@@ -8,7 +8,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -39,6 +39,17 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* Marke — nur als Akzent verwenden (Buttons, Icons, Highlights). */
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-tint: var(--brand-tint);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-brand-strong: var(--brand-strong);
+  --color-on-brand: var(--text-on-brand);
+  --color-glass-border: var(--surface-glass-border);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -48,83 +59,203 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * Rohwerte stehen bewusst nur hier. Ab Stufe 5 wird dieser Block aus
+ * tokens/tokens.json generiert — Komponenten nutzen ausschliesslich die
+ * Utility-Klassen, die auf diese Variablen zeigen.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* Stufe 1 — Rohpalette (Crimson). Nie direkt in Komponenten. */
+  --brand-50: #f8e9eb;
+  --brand-100: #ebc0c5;
+  --brand-200: #e0a3aa;
+  --brand-300: #d5858f;
+  --brand-400: #c96773;
+  --brand-500: #b64652;
+  --brand-600: #a32432;
+  --brand-700: #881e2a;
+  --brand-800: #6e1822;
+  --brand-900: #491016;
+
+  --neutral-0: #ffffff;
+  --neutral-50: #faf7f8;
+  --neutral-100: #f1eced;
+  --neutral-200: #dfd7d9;
+  --neutral-400: #a29699;
+  --neutral-600: #6b5f62;
+  --neutral-800: #332c2e;
+  --neutral-900: #1e191a;
+  --neutral-950: #131011;
+
+  --success-100: #d8f3e3;
+  --success-600: #177a46;
+  --warning-100: #fdeecf;
+  --warning-600: #8a5a00;
+  --danger-100: #fce4d8;
+  --danger-600: #b33a00;
+
+  /* Stufe 2 — semantische Tokens (Hell ist der Standard-Modus). */
+  --background: var(--neutral-0);
+  --background-subtle: var(--neutral-50);
+  --background-canvas: linear-gradient(
+    160deg,
+    #faf7f8 0%,
+    #f8e9eb 45%,
+    #f1eced 100%
+  );
+  --foreground: var(--neutral-900);
+
+  --brand: var(--brand-600);
+  --brand-hover: var(--brand-700);
+  --brand-secondary: var(--brand-400);
+  --brand-subtle: var(--brand-50);
+  --brand-tint: var(--brand-100);
+  --brand-strong: var(--brand-800);
+  --text-on-brand: var(--neutral-0);
+
+  /* Glassmorphism — immer zusammen mit dem passenden Blur einsetzen. */
+  --surface-glass: rgba(255, 255, 255, 0.6);
+  --surface-glass-strong: rgba(255, 255, 255, 0.78);
+  --surface-glass-subtle: rgba(255, 255, 255, 0.38);
+  --surface-glass-border: rgba(255, 255, 255, 0.65);
+  --surface-glass-fallback: #ffffff;
+  --surface-glass-subtle-fallback: var(--neutral-50);
+  --shadow-glass: 0 8px 32px rgba(110, 24, 34, 0.1);
+  --blur-tile: 16px;
+  --blur-container: 28px;
+
+  --card: var(--neutral-0);
+  --card-foreground: var(--neutral-900);
+  --popover: var(--neutral-0);
+  --popover-foreground: var(--neutral-900);
+  --primary: var(--brand-600);
+  --primary-foreground: var(--neutral-0);
+  --secondary: var(--neutral-100);
+  --secondary-foreground: var(--neutral-900);
+  --muted: var(--neutral-100);
+  --muted-foreground: var(--neutral-600);
+  --accent: var(--brand-50);
+  --accent-foreground: var(--brand-800);
+  --destructive: var(--danger-600);
+  --border: rgba(30, 25, 26, 0.1);
+  --input: rgba(30, 25, 26, 0.1);
+  --ring: var(--brand-600);
+  --chart-1: var(--brand-600);
+  --chart-2: var(--brand-400);
+  --chart-3: var(--brand-200);
+  --chart-4: var(--neutral-400);
+  --chart-5: var(--neutral-200);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: var(--neutral-50);
+  --sidebar-foreground: var(--neutral-900);
+  --sidebar-primary: var(--brand-600);
+  --sidebar-primary-foreground: var(--neutral-0);
+  --sidebar-accent: var(--brand-50);
+  --sidebar-accent-foreground: var(--brand-800);
+  --sidebar-border: rgba(30, 25, 26, 0.1);
+  --sidebar-ring: var(--brand-600);
+
+  --font-sans: var(--font-ibm-plex), system-ui, sans-serif;
+  --font-mono: ui-monospace, monospace;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: var(--neutral-950);
+  --background-subtle: var(--neutral-900);
+  --background-canvas: linear-gradient(
+    160deg,
+    #131011 0%,
+    #1e1416 50%,
+    #171314 100%
+  );
+  --foreground: var(--neutral-50);
+
+  --brand: var(--brand-500);
+  --brand-hover: var(--brand-400);
+  --brand-secondary: var(--brand-700);
+  --brand-subtle: var(--brand-900);
+  --brand-tint: var(--brand-800);
+  --brand-strong: var(--brand-100);
+
+  --surface-glass: rgba(30, 25, 26, 0.55);
+  --surface-glass-strong: rgba(30, 25, 26, 0.75);
+  --surface-glass-subtle: rgba(30, 25, 26, 0.35);
+  --surface-glass-border: rgba(255, 255, 255, 0.12);
+  --surface-glass-fallback: var(--neutral-900);
+  --surface-glass-subtle-fallback: var(--neutral-950);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.35);
+
+  --card: var(--neutral-900);
+  --card-foreground: var(--neutral-50);
+  --popover: var(--neutral-900);
+  --popover-foreground: var(--neutral-50);
+  --primary: var(--brand-500);
+  --primary-foreground: var(--neutral-0);
+  --secondary: var(--neutral-800);
+  --secondary-foreground: var(--neutral-50);
+  --muted: var(--neutral-800);
+  --muted-foreground: var(--neutral-400);
+  --accent: var(--brand-900);
+  --accent-foreground: var(--brand-100);
+  --border: var(--neutral-800);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: var(--brand-300);
+  --sidebar: var(--neutral-900);
+  --sidebar-foreground: var(--neutral-50);
+  --sidebar-primary: var(--brand-500);
+  --sidebar-primary-foreground: var(--neutral-0);
+  --sidebar-accent: var(--brand-900);
+  --sidebar-accent-foreground: var(--brand-100);
+  --sidebar-border: var(--neutral-800);
+  --sidebar-ring: var(--brand-300);
+}
+
+/* Standard-Kachel: KPI-Tiles, Cards. */
+@utility glass {
+  background-color: var(--surface-glass);
+  backdrop-filter: blur(var(--blur-tile));
+  border: 1px solid var(--surface-glass-border);
+  box-shadow: var(--shadow-glass);
+
+  @supports not (backdrop-filter: blur(1px)) {
+    background-color: var(--surface-glass-fallback);
+  }
+}
+
+/* Kacheln mit viel Text oder Daten — mehr Deckung, bessere Lesbarkeit. */
+@utility glass-strong {
+  background-color: var(--surface-glass-strong);
+  backdrop-filter: blur(var(--blur-tile));
+  border: 1px solid var(--surface-glass-border);
+  box-shadow: var(--shadow-glass);
+
+  @supports not (backdrop-filter: blur(1px)) {
+    background-color: var(--surface-glass-fallback);
+  }
+}
+
+/* Grosse Container und Navigation — wenig direkter Text darauf. */
+@utility glass-subtle {
+  background-color: var(--surface-glass-subtle);
+  backdrop-filter: blur(var(--blur-container));
+  border: 1px solid var(--surface-glass-border);
+  box-shadow: var(--shadow-glass);
+
+  @supports not (backdrop-filter: blur(1px)) {
+    background-color: var(--surface-glass-subtle-fallback);
+  }
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
     @apply font-sans;
+  }
+  body {
+    @apply text-foreground;
+    background: var(--background-canvas) fixed;
+    background-color: var(--background-subtle);
   }
 }
