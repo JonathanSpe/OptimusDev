@@ -24,7 +24,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
         >
           <Link
             href="/dashboard"
-            className="text-lg font-semibold tracking-tight text-foreground"
+            className="text-foreground text-lg font-semibold tracking-tight"
           >
             Optimus
           </Link>
@@ -34,7 +34,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-brand"
+                  className="text-muted-foreground hover:text-brand text-sm font-medium transition-colors"
                 >
                   {item.label}
                 </Link>
@@ -45,14 +45,14 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
           <div className="ml-auto flex items-center gap-4">
             <Link
               href="/einstellungen"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-brand"
+              className="text-muted-foreground hover:text-brand text-sm font-medium transition-colors"
             >
               Einstellungen
             </Link>
             {/* Platzhalter: meldet noch nichts ab, führt nur zurück zur Startseite. */}
             <Link
               href="/"
-              className="rounded-lg border border-glass-border bg-brand-subtle px-3 py-2 text-sm font-medium text-brand transition-colors hover:bg-brand-tint"
+              className="border-glass-border bg-brand-subtle text-brand hover:bg-brand-tint rounded-lg border px-3 py-2 text-sm font-medium transition-colors"
             >
               Abmelden
             </Link>

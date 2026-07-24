@@ -6,7 +6,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
       <div className="w-full max-w-md">
         <Link
           href="/"
-          className="block text-center text-lg font-semibold tracking-tight text-foreground"
+          className="text-foreground block text-center text-lg font-semibold tracking-tight"
         >
           Optimus
         </Link>

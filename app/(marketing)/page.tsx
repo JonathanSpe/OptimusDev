@@ -22,14 +22,14 @@ export default function StartseitePage() {
   return (
     <>
       <section className="max-w-3xl">
-        <p className="text-sm font-medium tracking-wide text-brand uppercase">
+        <p className="text-brand text-sm font-medium tracking-wide uppercase">
           Gesundheit in Zahlen
         </p>
-        <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl">
-          Deine Gesundheit, endlich{" "}
-          <span className="text-brand">messbar</span> besser.
+        <h1 className="text-foreground mt-4 text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
+          Deine Gesundheit, endlich <span className="text-brand">messbar</span>{" "}
+          besser.
         </h1>
-        <p className="mt-6 text-lg text-muted-foreground">
+        <p className="text-muted-foreground mt-6 text-lg">
           Optimus bündelt deine Messwerte, erklärt sie in verständlicher Sprache
           und zeigt dir, welcher nächste Schritt wirklich etwas bringt.
         </p>
@@ -37,13 +37,13 @@ export default function StartseitePage() {
         <div className="mt-10 flex flex-wrap items-center gap-4">
           <Link
             href="/registrieren"
-            className="rounded-lg bg-brand px-6 py-3 text-sm font-medium text-on-brand transition-colors hover:bg-brand-hover"
+            className="bg-brand text-on-brand hover:bg-brand-hover rounded-lg px-6 py-3 text-sm font-medium transition-colors"
           >
             Jetzt starten
           </Link>
           <Link
             href="/so-funktioniert-es"
-            className="glass rounded-lg px-6 py-3 text-sm font-medium text-foreground transition-colors hover:text-brand"
+            className="glass text-foreground hover:text-brand rounded-lg px-6 py-3 text-sm font-medium transition-colors"
           >
             So funktioniert es
           </Link>
@@ -56,10 +56,10 @@ export default function StartseitePage() {
       >
         {previewCards.map((card) => (
           <article key={card.title} className="glass rounded-2xl p-6">
-            <h2 className="text-lg font-semibold text-foreground">
+            <h2 className="text-foreground text-lg font-semibold">
               {card.title}
             </h2>
-            <p className="mt-3 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-3 text-sm">
               {card.description}
             </p>
           </article>

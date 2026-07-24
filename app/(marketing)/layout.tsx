@@ -22,7 +22,7 @@ export default function MarketingLayout({ children }: LayoutProps<"/">) {
         >
           <Link
             href="/"
-            className="text-lg font-semibold tracking-tight text-foreground"
+            className="text-foreground text-lg font-semibold tracking-tight"
           >
             Optimus
           </Link>
@@ -32,7 +32,7 @@ export default function MarketingLayout({ children }: LayoutProps<"/">) {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-brand"
+                  className="text-muted-foreground hover:text-brand text-sm font-medium transition-colors"
                 >
                   {item.label}
                 </Link>
@@ -42,7 +42,7 @@ export default function MarketingLayout({ children }: LayoutProps<"/">) {
 
           <Link
             href="/login"
-            className="ml-auto rounded-lg bg-brand px-4 py-2 text-sm font-medium text-on-brand transition-colors hover:bg-brand-hover"
+            className="bg-brand text-on-brand hover:bg-brand-hover ml-auto rounded-lg px-4 py-2 text-sm font-medium transition-colors"
           >
             Anmelden
           </Link>
@@ -55,7 +55,7 @@ export default function MarketingLayout({ children }: LayoutProps<"/">) {
 
       <footer className="glass mt-16">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-8 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             © {new Date().getFullYear()} Optimus
           </p>
           <ul className="flex items-center gap-6">
@@ -63,7 +63,7 @@ export default function MarketingLayout({ children }: LayoutProps<"/">) {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="text-sm text-muted-foreground transition-colors hover:text-brand"
+                  className="text-muted-foreground hover:text-brand text-sm transition-colors"
                 >
                   {item.label}
                 </Link>

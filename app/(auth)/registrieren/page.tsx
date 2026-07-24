@@ -8,26 +8,26 @@ export const metadata: Metadata = {
 export default function RegistrierenPage() {
   return (
     <section className="glass-strong rounded-2xl p-8">
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+      <h1 className="text-foreground text-2xl font-semibold tracking-tight">
         Konto erstellen
       </h1>
-      <p className="mt-3 text-sm text-muted-foreground">
+      <p className="text-muted-foreground mt-3 text-sm">
         Die echte Registrierung folgt in einer späteren Stufe. Bis dahin kannst
         du dir den eingeloggten Bereich unverbindlich ansehen.
       </p>
 
       <Link
         href="/dashboard"
-        className="mt-8 block rounded-lg bg-brand px-4 py-3 text-center text-sm font-medium text-on-brand transition-colors hover:bg-brand-hover"
+        className="bg-brand text-on-brand hover:bg-brand-hover mt-8 block rounded-lg px-4 py-3 text-center text-sm font-medium transition-colors"
       >
         Zur Dashboard-Vorschau
       </Link>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
+      <p className="text-muted-foreground mt-6 text-center text-sm">
         Bereits registriert?{" "}
         <Link
           href="/login"
-          className="font-medium text-brand transition-colors hover:text-brand-hover"
+          className="text-brand hover:text-brand-hover font-medium transition-colors"
         >
           Anmelden
         </Link>

@@ -17,20 +17,20 @@ export function PlaceholderPage({
 }: PlaceholderPageProps) {
   return (
     <section>
-      <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+      <h1 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
         {title}
       </h1>
       {lead ? (
-        <p className="mt-4 max-w-2xl text-lg text-muted-foreground">{lead}</p>
+        <p className="text-muted-foreground mt-4 max-w-2xl text-lg">{lead}</p>
       ) : null}
 
       <div className="glass mt-10 max-w-2xl rounded-2xl p-6">
         {cardTitle ? (
-          <h2 className="text-base font-semibold text-foreground">
+          <h2 className="text-foreground text-base font-semibold">
             {cardTitle}
           </h2>
         ) : null}
-        <p className="mt-2 text-sm text-muted-foreground">{cardText}</p>
+        <p className="text-muted-foreground mt-2 text-sm">{cardText}</p>
       </div>
     </section>
   );
