@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+/* Einzige Quelle der Wahrheit: tokens/tokens.json — neu erzeugen: npm run tokens. */
+@import "../tokens/generated/theme.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -40,6 +42,58 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
 
+  /*
+   * DIE FLAECHENEBENEN DES APP-SHELLS, von hinten nach vorn:
+   *   backdrop  Mesh-Hintergrund am body (unscharf, nur zum Brechen da)
+   *   shell     schwebendes Glas-Panel + abgesetzte Icon-Leiste
+   *   content   helle Inhaltsflaeche im Panel
+   *   card      DECKENDE Karte darauf — Zahlen wollen ruhigen Grund
+   *   rail      EIGENES Panel neben dem Inhalt, etwas matter als die
+ *             Inhaltsflaeche — sonst verschwimmen die Kacheln darauf mit ihr
+   *   rail-card DECKENDE Karte darauf
+   * Inhalt und Leiste trennt der Spalt zwischen den Panels, keine Linie.
+   */
+  --color-shell: var(--color-surface-shell);
+  --color-content: var(--color-surface-content);
+  --color-card-solid: var(--color-surface-card);
+  --color-rail: var(--color-surface-rail);
+  --color-rail-card: var(--color-surface-rail-card);
+  --color-glass-edge: var(--color-surface-glass-edge);
+
+  /* Text, Linien und Status AUF der Kontext-Leiste. */
+  --color-on-rail: var(--color-text-on-rail);
+  --color-on-rail-muted: var(--color-text-on-rail-muted);
+  --color-on-rail-faint: var(--color-text-on-rail-faint);
+  --color-on-rail-brand: var(--color-text-on-rail-brand);
+  --color-rail-line: var(--color-border-on-rail);
+  --color-rail-line-strong: var(--color-border-on-rail-strong);
+  --color-success-on-rail: var(--color-status-success-on-rail);
+  --color-warning-on-rail: var(--color-status-warning-on-rail);
+  /* Fokus-Ring muss auf BEIDEN Ebenen sichtbar sein — Rot verschwindet dort. */
+  --color-ring-on-rail: var(--color-focus-on-rail);
+
+  /*
+   * Toenungen der Marker-Chips — eine je ANZEIGE-GRUPPE, in deren Reihenfolge:
+   * k1 Hormone, k2 Herz-Gesundheit, k3 Stoffwechsel, k4 Schilddruese,
+   * k5 Leber & Niere. Sie geben dem Raster Rhythmus und sind KEIN Signal:
+   * keine Statusfarbe, kein Urteil, nichts Gesaettigtes.
+   *
+   * ACHTUNG: k1–k5 sind hier Steckplaetze fuer ANZEIGE-Gruppen und NICHT die
+   * Bewertungs-Kategorien K1–K4 der Analyse. Die Kuerzel werden in die
+   * Gruppen-Ids umbenannt, sobald die Kachel die Gruppe aus
+   * contracts/biomarker liest.
+   */
+  --color-cat-k1: var(--color-category-k1-surface);
+  --color-cat-k1-ink: var(--color-category-k1-icon);
+  --color-cat-k2: var(--color-category-k2-surface);
+  --color-cat-k2-ink: var(--color-category-k2-icon);
+  --color-cat-k3: var(--color-category-k3-surface);
+  --color-cat-k3-ink: var(--color-category-k3-icon);
+  --color-cat-k4: var(--color-category-k4-surface);
+  --color-cat-k4-ink: var(--color-category-k4-icon);
+  --color-cat-k5: var(--color-category-k5-surface);
+  --color-cat-k5-ink: var(--color-category-k5-icon);
+
   /* Marke — nur als Akzent verwenden (Buttons, Icons, Highlights). */
   --color-brand: var(--brand);
   --color-brand-hover: var(--brand-hover);
@@ -50,6 +104,51 @@
   --color-on-brand: var(--text-on-brand);
   --color-glass-border: var(--surface-glass-border);
 
+  /* Leiseste Textstufe — nur kurze, anderswo wiederholte Beschriftungen. */
+  --color-faint: var(--text-faint);
+
+  /*
+   * Zonen der Referenz-Schiene: EIN Farbton in drei Dichten, niemals
+   * farbcodiert. Die Zone verortet einen Wert, sie bewertet ihn nicht.
+   */
+  --color-track-base: var(--track-base);
+  --color-track-reference: var(--track-reference);
+  --color-track-optimal: var(--track-optimal);
+
+  /*
+   * Status — RESERVIERT. Nur für Zustände (Erfolg, Warnung, Fehler), nie
+   * dekorativ und nie ohne Icon + Text-Label. Siehe tokens/README.md.
+   */
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-critical: var(--critical);
+  --color-critical-subtle: var(--critical-subtle);
+
+  /*
+   * Messwert-Stufe der Token-Typoskala (2.5rem). Tailwinds Standardskala kennt
+   * diese Stufe nicht; eigener Name, damit text-xl/2xl unveraendert bleiben.
+   */
+  --text-metric: var(--font-size-3xl);
+
+  /* Kleinste Beschriftungsstufe (11px) — Bereichsgrenzen, Kontextzeilen. */
+  --text-2xs: var(--font-size-2xs);
+  --text-2xs--line-height: calc(1 / 0.6875);
+
+  /* 10px — nachgeordnete Zahlen an einer Grafik, nie Fliesstext. */
+  --text-3xs: var(--font-size-3xs);
+  --text-3xs--line-height: calc(1 / 0.625);
+
+  /*
+   * Schatten interaktiver Kacheln im Hover: der enge Kachel-Schatten bleibt und
+   * bekommt eine zweite, tiefere Ebene — die Kachel hebt sich minimal ab.
+   */
+  --shadow-lift: var(--shadow-card), var(--shadow-md);
+
+  /* Standarddauer aller transition-Utilities kommt aus dem Token. */
+  --default-transition-duration: var(--transition-fast);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -57,165 +156,149 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Eigene Stufe (24px) fuer die grossen Glasflaechen: rounded-panel. */
+  --radius-panel: var(--radius-shell);
+
+  /*
+   * Zwei Breiten, zwei Zwecke: max-w-measure begrenzt FLIESSTEXT auf eine
+   * lesbare Zeilenlaenge, max-w-content ist nur die Notbremse gegen absurdes
+   * Dehnen auf Ultrawide. Raster und Karten bekommen KEINE Obergrenze.
+   */
+  --container-measure: var(--size-measure);
+  --container-content: var(--size-content-max);
 }
 
 /*
- * Rohwerte stehen bewusst nur hier. Ab Stufe 5 wird dieser Block aus
- * tokens/tokens.json generiert — Komponenten nutzen ausschliesslich die
- * Utility-Klassen, die auf diese Variablen zeigen.
+ * Bruecke zwischen den generierten Tokens und den Variablennamen, die shadcn/ui
+ * und die Utilities oben erwarten. Hier stehen ausschliesslich var()-Verweise:
+ * jeder Rohwert lebt in tokens/tokens.json.
  */
 :root {
-  /* Stufe 1 — Rohpalette (Crimson). Nie direkt in Komponenten. */
-  --brand-50: #f8e9eb;
-  --brand-100: #ebc0c5;
-  --brand-200: #e0a3aa;
-  --brand-300: #d5858f;
-  --brand-400: #c96773;
-  --brand-500: #b64652;
-  --brand-600: #a32432;
-  --brand-700: #881e2a;
-  --brand-800: #6e1822;
-  --brand-900: #491016;
-
-  --neutral-0: #ffffff;
-  --neutral-50: #faf7f8;
-  --neutral-100: #f1eced;
-  --neutral-200: #dfd7d9;
-  --neutral-400: #a29699;
-  --neutral-600: #6b5f62;
-  --neutral-800: #332c2e;
-  --neutral-900: #1e191a;
-  --neutral-950: #131011;
-
-  --success-100: #d8f3e3;
-  --success-600: #177a46;
-  --warning-100: #fdeecf;
-  --warning-600: #8a5a00;
-  --danger-100: #fce4d8;
-  --danger-600: #b33a00;
-
-  /* Stufe 2 — semantische Tokens (Hell ist der Standard-Modus). */
-  --background: var(--neutral-0);
-  --background-subtle: var(--neutral-50);
-  --background-canvas: linear-gradient(
-    160deg,
-    #faf7f8 0%,
-    #f8e9eb 45%,
-    #f1eced 100%
-  );
-  --foreground: var(--neutral-900);
-
-  --brand: var(--brand-600);
-  --brand-hover: var(--brand-700);
-  --brand-secondary: var(--brand-400);
-  --brand-subtle: var(--brand-50);
-  --brand-tint: var(--brand-100);
-  --brand-strong: var(--brand-800);
-  --text-on-brand: var(--neutral-0);
-
-  /* Glassmorphism — immer zusammen mit dem passenden Blur einsetzen. */
-  --surface-glass: rgba(255, 255, 255, 0.6);
-  --surface-glass-strong: rgba(255, 255, 255, 0.78);
-  --surface-glass-subtle: rgba(255, 255, 255, 0.38);
-  --surface-glass-border: rgba(255, 255, 255, 0.65);
-  --surface-glass-fallback: #ffffff;
-  --surface-glass-subtle-fallback: var(--neutral-50);
-  --shadow-glass: 0 8px 32px rgba(110, 24, 34, 0.1);
-  --blur-tile: 16px;
-  --blur-container: 28px;
-
-  --card: var(--neutral-0);
-  --card-foreground: var(--neutral-900);
-  --popover: var(--neutral-0);
-  --popover-foreground: var(--neutral-900);
-  --primary: var(--brand-600);
-  --primary-foreground: var(--neutral-0);
+  /* shadcn/ui-Kontrakt — damit ist jede kuenftige shadcn-Komponente on-brand. */
+  --background: var(--color-background-default);
+  --background-subtle: var(--color-background-subtle);
+  --foreground: var(--color-text-default);
+  --card: var(--color-background-elevated);
+  --card-foreground: var(--color-text-default);
+  --popover: var(--color-background-elevated);
+  --popover-foreground: var(--color-text-default);
+  --primary: var(--color-brand-default);
+  --primary-foreground: var(--color-text-on-brand);
   --secondary: var(--neutral-100);
-  --secondary-foreground: var(--neutral-900);
+  --secondary-foreground: var(--color-text-default);
   --muted: var(--neutral-100);
-  --muted-foreground: var(--neutral-600);
-  --accent: var(--brand-50);
+  --muted-foreground: var(--color-text-muted);
+  --accent: var(--color-background-panel);
   --accent-foreground: var(--brand-800);
-  --destructive: var(--danger-600);
-  --border: rgba(30, 25, 26, 0.1);
-  --input: rgba(30, 25, 26, 0.1);
-  --ring: var(--brand-600);
-  --chart-1: var(--brand-600);
-  --chart-2: var(--brand-400);
-  --chart-3: var(--brand-200);
-  --chart-4: var(--neutral-400);
-  --chart-5: var(--neutral-200);
-  --radius: 0.625rem;
-  --sidebar: var(--neutral-50);
-  --sidebar-foreground: var(--neutral-900);
-  --sidebar-primary: var(--brand-600);
-  --sidebar-primary-foreground: var(--neutral-0);
-  --sidebar-accent: var(--brand-50);
-  --sidebar-accent-foreground: var(--brand-800);
-  --sidebar-border: rgba(30, 25, 26, 0.1);
-  --sidebar-ring: var(--brand-600);
+  --destructive: var(--color-status-critical);
+  --border: var(--color-border-default);
+  --input: var(--color-border-input);
+  --ring: var(--color-focus);
+  --radius: var(--radius-base);
 
-  --font-sans: var(--font-ibm-plex), system-ui, sans-serif;
-  --font-mono: ui-monospace, monospace;
+  /*
+   * --chart-1 … --chart-5 kommen direkt aus tokens/generated/theme.css und
+   * sind dort je Modus definiert; Diagramme erben den Modus damit von selbst.
+   */
+
+  /* Status-Rollen. Die Token-Variablen wechseln in .dark automatisch mit. */
+  --success: var(--color-status-success);
+  --success-subtle: var(--color-status-success-subtle);
+  --warning: var(--color-status-warning);
+  --warning-subtle: var(--color-status-warning-subtle);
+  --critical: var(--color-status-critical);
+  --critical-subtle: var(--color-status-critical-subtle);
+
+  /*
+   * Leise Beschriftung und die drei Dichten der Referenz-Schiene. Wie die
+   * Status-Rollen brauchen sie keinen .dark-Zweig: die Token-Variablen dahinter
+   * wechseln den Modus selbst.
+   */
+  --text-faint: var(--color-text-faint);
+  --track-base: var(--color-track-zone-base);
+  --track-reference: var(--color-track-zone-reference);
+  --track-optimal: var(--color-track-zone-optimal);
+
+  --sidebar: var(--color-background-subtle);
+  --sidebar-foreground: var(--color-text-default);
+  --sidebar-primary: var(--color-brand-default);
+  --sidebar-primary-foreground: var(--color-text-on-brand);
+  --sidebar-accent: var(--color-background-panel);
+  --sidebar-accent-foreground: var(--brand-800);
+  --sidebar-border: var(--color-border-default);
+  --sidebar-ring: var(--color-focus);
+
+  /* Marken-Akzente. */
+  --brand: var(--color-brand-default);
+  --brand-hover: var(--color-brand-hover);
+  --brand-secondary: var(--color-brand-secondary);
+  --brand-subtle: var(--color-background-panel);
+  --brand-tint: var(--color-background-panel-strong);
+  --brand-strong: var(--brand-800);
+  --text-on-brand: var(--color-text-on-brand);
+
+  /* Deckende Rueckfallebene, wenn backdrop-filter fehlt. */
+  --surface-glass-fallback: var(--color-background-default);
+  --surface-glass-subtle-fallback: var(--color-background-subtle);
+
+  /* next/font stellt die selbst gehostete Familie bereit, Tokens die Fallbacks. */
+  --font-sans: var(--font-ibm-plex), var(--font-family-sans);
+  --font-mono: var(--font-family-mono);
 }
 
 .dark {
-  --background: var(--neutral-950);
-  --background-subtle: var(--neutral-900);
-  --background-canvas: linear-gradient(
-    160deg,
-    #131011 0%,
-    #1e1416 50%,
-    #171314 100%
-  );
-  --foreground: var(--neutral-50);
-
-  --brand: var(--brand-500);
-  --brand-hover: var(--brand-400);
-  --brand-secondary: var(--brand-700);
-  --brand-subtle: var(--brand-900);
-  --brand-tint: var(--brand-800);
-  --brand-strong: var(--brand-100);
-
-  --surface-glass: rgba(30, 25, 26, 0.55);
-  --surface-glass-strong: rgba(30, 25, 26, 0.75);
-  --surface-glass-subtle: rgba(30, 25, 26, 0.35);
-  --surface-glass-border: rgba(255, 255, 255, 0.12);
-  --surface-glass-fallback: var(--neutral-900);
-  --surface-glass-subtle-fallback: var(--neutral-950);
-  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.35);
-
-  --card: var(--neutral-900);
-  --card-foreground: var(--neutral-50);
-  --popover: var(--neutral-900);
-  --popover-foreground: var(--neutral-50);
-  --primary: var(--brand-500);
-  --primary-foreground: var(--neutral-0);
+  --background: var(--color-background-default);
+  --background-subtle: var(--color-background-subtle);
+  --foreground: var(--color-text-default);
+  --card: var(--color-background-elevated);
+  --card-foreground: var(--color-text-default);
+  --popover: var(--color-background-elevated);
+  --popover-foreground: var(--color-text-default);
+  --primary: var(--color-brand-default);
+  --primary-foreground: var(--color-text-on-brand);
   --secondary: var(--neutral-800);
-  --secondary-foreground: var(--neutral-50);
+  --secondary-foreground: var(--color-text-default);
   --muted: var(--neutral-800);
-  --muted-foreground: var(--neutral-400);
-  --accent: var(--brand-900);
+  --muted-foreground: var(--color-text-muted);
+  --accent: var(--color-background-panel);
   --accent-foreground: var(--brand-100);
-  --border: var(--neutral-800);
-  --input: rgba(255, 255, 255, 0.15);
-  --ring: var(--brand-300);
-  --sidebar: var(--neutral-900);
-  --sidebar-foreground: var(--neutral-50);
-  --sidebar-primary: var(--brand-500);
-  --sidebar-primary-foreground: var(--neutral-0);
-  --sidebar-accent: var(--brand-900);
+  --destructive: var(--color-status-critical);
+  --border: var(--color-border-default);
+  --input: var(--color-border-input);
+  --ring: var(--color-focus);
+
+  --sidebar: var(--color-background-subtle);
+  --sidebar-foreground: var(--color-text-default);
+  --sidebar-primary: var(--color-brand-default);
+  --sidebar-primary-foreground: var(--color-text-on-brand);
+  --sidebar-accent: var(--color-background-panel);
   --sidebar-accent-foreground: var(--brand-100);
-  --sidebar-border: var(--neutral-800);
-  --sidebar-ring: var(--brand-300);
+  --sidebar-border: var(--color-border-default);
+  --sidebar-ring: var(--color-focus);
+
+  --brand: var(--color-brand-default);
+  --brand-hover: var(--color-brand-hover);
+  --brand-secondary: var(--color-brand-secondary);
+  --brand-subtle: var(--color-background-panel);
+  --brand-tint: var(--color-background-panel-strong);
+  --brand-strong: var(--brand-100);
+  --text-on-brand: var(--color-text-on-brand);
+
+  --surface-glass-fallback: var(--color-background-subtle);
+  --surface-glass-subtle-fallback: var(--color-background-default);
 }
 
-/* Standard-Kachel: KPI-Tiles, Cards. */
+/*
+ * Standard-Kachel: KPI-Tiles, Cards. Kante und Schatten sind bewusst knapp —
+ * eine feine Tuschelinie plus enger Schatten lassen die Kachel als praezises
+ * Objekt lesen, waehrend die Transluzenz erhalten bleibt.
+ */
 @utility glass {
   background-color: var(--surface-glass);
-  backdrop-filter: blur(var(--blur-tile));
-  border: 1px solid var(--surface-glass-border);
-  box-shadow: var(--shadow-glass);
+  backdrop-filter: blur(var(--blur-md));
+  border: 1px solid var(--color-border-card);
+  box-shadow: var(--shadow-card);
 
   @supports not (backdrop-filter: blur(1px)) {
     background-color: var(--surface-glass-fallback);
@@ -225,25 +308,144 @@
 /* Kacheln mit viel Text oder Daten — mehr Deckung, bessere Lesbarkeit. */
 @utility glass-strong {
   background-color: var(--surface-glass-strong);
-  backdrop-filter: blur(var(--blur-tile));
-  border: 1px solid var(--surface-glass-border);
-  box-shadow: var(--shadow-glass);
+  backdrop-filter: blur(var(--blur-md));
+  border: 1px solid var(--color-border-card);
+  box-shadow: var(--shadow-card);
 
   @supports not (backdrop-filter: blur(1px)) {
     background-color: var(--surface-glass-fallback);
   }
 }
 
-/* Grosse Container und Navigation — wenig direkter Text darauf. */
+/*
+ * Grosse Container und Navigation — wenig direkter Text darauf. Hier bleibt der
+ * weiche, weit gestreute Glas-Schatten: er traegt die Tiefe der ganzen Seite.
+ */
 @utility glass-subtle {
   background-color: var(--surface-glass-subtle);
-  backdrop-filter: blur(var(--blur-container));
-  border: 1px solid var(--surface-glass-border);
+  backdrop-filter: blur(var(--blur-lg));
+  border: 1px solid var(--color-border-card);
   box-shadow: var(--shadow-glass);
 
   @supports not (backdrop-filter: blur(1px)) {
     background-color: var(--surface-glass-subtle-fallback);
   }
+}
+
+/*
+ * ------------------------------------------------------------------ DAS GLAS
+ * Ein Rezept, drei Flaechen (Panel, Icon-Leiste, Kontext-Leiste):
+ *   1. transluzente Flaeche — NIE deckend, sonst ist es kein Glas
+ *   2. backdrop-filter aus blur() UND saturate(): Weichzeichnen mittelt Farben
+ *      aus, erst das Nachsaettigen holt den Hintergrund zurueck
+ *   3. 1px Lichtkante oben und links, die abgewandten Kanten leiser — damit
+ *      hat die Flaeche eine Dicke und eine Lichtrichtung
+ *   4. tiefer, weicher Schatten: er trennt die Flaeche vom Hintergrund
+ * Ohne den Mesh-Hintergrund am body ist das alles unsichtbar — der Blur
+ * braucht etwas, worauf er arbeiten kann.
+ */
+
+/* EBENE 1a — das schwebende App-Panel. */
+@utility glass-shell {
+  background-color: var(--color-surface-shell);
+  backdrop-filter: blur(var(--blur-xl)) saturate(var(--saturate-glass));
+  border: 1px solid var(--color-surface-glass-edge-quiet);
+  border-top-color: var(--color-surface-glass-edge);
+  border-left-color: var(--color-surface-glass-edge);
+  box-shadow: var(--shadow-float);
+
+  @supports not (backdrop-filter: blur(1px)) {
+    background-color: var(--surface-glass-fallback);
+  }
+}
+
+/* EBENE 1b — die abgesetzte Icon-Leiste. Gleiches Glas, knapperer Schatten. */
+@utility glass-rail {
+  background-color: var(--color-surface-shell);
+  backdrop-filter: blur(var(--blur-xl)) saturate(var(--saturate-glass));
+  border: 1px solid var(--color-surface-glass-edge-quiet);
+  border-top-color: var(--color-surface-glass-edge);
+  border-left-color: var(--color-surface-glass-edge);
+  box-shadow: var(--shadow-rail-float);
+
+  @supports not (backdrop-filter: blur(1px)) {
+    background-color: var(--surface-glass-fallback);
+  }
+}
+
+/*
+ * EBENE 2 — Inhaltsflaeche im Panel. Bewusst ohne Kante und ohne Schatten:
+ * sie ist ein Bereich, kein Objekt. Sie liegt auf dem Shell-Glas, beide
+ * Deckungen addieren sich zu einer fast weissen, ruhigen Flaeche.
+ */
+@utility surface-content {
+  background-color: var(--color-surface-content);
+}
+
+/*
+ * EBENE 3 — Karten auf der Inhaltsflaeche. DECKEND und ohne Blur: Messwerte
+ * werden auf ruhigem Grund gelesen. Genau dieser Wechsel — deckendes Weiss
+ * auf gefrosteter Flaeche — laesst die Karte abspringen.
+ */
+@utility surface-card {
+  background-color: var(--color-surface-card);
+  border: 1px solid var(--color-border-card);
+  box-shadow: var(--shadow-card);
+}
+
+/*
+ * EBENE 4 — die Kontext-Leiste als EIGENES schwebendes Panel neben dem
+ * Inhalts-Panel. Kein Trenner: die Leiste steht mit Abstand daneben, dazwischen
+ * liegt der Hintergrund. Weil sie frei auf dem Hintergrund liegt, bringt sie
+ * ihre Deckung selbst mit (surface.rail) und bekommt Lichtkante und Schatten wie
+ * die anderen schwebenden Flaechen. Ihre Flaeche ist BEWUSST etwas matter als
+ * die Inhaltsspalte: sie traegt deckend weisse Kacheln, und die muessen als
+ * eigene Objekte lesbar bleiben statt mit dem Grund zu verschwimmen. Der Radius
+ * kommt aus rounded-panel, damit dieselbe Flaeche unter xl auch als Schublade
+ * (Sheet) an der Fensterkante sitzen kann.
+ */
+@utility rail-panel {
+  background-color: var(--color-surface-rail);
+  /* Dieselbe Weichzeichnung wie glass-shell — sonst ist es dieselbe Farbe, aber
+   * nicht dasselbe Material. */
+  backdrop-filter: blur(var(--blur-xl)) saturate(var(--saturate-glass));
+  border: 1px solid var(--color-surface-glass-edge-quiet);
+  border-top-color: var(--color-surface-glass-edge);
+  border-left-color: var(--color-surface-glass-edge);
+  box-shadow: var(--shadow-rail-float);
+
+  @supports not (backdrop-filter: blur(1px)) {
+    background-color: var(--color-surface-rail-fallback);
+  }
+}
+
+/*
+ * Das Kachel-Raster der Inhaltsflaeche. INTRINSISCH: die Spaltenzahl ergibt
+ * sich aus dem vorhandenen Platz, nicht aus Breakpoints. Jede Spalte ist 1fr,
+ * der Rest einer Zeile wird also auf die Karten verteilt — es bleibt nie ein
+ * Streifen neben dem Raster stehen. min() haelt die Spalte auf schmalen
+ * Schirmen innerhalb des Containers, sonst laeuft sie bei unter 300px ueber.
+ */
+@utility panel-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(min(var(--size-card-min), 100%), 1fr)
+  );
+}
+
+/*
+ * Karten auf der Leiste: DECKEND und ohne Blur, genau wie surface-card auf der
+ * Inhaltsflaeche. Sie stehen auf einer matteren Flaeche als die Karten in der
+ * Mitte und springen deshalb schon durch ihr Weiss ab; Kante und Schatten geben
+ * ihnen zusaetzlich Dicke. Eigene Rolle, damit die Leiste ihre Flaeche wechseln
+ * kann, ohne jede Kachel darauf anzufassen.
+ */
+@utility rail-card {
+  background-color: var(--color-surface-rail-card);
+  border: 1px solid var(--color-border-card);
+  box-shadow: var(--shadow-card);
 }
 
 @layer base {
@@ -255,7 +457,29 @@
   }
   body {
     @apply text-foreground;
-    background: var(--background-canvas) fixed;
-    background-color: var(--background-subtle);
+    /*
+     * Mesh-Hintergrund: vier grosse, weich auslaufende Radialfelder auf
+     * neutraler Basis. background-attachment steht separat — in der Kurzform
+     * gaelte es nur fuer die letzte Ebene; als eigene Eigenschaft wiederholt
+     * CSS den Wert fuer alle Ebenen.
+     */
+    background-image: var(--background-canvas);
+    background-attachment: fixed;
+    background-color: var(--color-background-backdrop);
+  }
+  /*
+   * Kornschicht ueber dem Mesh. Als fixiertes Pseudo-Element ist sie aus dem
+   * Fluss genommen und damit KEIN Flex-Item des body. z-index -1 legt sie
+   * ueber den Hintergrund, aber unter alles Sichtbare — die Glasflaechen
+   * verwischen sie also mit.
+   */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--background-grain);
+    opacity: var(--grain-opacity);
+    pointer-events: none;
   }
 }

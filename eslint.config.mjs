@@ -56,6 +56,13 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    // Von shadcn generiert und nicht von Hand gepflegt. Die Hex-Werte darin
+    // sind Recharts-Selektoren ([stroke='#ccc']), keine Design-Entscheidungen —
+    // die Farben der Diagramme kommen aus --chart-1 … --chart-5.
+    files: ["components/ui/chart.tsx"],
+    rules: { "no-restricted-syntax": "off" },
+  },
   // Must stay last so formatting-related rules lose to Prettier.
   prettier,
   // Override default ignores of eslint-config-next.

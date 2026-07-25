@@ -1,18 +1,10 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { PlaceholderPage } from "@/components/common/placeholder-page";
-
-export const metadata: Metadata = {
-  title: "Analyse",
-};
-
+/*
+ * /analyse ist nur das Kapitel, keine eigene Seite: der Einstieg ist der
+ * Snapshot. Die Weiterleitung passiert im Server-Rendering, damit die Adresse
+ * in der Leiste sofort stimmt und die Navigation den Unterpunkt markieren kann.
+ */
 export default function AnalysePage() {
-  return (
-    <PlaceholderPage
-      title="Analyse"
-      lead="Deine Werte im Detail."
-      cardTitle="Inhalt folgt"
-      cardText="Hier entstehen die Detailauswertungen einzelner Messwerte inklusive Referenzbereichen und Verlauf."
-    />
-  );
+  redirect("/analyse/snapshot");
 }

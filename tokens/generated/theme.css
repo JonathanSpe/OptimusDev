@@ -1,0 +1,281 @@
+/* AUTO-GENERATED from tokens/tokens.json — DO NOT EDIT */
+/* Neu erzeugen mit: npm run tokens */
+
+:root {
+  /* Stufe 1 — Rohpalette. Nie direkt in Komponenten verwenden. */
+  --brand-50: #F8E9EB;
+  --brand-100: #EBC0C5;
+  --brand-200: #E0A3AA;
+  --brand-300: #D5858F;
+  --brand-400: #C96773;
+  --brand-500: #B64652;
+  --brand-600: #A32432;
+  --brand-700: #881E2A;
+  --brand-800: #6E1822;
+  --brand-900: #491016;
+  --neutral-0: #FFFFFF;
+  --neutral-50: #FAF7F8;
+  --neutral-100: #F1ECED;
+  --neutral-200: #DFD7D9;
+  --neutral-300: #C9C0C2;
+  --neutral-400: #A29699;
+  --neutral-500: #85787B;
+  --neutral-600: #6B5F62;
+  --neutral-800: #332C2E;
+  --neutral-900: #1E191A;
+  --neutral-950: #131011;
+  --canvas-light: #F6F6F7;
+  --canvas-light-end: #F2F2F4;
+  --canvas-mid: #D4D4D6;
+  --canvas-dark: #0F0F11;
+  --canvas-dark-end: #141416;
+  --backdrop-base: #FAF9FB;
+  --backdrop-warm: #EEDFD3;
+  --backdrop-tint: #F3D8E1;
+  --backdrop-cool: #D6DAEA;
+  --backdrop-deep: #D0CEDA;
+  --backdrop-dark-base: #101013;
+  --backdrop-dark-warm: #1A1618;
+  --backdrop-dark-tint: #1F1417;
+  --backdrop-dark-cool: #14161B;
+  --backdrop-dark-deep: #08080A;
+  --category-k1-tint: #E5D7F9;
+  --category-k1-ink: #704891;
+  --category-k2-tint: #E5E6FF;
+  --category-k2-ink: #404878;
+  --category-k3-tint: #E6D6C6;
+  --category-k3-ink: #5F5346;
+  --category-k4-tint: #B0D6E0;
+  --category-k4-ink: #175560;
+  --category-k5-tint: #D9EBFF;
+  --category-k5-ink: #275A9A;
+  --category-k1-tint-dark: #332A41;
+  --category-k1-ink-dark: #CDB8EA;
+  --category-k2-tint-dark: #2C2F45;
+  --category-k2-ink-dark: #B7C2F0;
+  --category-k3-tint-dark: #362F29;
+  --category-k3-ink-dark: #D3C7BA;
+  --category-k4-tint-dark: #172D32;
+  --category-k4-ink-dark: #9ECFD7;
+  --category-k5-tint-dark: #28324A;
+  --category-k5-ink-dark: #A2CBF3;
+  --success-100: #D6F0E7;
+  --success-400: #34B894;
+  --success-600: #0F7059;
+  --success-900: #0A2E26;
+  --warning-100: #FCEBCD;
+  --warning-400: #E8A93D;
+  --warning-600: #8A5A00;
+  --warning-900: #3A2B08;
+  --critical-100: #FBE3D5;
+  --critical-400: #F2764A;
+  --critical-600: #A8380B;
+  --critical-900: #3B1305;
+
+  /* Abstaende */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  /* Rundungen */
+  --radius-base: 0.625rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-shell: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Layout-Breiten */
+  --size-card-min: 18.75rem;
+  --size-measure: 70ch;
+  --size-content-max: 112.5rem;
+
+  /* Schrift-Familien */
+  --font-family-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-family-mono: ui-monospace, monospace;
+
+  /* Schriftgroessen */
+  --font-size-3xs: 0.625rem;
+  --font-size-2xs: 0.6875rem;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+  --font-size-3xl: 2.5rem;
+
+  /* Schriftschnitte */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* Schatten */
+  --shadow-sm: 0 1px 2px rgba(19,16,17,0.06);
+  --shadow-md: 0 4px 12px rgba(19,16,17,0.08);
+  --shadow-glass: 0 8px 32px rgba(110,24,34,0.10);
+  --shadow-card: 0 1px 2px rgba(19,16,17,0.05), 0 2px 8px -3px rgba(19,16,17,0.08);
+  --shadow-float: 0 32px 64px -24px rgba(19,16,17,0.24), 0 12px 28px -18px rgba(19,16,17,0.18);
+  --shadow-rail-float: 0 20px 44px -20px rgba(19,16,17,0.22), 0 6px 16px -10px rgba(19,16,17,0.14);
+
+  /* Blur (Glassmorphism) */
+  --blur-sm: 8px;
+  --blur-md: 16px;
+  --blur-lg: 28px;
+  --blur-xl: 32px;
+
+  /* Nachsaettigung hinter dem Glas */
+  --saturate-glass: 1.75;
+
+  /* Kornschicht */
+  --grain-opacity: 0.03;
+
+  /* Uebergaenge */
+  --transition-fast: 150ms;
+  --transition-normal: 250ms;
+
+  /* Stufe 2 — semantische Tokens (Hell ist der Standard-Modus). */
+  --color-background-default: #FFFFFF;
+  --color-background-subtle: #FAF7F8;
+  --background-canvas: radial-gradient(96rem 72rem at 8% 2%, #EEDFD3 0%, transparent 72%), radial-gradient(86rem 64rem at 98% 10%, #F3D8E1 0%, transparent 68%), radial-gradient(104rem 78rem at 88% 100%, #D6DAEA 0%, transparent 72%), radial-gradient(76rem 60rem at 14% 96%, #D0CEDA 0%, transparent 68%), linear-gradient(180deg, #FAF9FB 0%, #FAF9FB 100%);
+  --color-background-backdrop: #FAF9FB;
+  --background-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='optimusGrain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23optimusGrain)'/%3E%3C/svg%3E");
+  --color-background-panel: #F8E9EB;
+  --color-background-panel-strong: #EBC0C5;
+  --color-background-elevated: #FFFFFF;
+  --surface-glass: rgba(255,255,255,0.60);
+  --surface-glass-strong: rgba(255,255,255,0.78);
+  --surface-glass-subtle: rgba(255,255,255,0.38);
+  --surface-glass-border: rgba(255,255,255,0.65);
+  --color-surface-shell: rgba(255,255,255,0.42);
+  --color-surface-content: rgba(255,255,255,0.34);
+  --color-surface-card: #FFFFFF;
+  --color-surface-rail: rgba(255,255,255,0.46);
+  --color-surface-rail-card: #FFFFFF;
+  --color-surface-glass-edge: rgba(255,255,255,0.60);
+  --color-surface-glass-edge-quiet: rgba(255,255,255,0.22);
+  --color-surface-rail-fallback: #F6F6F7;
+  --color-text-default: #1E191A;
+  --color-text-muted: #6B5F62;
+  --color-text-faint: #85787B;
+  --color-text-brand: #A32432;
+  --color-text-heading: #1E191A;
+  --color-text-on-brand: #FFFFFF;
+  --color-text-on-rail: #1E191A;
+  --color-text-on-rail-muted: #6B5F62;
+  --color-text-on-rail-faint: #85787B;
+  --color-text-on-rail-brand: #A32432;
+  --color-border-default: rgba(30,25,26,0.10);
+  --color-border-on-rail: rgba(30,25,26,0.10);
+  --color-border-on-rail-strong: rgba(30,25,26,0.18);
+  --color-border-input: rgba(30,25,26,0.10);
+  --color-border-card: rgba(30,25,26,0.08);
+  --color-border-brand: #E0A3AA;
+  --color-track-zone-base: rgba(30,25,26,0.06);
+  --color-track-zone-reference: rgba(30,25,26,0.12);
+  --color-track-zone-optimal: rgba(30,25,26,0.20);
+  --color-brand-default: #A32432;
+  --color-brand-hover: #881E2A;
+  --color-brand-secondary: #C96773;
+  --color-status-success: #0F7059;
+  --color-status-success-subtle: #D6F0E7;
+  --color-status-warning: #8A5A00;
+  --color-status-warning-subtle: #FCEBCD;
+  --color-status-critical: #A8380B;
+  --color-status-critical-subtle: #FBE3D5;
+  --color-status-success-on-rail: #0F7059;
+  --color-status-warning-on-rail: #8A5A00;
+  --color-category-k1-surface: #E5D7F9;
+  --color-category-k1-icon: #704891;
+  --color-category-k2-surface: #E5E6FF;
+  --color-category-k2-icon: #404878;
+  --color-category-k3-surface: #E6D6C6;
+  --color-category-k3-icon: #5F5346;
+  --color-category-k4-surface: #B0D6E0;
+  --color-category-k4-icon: #175560;
+  --color-category-k5-surface: #D9EBFF;
+  --color-category-k5-icon: #275A9A;
+  --chart-1: #A32432;
+  --chart-2: #C96773;
+  --chart-3: #E0A3AA;
+  --chart-4: #A29699;
+  --chart-5: #DFD7D9;
+  --color-focus: #A32432;
+  --color-focus-on-rail: #A32432;
+}
+
+.dark {
+  /* Stufe 2 — semantische Tokens (Dunkel). */
+  --color-background-default: #131011;
+  --color-background-subtle: #1E191A;
+  --background-canvas: radial-gradient(96rem 72rem at 8% 2%, #1A1618 0%, transparent 72%), radial-gradient(86rem 64rem at 98% 10%, #1F1417 0%, transparent 68%), radial-gradient(104rem 78rem at 88% 100%, #14161B 0%, transparent 72%), radial-gradient(76rem 60rem at 14% 96%, #08080A 0%, transparent 68%), linear-gradient(180deg, #101013 0%, #101013 100%);
+  --color-background-backdrop: #101013;
+  --background-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='optimusGrain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23optimusGrain)'/%3E%3C/svg%3E");
+  --color-background-panel: #491016;
+  --color-background-panel-strong: #6E1822;
+  --color-background-elevated: #332C2E;
+  --surface-glass: rgba(30,25,26,0.55);
+  --surface-glass-strong: rgba(30,25,26,0.75);
+  --surface-glass-subtle: rgba(30,25,26,0.35);
+  --surface-glass-border: rgba(255,255,255,0.12);
+  --color-surface-shell: rgba(46,41,43,0.50);
+  --color-surface-content: rgba(30,25,26,0.45);
+  --color-surface-card: #332C2E;
+  --color-surface-rail: rgba(26,22,23,0.80);
+  --color-surface-rail-card: #332C2E;
+  --color-surface-glass-edge: rgba(255,255,255,0.16);
+  --color-surface-glass-edge-quiet: rgba(255,255,255,0.05);
+  --color-surface-rail-fallback: #1E191A;
+  --color-text-default: #FAF7F8;
+  --color-text-muted: #A29699;
+  --color-text-faint: #85787B;
+  --color-text-brand: #E0A3AA;
+  --color-text-heading: #EBC0C5;
+  --color-text-on-brand: #FFFFFF;
+  --color-text-on-rail: #FAF7F8;
+  --color-text-on-rail-muted: #A29699;
+  --color-text-on-rail-faint: #85787B;
+  --color-text-on-rail-brand: #E0A3AA;
+  --color-border-default: #332C2E;
+  --color-border-on-rail: rgba(255,255,255,0.10);
+  --color-border-on-rail-strong: rgba(255,255,255,0.18);
+  --color-border-input: rgba(255,255,255,0.15);
+  --color-border-card: rgba(255,255,255,0.14);
+  --color-border-brand: #881E2A;
+  --color-track-zone-base: rgba(255,255,255,0.08);
+  --color-track-zone-reference: rgba(255,255,255,0.14);
+  --color-track-zone-optimal: rgba(255,255,255,0.24);
+  --color-brand-default: #B64652;
+  --color-brand-hover: #C96773;
+  --color-brand-secondary: #881E2A;
+  --color-status-success: #34B894;
+  --color-status-success-subtle: #0A2E26;
+  --color-status-warning: #E8A93D;
+  --color-status-warning-subtle: #3A2B08;
+  --color-status-critical: #F2764A;
+  --color-status-critical-subtle: #3B1305;
+  --color-status-success-on-rail: #34B894;
+  --color-status-warning-on-rail: #E8A93D;
+  --color-category-k1-surface: #332A41;
+  --color-category-k1-icon: #CDB8EA;
+  --color-category-k2-surface: #2C2F45;
+  --color-category-k2-icon: #B7C2F0;
+  --color-category-k3-surface: #362F29;
+  --color-category-k3-icon: #D3C7BA;
+  --color-category-k4-surface: #172D32;
+  --color-category-k4-icon: #9ECFD7;
+  --color-category-k5-surface: #28324A;
+  --color-category-k5-icon: #A2CBF3;
+  --chart-1: #C96773;
+  --chart-2: #E0A3AA;
+  --chart-3: #EBC0C5;
+  --chart-4: #A29699;
+  --chart-5: #6B5F62;
+  --color-focus: #D5858F;
+  --color-focus-on-rail: #D5858F;
+}

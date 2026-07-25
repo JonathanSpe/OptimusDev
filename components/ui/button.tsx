@@ -18,6 +18,18 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        /*
+         * Die drei rail-Varianten gehoeren auf die Kontext-Leiste. Sie ziehen
+         * Text, Rahmen, Hover-Flaeche und Fokus-Ring ausschliesslich aus den
+         * on-rail-Tokens — so bleiben sie richtig, wenn die Leiste ihre
+         * Flaeche wechselt, waehrend muted/primary daran zerbrechen wuerden.
+         */
+        railGhost:
+          "text-on-rail-muted hover:bg-on-rail/10 hover:text-on-rail focus-visible:border-ring-on-rail focus-visible:ring-ring-on-rail/40",
+        railOutline:
+          "border-rail-line-strong text-on-rail hover:bg-on-rail/10 focus-visible:border-ring-on-rail focus-visible:ring-ring-on-rail/40",
+        railLink:
+          "text-on-rail-brand underline underline-offset-4 hover:no-underline focus-visible:border-ring-on-rail focus-visible:ring-ring-on-rail/40",
       },
       size: {
         default:
