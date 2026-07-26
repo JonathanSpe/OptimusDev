@@ -97,7 +97,7 @@
   /* Layout-Breiten */
   --size-card-min: 18.75rem;
   --size-measure: 70ch;
-  --size-score-column: 40rem;
+  --size-score-column: 34rem;
   --size-dial-column: 30rem;
   --size-content-max: 112.5rem;
 
@@ -115,7 +115,7 @@
   --font-size-xl: 1.5rem;
   --font-size-2xl: 2rem;
   --font-size-3xl: 2.5rem;
-  --font-size-score: 6rem;
+  --font-size-score: 4.5rem;
 
   /* Schriftschnitte */
   --font-weight-regular: 400;
