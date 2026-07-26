@@ -7,6 +7,7 @@ import { useId, useState } from "react";
 import { useMotionPreset } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
+import { CONFIDENCE_SOLID, toFocusIds } from "../rules";
 import {
   CONFIDENCE_MAX,
   SCORE_MAX,
@@ -47,19 +48,10 @@ import {
  * gestorben und kommt hier nicht als Quadrantenlinie zurueck. In der Senkrechten
  * spricht allein die Position.
  *
- * Die Stufe 4 von 5 ist ein PLATZHALTER wie die Konfidenzskala selbst; sie
- * kommt spaeter aus dem Bluttest-Framework.
+ * Die Stufe selbst und die Auswahl der betonten Buendel stehen in rules.ts —
+ * die Prioritaetskarte nennt genau das erste dieser Buendel und muss dieselbe
+ * Rechnung sehen.
  */
-const CONFIDENCE_SOLID = 4;
-
-/*
- * Betonung ohne Schwelle: Betont werden nicht "alle unter X", sondern die drei
- * NIEDRIGSTEN der belastbaren Buendel. Das ist eine Rangfolge, keine Grenze —
- * sie behauptet nicht, dass 72 schlecht ist, sondern dass es unter den gut
- * gemessenen Buendeln das dritt-niedrigste ist. Drei, weil eine Liste von
- * Ansatzpunkten, die laenger ist als drei, keine Ansatzpunkte mehr sind.
- */
-const FOCUS_COUNT = 3;
 
 /** Beschriftete Linien der Score-Achse. */
 const SCORE_GRID = [0, 25, 50, 75, 100] as const;
@@ -96,20 +88,6 @@ const toY = scaleLinear()
 
 /** Die Trennung liegt zwischen den Stufen, nicht auf einer. */
 const DIVIDER_X = toX(CONFIDENCE_SOLID - 0.5);
-
-/**
- * Die Buendel, auf die es ankommt: belastbar gemessen UND am weitesten unten.
- * Rangfolge statt Schwelle — siehe FOCUS_COUNT.
- */
-function toFocusIds(bundles: readonly Bundle[]): ReadonlySet<string> {
-  return new Set(
-    bundles
-      .filter((bundle) => bundle.confidence >= CONFIDENCE_SOLID)
-      .toSorted((left, right) => left.score - right.score)
-      .slice(0, FOCUS_COUNT)
-      .map((bundle) => bundle.id),
-  );
-}
 
 interface BundlePointProps {
   bundle: Bundle;

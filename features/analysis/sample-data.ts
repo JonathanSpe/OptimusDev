@@ -22,6 +22,8 @@
  * ihre echten Felder kennt (dann samt Zod-Schema wie bei den Biomarkern).
  */
 
+import type { Measurement } from "@/contracts";
+
 /** Ein Score-Stand zu einem Testtermin. */
 export interface ScorePoint {
   /** ISO-Datum (YYYY-MM-DD) des Tests. */
@@ -171,10 +173,12 @@ export interface Bundle {
  * ein Fall traegt die ganze Aussage der Landkarte: 2.1 hat den NIEDRIGSTEN
  * Score von allen (50) und trotzdem nichts zu tun — bei Konfidenz 2 weiss man
  * zu wenig, um zu handeln. Die Punkte, auf die es ankommt, liegen rechts unten
- * (4.1, 4.2, 2.2): niedrig UND belastbar.
+ * (4.1, 2.2, 3.2): niedrig UND belastbar.
  *
  * Innerhalb einer Konfidenzstufe liegen die Scores mindestens acht Punkte
  * auseinander, damit sich in der Senkrechten keine zwei Marken ueberdecken.
+ * Zusaetzlich haelt jeder Ansatzpunkt Abstand zu den Marken der NACHBARSPALTE:
+ * er traegt seinen vollen Namen, und der ragt weiter ins Feld als eine Nummer.
  */
 export const sampleBundles: readonly Bundle[] = [
   {
@@ -195,7 +199,7 @@ export const sampleBundles: readonly Bundle[] = [
     id: "1.3",
     name: "Leberstoffwechsel",
     categoryId: "k1",
-    score: 82,
+    score: 88,
     confidence: 4,
   },
   {
@@ -226,19 +230,25 @@ export const sampleBundles: readonly Bundle[] = [
     score: 78,
     confidence: 5,
   },
+  /*
+   * Konfidenz 4 und nicht 5: einer der drei Marker dahinter steht auf einer
+   * einzelnen Messung (siehe samplePriorityFindings). Die volle Stufe zu geben
+   * und daneben eine offene Frage aufzumachen, waere ein Widerspruch auf
+   * derselben Kachel.
+   */
   {
     id: "4.1",
     name: "Eisenhaushalt",
     categoryId: "k4",
     score: 58,
-    confidence: 5,
+    confidence: 4,
   },
   {
     id: "4.2",
     name: "Vitamin-D-Status",
     categoryId: "k4",
     score: 64,
-    confidence: 4,
+    confidence: 3,
   },
   {
     id: "4.3",
@@ -260,6 +270,127 @@ export function categoryNameById(categoryId: string): string {
     "Ohne Kategorie"
   );
 }
+
+/**
+ * Ein Marker als BELEG unter einem Befund — nur die Felder, die der Beleg
+ * braucht. Namen und Bedeutung sind die des Biomarker-Vertrags, damit aus
+ * diesem Ausschnitt spaeter ein Import wird und keine Uebersetzung.
+ *
+ * ⚠️ Einheiten, Referenz- und Optimalbereiche sind PLATZHALTER. Wo ein Marker
+ * auch auf dem Dashboard steht, traegt er hier DIESELBEN Zahlen: derselbe Name
+ * mit zwei Werten in einer Anwendung ist kein Platzhalter mehr, sondern ein
+ * Fehler.
+ */
+export interface FindingMarker {
+  /** Anzeigename, z. B. "Ferritin". */
+  name: string;
+  /** Einheit; ein leerer String heisst dimensionslos. */
+  unit: string;
+  referenceLow: number;
+  referenceHigh: number;
+  /** Optionaler Optimalbereich INNERHALB des Referenzbereichs. */
+  optimalLow?: number;
+  optimalHigh?: number;
+  /** Aelteste Messung zuerst. LEER heisst: noch nie gemessen. */
+  history: readonly Measurement[];
+}
+
+/**
+ * Der ausformulierte Befund zu einem Buendel: ein Satz, die Marker, auf denen
+ * er steht, und die eine offene Frage dazu.
+ */
+export interface PriorityFinding {
+  /** Buendel, zu dem der Befund gehoert. */
+  bundleId: string;
+  /**
+   * EIN Satz in einfachem Deutsch. Er darf nur benennen, was auch in markers
+   * steht — jede Aussage hier hat unten ihren Beleg.
+   */
+  claim: string;
+  /**
+   * Zwei bis drei Marker. Zwei, weil ein einzelner Wert keine Begruendung ist;
+   * hoechstens drei, weil eine laengere Liste keine Begruendung mehr ist,
+   * sondern eine Tabelle. Die Karte kuerzt NICHT nach — ein weggelassener
+   * Beleg ist genau das Verschweigen, das sie verhindern soll.
+   */
+  markers: readonly FindingMarker[];
+  /** Was die Konfidenz heben wuerde, und an welchem Marker es haengt. */
+  openQuestion: {
+    /** Muss auf einen Marker aus markers zeigen — sonst zeigt die Karte die Frage nicht. */
+    marker: string;
+    question: string;
+  };
+}
+
+/*
+ * Die Marker hinter Buendel 4.1 "Eisenhaushalt". Ferritin traegt dieselben vier
+ * Werte wie die Dashboard-Kachel (41 → 68 ng/ml, steigend), die
+ * Transferrin-Saettigung steht bewusst auf EINER Messung vom ersten Test: sie
+ * ist der Randfall, an dem sich zeigt, dass ein einzelner Wert hier keine Note
+ * bekommt — auch dann nicht, wenn er tief liegt.
+ */
+const eisenMarker: readonly FindingMarker[] = [
+  {
+    name: "Ferritin",
+    unit: "ng/ml",
+    referenceLow: 30,
+    referenceHigh: 300,
+    optimalLow: 70,
+    optimalHigh: 150,
+    history: [
+      { date: "2026-01-27", value: 41 },
+      { date: "2026-03-24", value: 49 },
+      { date: "2026-05-26", value: 58 },
+      { date: "2026-07-21", value: 68 },
+    ],
+  },
+  {
+    name: "Transferrin-Sättigung",
+    unit: "%",
+    referenceLow: 20,
+    referenceHigh: 45,
+    history: [{ date: "2026-01-27", value: 16 }],
+  },
+  {
+    name: "Hämoglobin",
+    unit: "g/dl",
+    referenceLow: 13.5,
+    referenceHigh: 17.5,
+    optimalLow: 14,
+    optimalHigh: 16,
+    history: [
+      { date: "2026-03-24", value: 14.1 },
+      { date: "2026-05-26", value: 14.3 },
+      { date: "2026-07-21", value: 14.2 },
+    ],
+  },
+];
+
+/*
+ * Befunde nach Buendel-Id. Heute steht hier genau einer — der zum Ansatzpunkt,
+ * und mehr zeigt die Karte auch nie. Als Verzeichnis steht er trotzdem da:
+ * welches Buendel der Ansatzpunkt ist, entscheidet die Regel in rules.ts, und
+ * die kann morgen ein anderes nennen.
+ *
+ * Dass der Ansatzpunkt (4.1, Kategorie k4) NICHT der Engpass der Score-Kachel
+ * ist (k2), ist kein Versehen: k2 drueckt den Gesamtscore am staerksten, ist
+ * aber nur Konfidenz 2 — man weiss dort zu wenig, um zu handeln. Die Kachel
+ * sagt, was am meisten kostet; diese Karte sagt, wo man anfangen kann.
+ */
+export const samplePriorityFindings: Readonly<Record<string, PriorityFinding>> =
+  {
+    "4.1": {
+      bundleId: "4.1",
+      claim:
+        "Der Eisenspeicher füllt sich seit vier Messungen, liegt aber weiter unter dem Optimum — das Hämoglobin ist davon bisher unberührt.",
+      markers: eisenMarker,
+      openQuestion: {
+        marker: "Transferrin-Sättigung",
+        question:
+          "Eine zweite Messung gäbe dem vorhandenen Wert einen Vergleich — erst dann lässt sich der Eisenhaushalt vollständig einordnen.",
+      },
+    },
+  };
 
 export const sampleScore: ScoreSummary = {
   target: SCORE_TARGET,

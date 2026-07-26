@@ -3,9 +3,11 @@ import type { Metadata } from "next";
 import {
   BundleMap,
   CategoryDialPanel,
+  PriorityCard,
   ScoreHero,
   sampleBundles,
   sampleCategories,
+  samplePriorityFindings,
   sampleScore,
 } from "@/features/analysis";
 
@@ -49,6 +51,16 @@ export default function LabPage() {
 
       <div className="max-w-map-column">
         <BundleMap bundles={sampleBundles} />
+      </div>
+
+      {/* Die Prioritaetskarte teilt sich die schmalere Bento-Spalte mit den
+       * Ringen: sie traegt einen Satz und drei Belege, und ein Satz ueber die
+       * volle Breite laesst sich nicht mehr in einem Zug lesen. */}
+      <div className="max-w-dial-column">
+        <PriorityCard
+          bundles={sampleBundles}
+          findings={samplePriorityFindings}
+        />
       </div>
     </div>
   );
