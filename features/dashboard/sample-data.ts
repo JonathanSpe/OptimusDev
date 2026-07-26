@@ -276,7 +276,12 @@ const gemesseneMarker = {
   },
 
   /* ---- Leber & Niere ------------------------------------------------- */
-  /** Flach auf hohem Normalniveau. */
+  /**
+   * Flach auf hohem Normalniveau — die letzten beiden Termine sind ABSICHTLICH
+   * gleich. Ein Marker, der sich nicht bewegt, ist ein eigener Zustand: die
+   * Delta-Pille zeigt den Strich, die Analyse schreibt "unveraendert". Ohne
+   * diesen Fall in den Daten waere beides nie zu sehen.
+   */
   kreatinin: {
     id: "kreatinin",
     name: "Kreatinin",
@@ -286,7 +291,7 @@ const gemesseneMarker = {
     referenceHigh: 1.3,
     optimalLow: 0.8,
     optimalHigh: 1.1,
-    history: verlauf([1.02, 0.99, 1.04, 1, 1.01]),
+    history: verlauf([1.02, 0.99, 1.04, 1, 1]),
   },
 } satisfies Record<string, Biomarker>;
 

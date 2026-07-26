@@ -22,7 +22,21 @@
  * ihre echten Felder kennt (dann samt Zod-Schema wie bei den Biomarkern).
  */
 
-import type { Measurement } from "@/contracts";
+import type { Biomarker, MarkerGroup, Measurement } from "@/contracts";
+/*
+ * Die Aufschluesselung rechnet auf DENSELBEN Messungen wie die Marker-Kacheln
+ * des Dashboards. Kopiert wird davon nichts: derselbe Marker mit zwei Werten in
+ * einer Anwendung ist kein Platzhalter mehr, sondern ein Fehler.
+ *
+ * ENTSCHEIDUNG: Der Import geht direkt auf die Mock-Datei und nicht ueber den
+ * Feature-Index — der zieht die Dashboard-Komponenten mit in den Modulgraphen
+ * dieser Datei. Sobald data/ steht, holen beide Seiten ihre Marker ohnehin aus
+ * demselben Repository.
+ */
+import {
+  sampleMarkerGroups,
+  sampleMarkers,
+} from "@/features/dashboard/sample-data";
 
 /** Ein Score-Stand zu einem Testtermin. */
 export interface ScorePoint {
@@ -625,3 +639,111 @@ export const sampleSupplements: readonly Supplement[] = [
       "Kein messbarer Zielmarker in dieser Auswertung — Wirkung hier nicht beurteilbar.",
   },
 ];
+
+/**
+ * Welche Richtung an EINEM Marker die guenstige ist.
+ *
+ * `null` heisst NICHT "neutral", sondern "nicht hinterlegt": dann bekommt die
+ * Bewegung kein Urteil und keine Statusfarbe. Ohne diese Angabe darf gar nichts
+ * bewertet werden — "nach oben ist gut" ist keine Regel, sondern ein Vorurteil,
+ * und es ist bei Ferritin richtig und bei LDL falsch.
+ */
+export type FavourableDirection = "up" | "down" | null;
+
+/*
+ * ⚠️ PLATZHALTER — klinisch nicht freigegeben.
+ *
+ * Die Vereinfachung, die vor dem Release fallen muss: hier steht EINE Richtung
+ * je Marker. Fachlich haengt sie bei mehreren davon ab, WO der Wert gerade
+ * steht — Ferritin steigt gern bis ins Optimum und darueber nicht mehr, TSH ist
+ * nach unten genauso auffaellig wie nach oben. Die bereichsabhaengige Regel
+ * dazu gibt es noch nicht; bis dahin ist diese Tabelle grob.
+ *
+ * Nicht aufgefuehrte Marker gelten als NICHT HINTERLEGT. Der Zweifelsfall ist
+ * damit die Enthaltung und nicht das Urteil — bewusst ohne Richtung stehen
+ * SHBG (Gegenspieler, in beide Richtungen deutbar), Gesamt-Cholesterin (ohne
+ * seine Unterfraktionen keine Aussage), Freies T3 und Kreatinin.
+ */
+const FAVOURABLE_DIRECTION: Readonly<Record<string, FavourableDirection>> = {
+  "testosteron-gesamt": "up",
+  apob: "down",
+  "ldl-cholesterin": "down",
+  "hdl-cholesterin": "up",
+  "hs-crp": "down",
+  ferritin: "up",
+  "vitamin-d-25-oh": "up",
+  triglyceride: "down",
+  /* Steigend heisst: die Schilddruese arbeitet schwerer. ⚠️ Gilt nur INNERHALB
+   * des Referenzbereichs — sehr tiefe Werte sind ebenso auffaellig. */
+  tsh: "down",
+};
+
+/**
+ * Ein Marker, der sich zwischen den letzten beiden Messungen bewegt hat — die
+ * Sicht, die eine Zeile der Aufschluesselung braucht.
+ */
+export interface MarkerChange {
+  /** Marker-Id aus dem Biomarker-Vertrag. */
+  id: string;
+  name: string;
+  /** Anzeige-Gruppe, ausgeschrieben — z. B. "Herz-Gesundheit". */
+  groupName: string;
+  /** Einheit; ein leerer String heisst dimensionslos. */
+  unit: string;
+  /** Wert beim vorherigen Test. Nie 0 — sonst gaebe es keinen Prozentwert. */
+  previous: number;
+  previousDate: string;
+  current: number;
+  currentDate: string;
+  favourable: FavourableDirection;
+}
+
+/**
+ * Aus den Biomarkern die Zeilen der Aufschluesselung. Drei Faelle fallen dabei
+ * heraus, jeder aus einem eigenen Grund:
+ *
+ *   - WENIGER ALS ZWEI MESSUNGEN: es gibt keinen Vergleich. Eine Zeile mit
+ *     einem Wert waere keine Veraenderung, sondern ein Messwert.
+ *   - ABGELEITETE INDIZES: sie bewegen sich, WEIL ihre Eingangswerte sich
+ *     bewegen. Sie danebenzustellen zaehlt dieselbe Bewegung ein zweites Mal
+ *     und laesst zwei Marker wie vier aussehen.
+ *   - VORWERT 0: dazu gibt es keine prozentuale Veraenderung.
+ *
+ * ENTSCHEIDUNG: Der dritte Fall verschwindet still. Die ehrliche Alternative —
+ * die absolute Veraenderung als eigener Zeilentyp — braucht eine zweite Skala,
+ * und in echten Laborwerten kommt eine Null als Vorwert kaum vor. Taucht sie
+ * auf, gehoert sie als eigener Zustand in die Zeile und nicht in diesen Filter.
+ */
+export function toMarkerChanges(
+  markers: readonly Biomarker[],
+  groups: readonly MarkerGroup[],
+): readonly MarkerChange[] {
+  const groupName = new Map(groups.map((group) => [group.id, group.name]));
+
+  return markers.flatMap((marker) => {
+    const current = marker.history.at(-1);
+    const previous = marker.history.at(-2);
+    if (marker.isDerived || !current || !previous || previous.value === 0) {
+      return [];
+    }
+
+    return [
+      {
+        id: marker.id,
+        name: marker.name,
+        groupName: groupName.get(marker.group) ?? "Ohne Gruppe",
+        unit: marker.unit,
+        previous: previous.value,
+        previousDate: previous.date,
+        current: current.value,
+        currentDate: current.date,
+        favourable: FAVOURABLE_DIRECTION[marker.id] ?? null,
+      },
+    ];
+  });
+}
+
+export const sampleMarkerChanges: readonly MarkerChange[] = toMarkerChanges(
+  sampleMarkers,
+  sampleMarkerGroups,
+);

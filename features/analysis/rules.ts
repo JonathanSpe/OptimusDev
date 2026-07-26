@@ -13,7 +13,12 @@
  * Bluttest-Framework und muessen vor dem Release freigegeben werden.
  */
 
-import type { Bundle, FindingMarker, Supplement } from "./sample-data";
+import type {
+  Bundle,
+  FindingMarker,
+  MarkerChange,
+  Supplement,
+} from "./sample-data";
 
 /*
  * ENTSCHEIDUNG: Es gibt eine Grenze auf der KONFIDENZ-Achse und keine auf der
@@ -149,6 +154,104 @@ export function toMarkerReading(marker: FindingMarker): MarkerReading {
     return { ...reading, verdict: "ueberOptimum" };
   }
   return { ...reading, verdict: "imOptimum" };
+}
+
+/*
+ * ============================================================================
+ * VERAENDERUNGEN — Richtung ist nicht Qualitaet.
+ * ============================================================================
+ * Das Dashboard nennt die Veraenderung als FAKT und faerbt sie deshalb nie:
+ * ob ein Anstieg gut ist, haengt am Marker. Genau dieses Urteil faellt hier —
+ * und es faellt AUSSCHLIESSLICH ueber die am Marker hinterlegte guenstige
+ * Richtung. Aus dem Vorzeichen laesst es sich nicht ableiten: derselbe Pfeil
+ * nach oben ist bei Ferritin die Erholung und bei LDL das Problem.
+ *
+ * Fehlt die Richtung, gibt es kein Urteil und keine Farbe. Das ist der
+ * haeufigere Fall, nicht der Ausnahmefall — die meisten Marker sind in beide
+ * Richtungen auffaellig.
+ */
+
+/*
+ * Ab welcher Bewegung eine Zeile ueberhaupt von Bewegung spricht. Das ist eine
+ * ANZEIGE-Regel und keine klinische: unter einem halben Prozent rundet der
+ * Prozentwert auf "0 %", und ein Pfeil neben einer Null waere ein Widerspruch
+ * in derselben Zeile. Dieselbe Schwelle traegt die Delta-Pille auf dem
+ * Dashboard — dieselbe Messung darf nicht hier "unveraendert" heissen und dort
+ * einen Pfeil bekommen.
+ *
+ * ⚠️ Die analytische Streuung des einzelnen Markers ist damit NICHT abgebildet:
+ * ein Prozent Kreatinin ist Rauschen, ein Prozent TSH nicht.
+ */
+export const CHANGE_FLAT = 0.005;
+
+/** Bewegungsrichtung — eine Beobachtung, noch kein Urteil. */
+export type ChangeDirection = "up" | "down" | "flat";
+
+export type ChangeVerdict =
+  /** Bewegung in die am Marker hinterlegte guenstige Richtung. */
+  | "guenstig"
+  /** Bewegung gegen sie. */
+  | "unguenstig"
+  /** Keine Richtung hinterlegt — die Bewegung steht ohne Urteil da. */
+  | "unbewertet"
+  /** Unter der Anzeigeschwelle: ein eigener Befund, keine kleine Bewegung. */
+  | "unveraendert";
+
+export interface ChangeReading {
+  /** Relative Veraenderung zum Vorwert, z. B. -0.364 fuer minus 36 Prozent. */
+  ratio: number;
+  direction: ChangeDirection;
+  verdict: ChangeVerdict;
+}
+
+/**
+ * Wertet eine Bewegung aus. Die Reihenfolge ist die Regel: erst "hat sich
+ * ueberhaupt etwas bewegt", dann "ist die Richtung bekannt", erst zuletzt das
+ * Urteil. So gibt es keinen Weg durch diese Funktion, auf dem eine unbekannte
+ * Richtung doch noch eine Farbe bekommt.
+ */
+export function toChangeReading(change: MarkerChange): ChangeReading {
+  /*
+   * Ein Vorwert von 0 hat keine prozentuale Veraenderung. Solche Marker
+   * entstehen als Zeile gar nicht erst (siehe toMarkerChanges) — hier faengt
+   * die Regel den Fall trotzdem ab, statt Unendlich weiterzureichen.
+   */
+  if (change.previous === 0) {
+    return { ratio: 0, direction: "flat", verdict: "unbewertet" };
+  }
+
+  const ratio = (change.current - change.previous) / change.previous;
+
+  if (Math.abs(ratio) < CHANGE_FLAT) {
+    return { ratio, direction: "flat", verdict: "unveraendert" };
+  }
+
+  const direction: ChangeDirection = ratio > 0 ? "up" : "down";
+
+  if (change.favourable === null) {
+    return { ratio, direction, verdict: "unbewertet" };
+  }
+
+  return {
+    ratio,
+    direction,
+    verdict: direction === change.favourable ? "guenstig" : "unguenstig",
+  };
+}
+
+/**
+ * Die groesste Bewegung fuehrt. Bei Gleichstand entscheidet der Name, damit die
+ * Reihenfolge zwischen zwei Renderings dieselbe bleibt.
+ */
+export function toChangeOrder(
+  changes: readonly MarkerChange[],
+): readonly MarkerChange[] {
+  return changes.toSorted((left, right) => {
+    const move =
+      Math.abs(toChangeReading(right).ratio) -
+      Math.abs(toChangeReading(left).ratio);
+    return move !== 0 ? move : left.name.localeCompare(right.name, "de");
+  });
 }
 
 /*

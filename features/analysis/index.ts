@@ -6,6 +6,12 @@
 export { BundleFocus, type BundleFocusProps } from "./components/bundle-focus";
 export { BundleMap, type BundleMapProps } from "./components/bundle-map";
 export {
+  ChangePanel,
+  ChangeRow,
+  type ChangePanelProps,
+  type ChangeRowProps,
+} from "./components/change-row";
+export {
   CategoryDial,
   CategoryDialPanel,
   type CategoryDialPanelProps,
@@ -31,14 +37,20 @@ export {
  * Datenlage zu duenn fuer ein Urteil ist. ⚠️ Platzhalterstufen, siehe rules.
  */
 export {
+  CHANGE_FLAT,
   CONFIDENCE_SOLID,
   MIN_MEASUREMENTS_FOR_VERDICT,
   isAdjustedActionHint,
+  toChangeOrder,
+  toChangeReading,
   toFocusBundles,
   toFocusEntries,
   toMarkerReading,
   toPriorityBundle,
   toSupplementStatus,
+  type ChangeDirection,
+  type ChangeReading,
+  type ChangeVerdict,
   type FocusEntry,
   type MarkerReading,
   type MarkerVerdict,
@@ -57,14 +69,18 @@ export {
   sampleBundles,
   sampleCategories,
   sampleCategorySeries,
+  sampleMarkerChanges,
   samplePriorityFindings,
   sampleScore,
   sampleSupplements,
   toCategoryScore,
+  toMarkerChanges,
   type Bundle,
   type CategoryScore,
   type CategorySeries,
+  type FavourableDirection,
   type FindingMarker,
+  type MarkerChange,
   type PriorityFinding,
   type ScorePoint,
   type ScoreSummary,

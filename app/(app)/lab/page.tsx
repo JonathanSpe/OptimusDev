@@ -3,12 +3,14 @@ import type { Metadata } from "next";
 import {
   BundleFocus,
   CategoryDialPanel,
+  ChangePanel,
   ProgressChart,
   ScoreHero,
   SupplementPanel,
   sampleBundles,
   sampleCategories,
   sampleCategorySeries,
+  sampleMarkerChanges,
   samplePriorityFindings,
   sampleScore,
   sampleSupplements,
@@ -67,6 +69,12 @@ export default function LabPage() {
        * Zeitleiste, Delta und Status stehen in einer Zeile. */}
       <div className="max-w-map-column">
         <SupplementPanel supplements={sampleSupplements} />
+      </div>
+
+      {/* Die Aufschluesselung ebenso: die Spur in der Mitte braucht Laenge,
+       * sonst sind kleine Bewegungen nicht mehr von null zu unterscheiden. */}
+      <div className="max-w-map-column">
+        <ChangePanel changes={sampleMarkerChanges} />
       </div>
     </div>
   );
