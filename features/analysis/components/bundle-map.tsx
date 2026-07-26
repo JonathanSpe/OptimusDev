@@ -281,10 +281,14 @@ export function BundleMap({
       >
         Bündel-Landkarte
       </h2>
+      {/* Die gepunktete Linie wird HIER erklaert und nicht mehr im Feld: eine
+       * Beschriftung mitten in der Karte steht zwischen den Punkten, obwohl sie
+       * nichts ueber sie sagt. Erklaert werden muss die Linie trotzdem — eine
+       * ungenannte Trennung ist ein Raetsel. */}
       <p className="text-muted-foreground max-w-measure text-2xs mt-1">
-        Jedes Bündel nach Score (senkrecht) und Konfidenz (waagerecht).
-        Hervorgehoben sind die drei niedrigsten Bündel mit belastbarer Datenlage
-        — dort lohnt sich Arbeit zuerst.
+        Jedes Bündel nach Score (senkrecht) und Konfidenz (waagerecht). Rechts
+        der gepunkteten Linie ist die Datenlage belastbar; hervorgehoben sind
+        die drei niedrigsten Bündel dort — bei ihnen lohnt sich Arbeit zuerst.
       </p>
 
       <p className="text-muted-foreground text-2xs mt-6">Score</p>
@@ -355,14 +359,6 @@ export function BundleMap({
             />
           </svg>
 
-          <span
-            aria-hidden="true"
-            className="text-faint text-3xs absolute top-0 ml-1.5"
-            style={{ left: `${DIVIDER_X}%` }}
-          >
-            ab hier belastbar
-          </span>
-
           {bundles.map((bundle, position) => (
             <BundlePoint
               key={bundle.id}
@@ -398,87 +394,6 @@ export function BundleMap({
       >
         Konfidenz
       </p>
-
-      <BundleTable bundles={bundles} focusIds={focusIds} />
     </motion.section>
-  );
-}
-
-interface BundleTableProps {
-  bundles: readonly Bundle[];
-  focusIds: ReadonlySet<string>;
-}
-
-/*
- * Die Tabelle ist keine Beilage, sondern die zweite Lesart derselben Daten:
- * fuer Screenreader, fuer die Tastatur, fuer alle, die Zahlen lieber lesen als
- * schaetzen — und sie loest nebenbei die Nummern am Punkt in Namen auf.
- */
-function BundleTable({ bundles, focusIds }: BundleTableProps) {
-  return (
-    <table className="mt-8 w-full text-left">
-      <caption className="text-muted-foreground text-2xs mb-2 text-left">
-        Alle Bündel als Tabelle — dieselben Werte wie in der Karte.
-      </caption>
-      <thead>
-        <tr className="text-muted-foreground text-2xs">
-          <th
-            scope="col"
-            className="py-1 font-semibold tracking-wide uppercase"
-          >
-            Bündel
-          </th>
-          <th
-            scope="col"
-            className="py-1 font-semibold tracking-wide uppercase"
-          >
-            Kategorie
-          </th>
-          <th
-            scope="col"
-            className="py-1 text-right font-semibold tracking-wide uppercase"
-          >
-            Score
-          </th>
-          <th
-            scope="col"
-            className="py-1 text-right font-semibold tracking-wide uppercase"
-          >
-            Konfidenz
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {bundles.map((bundle) => (
-          <tr key={bundle.id} className="border-border border-t">
-            <th
-              scope="row"
-              className="text-foreground py-1.5 text-xs font-medium"
-            >
-              <span className="text-muted-foreground tabular-nums">
-                {bundle.id}
-              </span>{" "}
-              {bundle.name}
-              {focusIds.has(bundle.id) ? (
-                /* Wort UND Akzent: in der Tabelle traegt die Betonung dieselbe
-                 * Aussage wie in der Karte, nur ausgeschrieben. */
-                <span className="text-brand text-2xs ml-2 font-medium">
-                  Ansatzpunkt
-                </span>
-              ) : null}
-            </th>
-            <td className="text-muted-foreground py-1.5 text-xs">
-              {categoryNameById(bundle.categoryId)}
-            </td>
-            <td className="text-foreground py-1.5 text-right text-xs tabular-nums">
-              {bundle.score}
-            </td>
-            <td className="text-foreground py-1.5 text-right text-xs tabular-nums">
-              {bundle.confidence} / {CONFIDENCE_MAX}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
   );
 }
