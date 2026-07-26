@@ -72,7 +72,9 @@ export const SCORE_MIN = 0;
 export const SCORE_MAX = 100;
 
 /**
- * Eine der vier BEWERTUNGS-Kategorien K1–K4 der Analyse.
+ * Der aktuelle STAND einer der vier BEWERTUNGS-Kategorien K1–K4 — die Sicht,
+ * die ein Ring braucht. Geschrieben wird er nicht: er entsteht aus dem Verlauf
+ * (CategorySeries) ueber toCategoryScore.
  *
  * ACHTUNG, Namensfalle: Das sind NICHT die Anzeige-Gruppen k1–k5 der
  * Biomarker-Kacheln (Hormone, Herz-Gesundheit, …). Die Anzeige-Gruppen ordnen
@@ -98,54 +100,114 @@ export interface CategoryScore {
   confidence: number;
 }
 
+/**
+ * Der VERLAUF einer Kategorie: alle Staende, aeltester zuerst.
+ *
+ * Hier wird geschrieben, nirgends sonst. Der Snapshot, den die Ringe brauchen
+ * (CategoryScore), entsteht daraus per toCategoryScore — deshalb kann der Ring
+ * gar keinen anderen Vorwert zeigen als die Verlaufskurve. Zwei getrennt
+ * gepflegte Quellen fuer denselben Wert laufen irgendwann auseinander, und
+ * zwar genau dann, wenn beide gleichzeitig auf dem Schirm stehen.
+ */
+export interface CategorySeries {
+  id: string;
+  name: string;
+  confidence: number;
+  /**
+   * MINDESTENS ein Stand. Der Typ sagt damit, was fachlich gilt: ohne Messung
+   * gibt es keinen Kategorie-Score, den man zeigen koennte.
+   */
+  history: readonly [ScorePoint, ...ScorePoint[]];
+}
+
 /*
  * Der Engpass steht als eigene Konstante, damit die Score-Kachel ihr "begrenzt
  * durch" aus derselben Quelle zieht wie das Kategorien-Raster seinen Eintrag.
  * Am Ring selbst ist er nicht mehr markiert: ein zweites Etikett neben Score,
  * letztem Test und Konfidenz war ein vierter Kanal auf 78 Pixeln.
  */
-const limiterCategory: CategoryScore = {
+const limiterCategory: CategorySeries = {
   id: "k2",
   name: "Regeneration & Hormonbalance",
-  score: 61,
-  previousScore: 64,
   confidence: 2,
+  history: [
+    { date: "2026-01-27", value: 55 },
+    { date: "2026-03-24", value: 60 },
+    { date: "2026-05-26", value: 64 },
+    { date: "2026-07-21", value: 61 },
+  ],
 };
 
 /*
- * Vier Kategorien in fester Reihenfolge. Die Werte sind bewusst ungleich
- * verteilt, und jede Kategorie zeigt eine andere BEWEGUNG gegenueber dem
- * letzten Test — deutlich hoch (k1), gefallen (k2), leicht hoch (k3),
- * unveraendert (k4). Nur so zeigt das Raster, was der Strich am Ring leistet:
- * bei k4 liegt er genau unter dem Bogenende, bei k2 vor ihm.
+ * Vier Kategorien in fester Reihenfolge, jede mit denselben vier Testterminen
+ * wie der Gesamtscore. Die Verlaeufe sind bewusst verschieden geformt —
+ * stetig hoch (k1), hoch und wieder gefallen (k2), ruhig steigend (k3), hoch
+ * und dann flach (k4). Am Ring zeigt sich davon der letzte Schritt: bei k4
+ * liegt der Strich genau unter dem Bogenende, bei k2 vor ihm.
  *
  * Die Konfidenzen von 2 bis 5 laufen absichtlich NICHT parallel zum Score —
- * k4 hat denselben Stand wie beim letzten Test, aber nur Stufe 3.
+ * k4 steht wie beim letzten Test, hat aber nur Stufe 3.
+ *
+ * Der Gesamtscore liegt an jedem Termin ein paar Punkte UNTER dem Mittel der
+ * vier Kategorien. Das ist kein Rechenfehler, sondern der Platzhalter dafuer,
+ * dass die Gesamtformel nicht das arithmetische Mittel ist — sie wiegt den
+ * schwaechsten Bereich staerker. Die echte Formel steht noch aus.
  */
-export const sampleCategories: readonly CategoryScore[] = [
+export const sampleCategorySeries: readonly CategorySeries[] = [
   {
     id: "k1",
     name: "Energie & Stoffwechsel",
-    score: 78,
-    previousScore: 71,
     confidence: 4,
+    history: [
+      { date: "2026-01-27", value: 64 },
+      { date: "2026-03-24", value: 68 },
+      { date: "2026-05-26", value: 71 },
+      { date: "2026-07-21", value: 78 },
+    ],
   },
   limiterCategory,
   {
     id: "k3",
     name: "Herz-Kreislauf & Langzeit",
-    score: 84,
-    previousScore: 80,
     confidence: 5,
+    history: [
+      { date: "2026-01-27", value: 74 },
+      { date: "2026-03-24", value: 77 },
+      { date: "2026-05-26", value: 80 },
+      { date: "2026-07-21", value: 84 },
+    ],
   },
   {
     id: "k4",
     name: "Immunsystem & Mikronährstoffe",
-    score: 72,
-    previousScore: 72,
     confidence: 3,
+    history: [
+      { date: "2026-01-27", value: 68 },
+      { date: "2026-03-24", value: 70 },
+      { date: "2026-05-26", value: 72 },
+      { date: "2026-07-21", value: 72 },
+    ],
   },
 ];
+
+/**
+ * Der Stand einer Kategorie aus ihrem Verlauf: letzter Eintrag ist der Score,
+ * vorletzter der Bezug. Genau die Rechnung, die die Score-Kachel auf dem
+ * Gesamtverlauf macht — eine Regel, zwei Ebenen.
+ */
+export function toCategoryScore(series: CategorySeries): CategoryScore {
+  const current = series.history.at(-1) ?? series.history[0];
+  return {
+    id: series.id,
+    name: series.name,
+    score: current.value,
+    previousScore: series.history.at(-2)?.value,
+    confidence: series.confidence,
+  };
+}
+
+export const sampleCategories: readonly CategoryScore[] =
+  sampleCategorySeries.map(toCategoryScore);
 
 /**
  * Ein BUENDEL — die kleinste bewertete Einheit der Analyse: mehrere Marker, die

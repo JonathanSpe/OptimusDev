@@ -91,7 +91,7 @@ export interface MotionPreset {
   reduced: boolean;
   /** Auftritt: von unten einblenden. Laeuft einmal. */
   fadeRise: Variants;
-  /** Pfad von links nach rechts zeichnen. */
+  /** Pfad von links nach rechts zeichnen. Nimmt wie fadeRise einen Reihenplatz. */
   drawPath: Variants;
   /** Uebergang fuer Layout- und Positionswechsel. */
   layout: Transition;
@@ -125,14 +125,27 @@ function buildPreset(reduced: boolean): MotionPreset {
     },
     drawPath: {
       hidden: { pathLength: 0, opacity: 0 },
-      visible: {
+      /*
+       * Derselbe Reihenplatz wie bei fadeRise: mehrere Linien in einem Feld
+       * sollen nacheinander loslaufen, und die Verzoegerung dafuer gehoert
+       * hierher und nicht in die Komponente. Ohne Angabe bleibt es beim
+       * bisherigen Verhalten — Platz 0, kein Versatz.
+       */
+      visible: (index: number = 0) => ({
         pathLength: 1,
         opacity: 1,
         transition: {
-          pathLength: { duration: duration(DURATION.layout), ease: EASE_OUT },
-          opacity: { duration: duration(DURATION.hover) },
+          pathLength: {
+            duration: duration(DURATION.layout),
+            ease: EASE_OUT,
+            delay: reduced ? 0 : staggerDelay(index),
+          },
+          opacity: {
+            duration: duration(DURATION.hover),
+            delay: reduced ? 0 : staggerDelay(index),
+          },
         },
-      },
+      }),
     },
     layout: reduced ? { duration: 0 } : SPRING,
     stagger: (index: number) => (reduced ? 0 : staggerDelay(index)),

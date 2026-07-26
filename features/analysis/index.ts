@@ -9,6 +9,10 @@ export {
   PriorityCard,
   type PriorityCardProps,
 } from "./components/priority-card";
+export {
+  ProgressChart,
+  type ProgressChartProps,
+} from "./components/progress-chart";
 export { ScoreHero, type ScoreHeroProps } from "./components/score-hero";
 /*
  * Die Regeln der Analyse — welches Buendel ein Ansatzpunkt ist und wann eine
@@ -35,10 +39,13 @@ export {
   categoryNameById,
   sampleBundles,
   sampleCategories,
+  sampleCategorySeries,
   samplePriorityFindings,
   sampleScore,
+  toCategoryScore,
   type Bundle,
   type CategoryScore,
+  type CategorySeries,
   type FindingMarker,
   type PriorityFinding,
   type ScorePoint,

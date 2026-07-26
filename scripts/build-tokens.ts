@@ -630,12 +630,20 @@ function buildContrastCases(): ContrastCase[] {
   }
 
   /*
-   * Dieselbe Deko-Schwelle fuer die Landkarte: die Marke traegt dort die ganze
-   * Aussage, und die Trennung der Datenlage ist die einzige Linie mit Inhalt.
-   * Der Marken-Akzent ist brand.default — er hebt einzelne Punkte hervor und
-   * muss sich dafuer von der Karte abheben, nicht nur von den anderen Marken.
+   * Dieselbe Deko-Schwelle fuer die Landkarte und die Verlaufskurven: die Marke
+   * traegt dort die ganze Aussage, die Trennung der Datenlage ist die einzige
+   * Linie mit Inhalt, und eine Verlaufslinie, die unter 3:1 faellt, zeigt eine
+   * Messung, die niemand sieht. Der Marken-Akzent ist brand.default — er hebt
+   * einzelne Punkte hervor und muss sich dafuer von der Karte abheben, nicht
+   * nur von den anderen Marken.
    */
-  for (const mark of ["mark", "divider"]) {
+  for (const mark of [
+    "mark",
+    "divider",
+    "series",
+    "seriesMuted",
+    "crosshair",
+  ]) {
     cases.push({
       label: `plot.${mark} auf surface.card`,
       foreground: light(`color.plot.${mark}`),

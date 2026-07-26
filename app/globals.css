@@ -151,6 +151,16 @@
   --color-map-mark: var(--color-plot-mark);
 
   /*
+   * Die Verlaufskurven teilen sich das Raster der Landkarte (map-grid) und
+   * ergaenzen zwei Linientoene: die tragende Linie und alle Nebenlinien. Es
+   * gibt bewusst nur EINEN Ton fuer die Nebenlinien — die Kategorie steht am
+   * Linienende als Wort, nicht in der Farbe.
+   */
+  --color-line-lead: var(--color-plot-series);
+  --color-line-muted: var(--color-plot-series-muted);
+  --color-line-crosshair: var(--color-plot-crosshair);
+
+  /*
    * Status — RESERVIERT. Nur für Zustände (Erfolg, Warnung, Fehler), nie
    * dekorativ und nie ohne Icon + Text-Label. Siehe tokens/README.md.
    */

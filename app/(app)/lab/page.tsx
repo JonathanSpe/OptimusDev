@@ -4,9 +4,11 @@ import {
   BundleMap,
   CategoryDialPanel,
   PriorityCard,
+  ProgressChart,
   ScoreHero,
   sampleBundles,
   sampleCategories,
+  sampleCategorySeries,
   samplePriorityFindings,
   sampleScore,
 } from "@/features/analysis";
@@ -51,6 +53,12 @@ export default function LabPage() {
 
       <div className="max-w-map-column">
         <BundleMap bundles={sampleBundles} />
+      </div>
+
+      {/* Der Verlauf braucht die volle Bento-Breite: fuenf Linien ueber vier
+       * Termine, und rechts daneben die Namen an den Linienenden. */}
+      <div className="max-w-map-column">
+        <ProgressChart score={sampleScore} categories={sampleCategorySeries} />
       </div>
 
       {/* Die Prioritaetskarte teilt sich die schmalere Bento-Spalte mit den

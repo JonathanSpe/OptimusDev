@@ -203,6 +203,9 @@
   --color-plot-grid: rgba(30,25,26,0.08);
   --color-plot-divider: rgba(30,25,26,0.50);
   --color-plot-mark: rgba(30,25,26,0.62);
+  --color-plot-series: rgba(30,25,26,0.92);
+  --color-plot-series-muted: rgba(30,25,26,0.52);
+  --color-plot-crosshair: rgba(30,25,26,0.50);
   --color-brand-default: #A32432;
   --color-brand-hover: #881E2A;
   --color-brand-secondary: #C96773;
@@ -290,6 +293,9 @@
   --color-plot-grid: rgba(255,255,255,0.10);
   --color-plot-divider: rgba(255,255,255,0.52);
   --color-plot-mark: rgba(255,255,255,0.66);
+  --color-plot-series: rgba(255,255,255,0.94);
+  --color-plot-series-muted: rgba(255,255,255,0.56);
+  --color-plot-crosshair: rgba(255,255,255,0.54);
   --color-brand-default: #B64652;
   --color-brand-hover: #C96773;
   --color-brand-secondary: #881E2A;
