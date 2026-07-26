@@ -472,6 +472,22 @@
 }
 
 /*
+ * Die Fusszeile der Score-Kachel. INTRINSISCH wie panel-grid: die Spaltenzahl
+ * ergibt sich aus der Breite der KACHEL, nicht aus Fenster-Breakpoints — die
+ * Kachel kann im Bento schmal stehen, waehrend das Fenster breit ist. Aus drei
+ * Spalten werden dann zwei und schliesslich eine, ohne dass eine Angabe im Wort
+ * umbricht. min() haelt die Spalte in sehr schmalen Kacheln im Container.
+ */
+@utility score-facts {
+  display: grid;
+  gap: var(--space-3) var(--space-6);
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--size-score-fact), 100%), 1fr)
+  );
+}
+
+/*
  * Karten auf der Leiste: DECKEND und ohne Blur, genau wie surface-card auf der
  * Inhaltsflaeche. Sie stehen auf einer matteren Flaeche als die Karten in der
  * Mitte und springen deshalb schon durch ihr Weiss ab; Kante und Schatten geben

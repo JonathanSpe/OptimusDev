@@ -180,7 +180,14 @@ function FactRow({ facts }: { facts: readonly Fact[] }) {
   const motionPreset = useMotionPreset();
 
   return (
-    <dl className="border-score-line/30 mt-5 grid gap-3 border-t pt-4 sm:grid-cols-3">
+    /*
+     * score-facts ist ein intrinsisches Raster: die Spaltenzahl haengt an der
+     * Breite der KACHEL, nicht am Fenster. Drei Angaben nebeneinander, solange
+     * jede ihre 7rem bekommt — sonst zwei, sonst eine. Eine feste sm:grid-cols-3
+     * waere hier falsch: im Bento kann die Kachel schmal stehen, waehrend das
+     * Fenster breit ist.
+     */
+    <dl className="score-facts border-score-line/30 mt-5 border-t pt-4">
       {facts.map((fact, index) => (
         <motion.div
           key={fact.label}
@@ -194,7 +201,7 @@ function FactRow({ facts }: { facts: readonly Fact[] }) {
           {/* Kein truncate: in der schmalen Score-Spalte passt "Regeneration &
            * Hormonbalance" nicht in eine Zeile, und ausgerechnet der Limiter
            * darf nicht abgeschnitten werden. Er bricht lieber um. */}
-          <dd className="text-on-score mt-0.5 text-xs font-medium text-balance">
+          <dd className="text-on-score mt-1 text-xs font-medium text-balance">
             {fact.value}
           </dd>
         </motion.div>
@@ -365,11 +372,17 @@ export function ScoreHero({ score, className }: ScoreHeroProps) {
     >
       {/*
        * EINE Zeile, zwei Gruppen: links der Wert mit seiner Veraenderung,
-       * rechts der Weg dorthin. Die Kurve steht damit NEBEN der Zahl statt
-       * unter ihr — nebeneinander ist sie eine Fussnote, darunter waere sie
-       * eine zweite Aussage in voller Breite.
+       * gleich daneben der Weg dorthin. Die Kurve steht damit NEBEN der Zahl
+       * statt unter ihr — nebeneinander ist sie eine Fussnote, darunter waere
+       * sie eine zweite Aussage in voller Breite.
+       *
+       * KEIN justify-between: die Kurve gehoert zur Zahl, nicht zum Rand. An
+       * die Kachelkante geheftet wandert sie mit jeder Breitenaenderung davon
+       * und laesst in der Mitte ein Loch stehen. Sie sitzt deshalb mit festem
+       * Abstand hinter der Pille; bleibt in einer schmalen Kachel zu wenig
+       * Platz, rutscht sie als Ganzes in die naechste Zeile.
        */}
-      <div className="flex items-center justify-between gap-4 sm:gap-6">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
         <div className="min-w-0">
           <h2
             id="score-hero-titel"

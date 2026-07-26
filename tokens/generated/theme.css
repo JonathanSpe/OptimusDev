@@ -97,7 +97,8 @@
   /* Layout-Breiten */
   --size-card-min: 18.75rem;
   --size-measure: 70ch;
-  --size-score-column: 34rem;
+  --size-score-column: 28rem;
+  --size-score-fact: 7rem;
   --size-dial-column: 30rem;
   --size-content-max: 112.5rem;
 
