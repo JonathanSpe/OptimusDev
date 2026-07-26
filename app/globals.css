@@ -161,6 +161,14 @@
   --color-line-crosshair: var(--color-plot-crosshair);
 
   /*
+   * Wirkzeitleiste der Praeparate-Zeile: Spur, erwartetes Fenster, Heute-Marke.
+   * Utilities timeline-*, Tokens plot.timeline*.
+   */
+  --color-timeline-track: var(--color-plot-timeline-track);
+  --color-timeline-window: var(--color-plot-timeline-window);
+  --color-timeline-now: var(--color-plot-timeline-now);
+
+  /*
    * Status — RESERVIERT. Nur für Zustände (Erfolg, Warnung, Fehler), nie
    * dekorativ und nie ohne Icon + Text-Label. Siehe tokens/README.md.
    */

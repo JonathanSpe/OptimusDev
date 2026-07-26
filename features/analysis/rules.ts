@@ -13,7 +13,7 @@
  * Bluttest-Framework und muessen vor dem Release freigegeben werden.
  */
 
-import type { Bundle, FindingMarker } from "./sample-data";
+import type { Bundle, FindingMarker, Supplement } from "./sample-data";
 
 /*
  * ENTSCHEIDUNG: Es gibt eine Grenze auf der KONFIDENZ-Achse und keine auf der
@@ -128,4 +128,88 @@ export function toMarkerReading(marker: FindingMarker): MarkerReading {
     return { ...reading, verdict: "ueberOptimum" };
   }
   return { ...reading, verdict: "imOptimum" };
+}
+
+/*
+ * ============================================================================
+ * PRAEPARATE — wann eine Einnahme als Wirkung zaehlt, und wann nicht.
+ * ============================================================================
+ * Drei Regeln, die in dieser Reihenfolge stehen muessen:
+ *
+ *   1. Ohne messbaren Zielmarker gibt es KEIN Urteil — "nicht beurteilbar".
+ *   2. Vor dem Wirkfenster gibt es KEIN "keine Reaktion" — nur "zu frueh".
+ *      Eine fehlende Wirkung vor dem Fenster ist keine fehlende Wirkung; sie
+ *      ist eine Messung zur Unzeit.
+ *   3. Ausgebliebene Wirkung NACH dem Fenster ist ein EIGENER Befund. Sie
+ *      fuehrt zu einem angepassten Rat (Dosis, anderes Praeparat, absetzen),
+ *      nie dazu, denselben Rat zu wiederholen. Der Text des Rats steht am
+ *      Praeparat; dass er angepasst sein MUSS, steht hier.
+ *
+ * ⚠️ Schwellwerte und Wirkfenster sind PLATZHALTER (siehe Supplement).
+ */
+
+export type SupplementStatus =
+  "wirkt" | "wirktSchwach" | "keineReaktion" | "zuFrueh" | "nichtBeurteilbar";
+
+/**
+ * Leitet den Status eines Praeparats ab. Die Reihenfolge der Pruefungen ist
+ * die Regel — siehe Kommentarblock oben.
+ */
+export function toSupplementStatus(prep: Supplement): SupplementStatus {
+  if (prep.targetMarker === null) {
+    return "nichtBeurteilbar";
+  }
+
+  /* Vor dem Fenster: immer "zu frueh", egal welches Delta schon da waere. */
+  if (prep.daysOn < prep.effectWindowDays.from) {
+    return "zuFrueh";
+  }
+
+  if (prep.observedDelta === null) {
+    return "nichtBeurteilbar";
+  }
+
+  /*
+   * Delta in Wirkrichtung drehen: ein Anstieg bei expectedDirection "up" und
+   * ein Abfall bei "down" sind dieselbe Aussage ("es tut, was es soll").
+   */
+  const aligned =
+    prep.expectedDirection === "up" ? prep.observedDelta : -prep.observedDelta;
+
+  if (aligned >= prep.strongDelta) {
+    return "wirkt";
+  }
+  if (aligned >= prep.weakDelta) {
+    return "wirktSchwach";
+  }
+  return "keineReaktion";
+}
+
+/**
+ * Prueft, ob der actionHint bei "keine Reaktion" nicht dieselbe Dosis noch
+ * einmal empfiehlt. Ein solcher Text waere genau der Fehler, den die Regel
+ * verhindern soll — er wird deshalb hier abgefangen, nicht erst im Review.
+ *
+ * ENTSCHEIDUNG: Die Heuristik sucht nach Formulierungen, die die laufende
+ * Einnahme unveraendert fortsetzen ("beibehalten", "weiternehmen",
+ * "weiter so"). Sie ist absichtlich streng und lieber falsch-positiv: ein
+ * angepasster Rat, der eines dieser Woerter braucht, muss anders formuliert
+ * werden. Die echte Freigabe der Texte kommt spaeter mit dem Framework.
+ */
+export function isAdjustedActionHint(
+  status: SupplementStatus,
+  actionHint: string,
+): boolean {
+  if (status !== "keineReaktion") {
+    return true;
+  }
+  const normalized = actionHint.toLowerCase();
+  const repeatsSame = [
+    "beibehalten",
+    "weiternehmen",
+    "weiter so",
+    "unverändert fortsetzen",
+    "unveraendert fortsetzen",
+  ].some((phrase) => normalized.includes(phrase));
+  return !repeatsSame;
 }

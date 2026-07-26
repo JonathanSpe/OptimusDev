@@ -14,6 +14,12 @@ export {
   type ProgressChartProps,
 } from "./components/progress-chart";
 export { ScoreHero, type ScoreHeroProps } from "./components/score-hero";
+export {
+  SupplementPanel,
+  SupplementRow,
+  type SupplementPanelProps,
+  type SupplementRowProps,
+} from "./components/supplement-row";
 /*
  * Die Regeln der Analyse — welches Buendel ein Ansatzpunkt ist und wann eine
  * Datenlage zu duenn fuer ein Urteil ist. ⚠️ Platzhalterstufen, siehe rules.
@@ -21,11 +27,14 @@ export { ScoreHero, type ScoreHeroProps } from "./components/score-hero";
 export {
   CONFIDENCE_SOLID,
   MIN_MEASUREMENTS_FOR_VERDICT,
+  isAdjustedActionHint,
   toFocusBundles,
   toMarkerReading,
   toPriorityBundle,
+  toSupplementStatus,
   type MarkerReading,
   type MarkerVerdict,
+  type SupplementStatus,
 } from "./rules";
 /*
  * ⚠️ Scores, Zielwert und Limiter sind Platzhalter — siehe Kopf von
@@ -42,6 +51,7 @@ export {
   sampleCategorySeries,
   samplePriorityFindings,
   sampleScore,
+  sampleSupplements,
   toCategoryScore,
   type Bundle,
   type CategoryScore,
@@ -50,4 +60,5 @@ export {
   type PriorityFinding,
   type ScorePoint,
   type ScoreSummary,
+  type Supplement,
 } from "./sample-data";

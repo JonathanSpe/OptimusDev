@@ -470,3 +470,158 @@ export const sampleScore: ScoreSummary = {
   limiter: limiterCategory.name,
   nextTestInDays: 34,
 };
+
+/**
+ * Ein Praeparat, das eingenommen wird — und gegen einen Marker geprueft
+ * werden soll. Der Status entsteht NICHT hier: ihn leitet toSupplementStatus
+ * in rules.ts ab, damit "zu frueh" und "keine Reaktion" nicht verwechselt
+ * werden koennen.
+ *
+ * ⚠️ effectWindowDays, expectedDirection und die beiden Schwellwerte sind
+ * PLATZHALTER. Sie sind nicht klinisch gesetzt und muessen vor dem Release
+ * gegen das Bluttest-Framework freigegeben werden. Dasselbe gilt fuer die
+ * Zuordnung Praeparat → Zielmarker.
+ */
+export interface Supplement {
+  id: string;
+  name: string;
+  /** Dosis als Anzeigetext, z. B. "2 000 IE / Tag". */
+  dose: string;
+  /**
+   * Zielmarker, an dem die Wirkung abgelesen wird. null heisst: es gibt keinen
+   * messbaren Marker in dieser Auswertung — dann ist der Status immer
+   * "nicht beurteilbar", nie ein Urteil.
+   */
+  targetMarker: string | null;
+  /** Einheit des Zielmarkers; leer bei dimensionslosen Groessen. */
+  targetUnit: string;
+  /** Einnahmebeginn als ISO-Datum (YYYY-MM-DD). */
+  startedOn: string;
+  /**
+   * ⚠️ PLATZHALTER — erwartetes Wirkfenster in Tagen ab Einnahmebeginn.
+   * "from" ist der frueheste Tag, an dem eine Wirkung ueberhaupt erwartet wird;
+   * davor ist der Status immer "zu frueh", nie "keine Reaktion".
+   */
+  effectWindowDays: { readonly from: number; readonly to: number };
+  /** Tage seit Einnahmebeginn zum Bewertungsstichtag. */
+  daysOn: number;
+  /**
+   * Beobachtete Veraenderung am Zielmarker seit Einnahmebeginn. null, wenn es
+   * keinen vergleichbaren Messpunkt gibt (zu frueh, nicht beurteilbar, oder
+   * noch keine zweite Messung).
+   */
+  observedDelta: number | null;
+  /**
+   * ⚠️ PLATZHALTER — Richtung, in der eine Wirkung am Marker sichtbar waere.
+   * Vitamin D steigt bei Wirkung, LDL faellt; ohne diese Richtung ist jede
+   * Schwelle sinnlos.
+   */
+  expectedDirection: "up" | "down";
+  /**
+   * ⚠️ PLATZHALTER — ab diesem Betrag (in Richtung expectedDirection) zaehlt
+   * die Veraenderung als "wirkt".
+   */
+  strongDelta: number;
+  /**
+   * ⚠️ PLATZHALTER — ab diesem Betrag (unter strongDelta) zaehlt sie als
+   * "wirkt schwach". Darunter: "keine Reaktion".
+   */
+  weakDelta: number;
+  /**
+   * Kurzer naechster Schritt. Bei "keine Reaktion" MUSS das ein angepasster
+   * Rat sein (Dosis, anderes Praeparat, absetzen) — niemals dieselbe Dosis
+   * noch einmal. Die Regel dazu steht in rules.ts; der Text hier ist der
+   * konkrete Rat zu DIESEM Praeparat.
+   */
+  actionHint: string;
+}
+
+/*
+ * Fuenf Praeparate, je einer der fuenf Zustaende. Der Bewertungsstichtag ist
+ * der letzte Test (21.07.2026) — dieselben Termine wie Score und Verlauf.
+ *
+ * Die Marker-Werte, die hinter den Deltas stehen, sind dieselben wie auf dem
+ * Dashboard (Vitamin D 17→44, Ferritin 41→68), damit dieselbe Messung nicht
+ * an zwei Stellen verschiedene Zahlen traegt.
+ */
+export const sampleSupplements: readonly Supplement[] = [
+  {
+    id: "vit-d3",
+    name: "Vitamin D3",
+    dose: "2 000 IE / Tag",
+    targetMarker: "25-OH-Vitamin-D",
+    targetUnit: "ng/ml",
+    startedOn: "2026-01-27",
+    effectWindowDays: { from: 56, to: 112 },
+    daysOn: 175,
+    observedDelta: 27,
+    expectedDirection: "up",
+    strongDelta: 15,
+    weakDelta: 5,
+    actionHint: "Dosis beibehalten und beim nächsten Test erneut prüfen.",
+  },
+  {
+    id: "eisen",
+    name: "Eisenbisglycinat",
+    dose: "30 mg / Tag",
+    targetMarker: "Ferritin",
+    targetUnit: "ng/ml",
+    startedOn: "2026-01-27",
+    effectWindowDays: { from: 56, to: 120 },
+    daysOn: 175,
+    observedDelta: 27,
+    expectedDirection: "up",
+    strongDelta: 40,
+    weakDelta: 15,
+    actionHint:
+      "Dosis belassen — die Richtung stimmt, das Tempo ist noch gering.",
+  },
+  {
+    id: "omega-3",
+    name: "Omega-3 (EPA/DHA)",
+    dose: "2 g / Tag",
+    targetMarker: "Triglyceride",
+    targetUnit: "mg/dl",
+    startedOn: "2026-01-27",
+    effectWindowDays: { from: 60, to: 120 },
+    daysOn: 175,
+    /* Flach seit Einnahmebeginn — nach dem Wirkfenster ist das "keine Reaktion". */
+    observedDelta: 0,
+    expectedDirection: "down",
+    strongDelta: 30,
+    weakDelta: 10,
+    actionHint:
+      "Präparat wechseln: höhere EPA-Dosis prüfen oder Einnahme beenden.",
+  },
+  {
+    id: "magnesium",
+    name: "Magnesiumcitrat",
+    dose: "300 mg / Tag",
+    targetMarker: "Magnesium (Serum)",
+    targetUnit: "mmol/l",
+    startedOn: "2026-06-23",
+    effectWindowDays: { from: 42, to: 84 },
+    daysOn: 28,
+    observedDelta: null,
+    expectedDirection: "up",
+    strongDelta: 0.1,
+    weakDelta: 0.04,
+    actionHint: "Noch abwarten — das Wirkfenster beginnt erst in zwei Wochen.",
+  },
+  {
+    id: "ashwagandha",
+    name: "Ashwagandha",
+    dose: "300 mg / Tag",
+    targetMarker: null,
+    targetUnit: "",
+    startedOn: "2026-03-24",
+    effectWindowDays: { from: 28, to: 56 },
+    daysOn: 119,
+    observedDelta: null,
+    expectedDirection: "up",
+    strongDelta: 1,
+    weakDelta: 0.5,
+    actionHint:
+      "Kein messbarer Zielmarker in dieser Auswertung — Wirkung hier nicht beurteilbar.",
+  },
+];

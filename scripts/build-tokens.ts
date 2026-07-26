@@ -643,6 +643,8 @@ function buildContrastCases(): ContrastCase[] {
     "series",
     "seriesMuted",
     "crosshair",
+    "timelineWindow",
+    "timelineNow",
   ]) {
     cases.push({
       label: `plot.${mark} auf surface.card`,

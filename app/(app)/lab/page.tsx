@@ -6,11 +6,13 @@ import {
   PriorityCard,
   ProgressChart,
   ScoreHero,
+  SupplementPanel,
   sampleBundles,
   sampleCategories,
   sampleCategorySeries,
   samplePriorityFindings,
   sampleScore,
+  sampleSupplements,
 } from "@/features/analysis";
 
 /*
@@ -69,6 +71,12 @@ export default function LabPage() {
           bundles={sampleBundles}
           findings={samplePriorityFindings}
         />
+      </div>
+
+      {/* Die Praeparate-Liste braucht die volle Bento-Breite: Name, Marker,
+       * Zeitleiste, Delta und Status stehen in einer Zeile. */}
+      <div className="max-w-map-column">
+        <SupplementPanel supplements={sampleSupplements} />
       </div>
     </div>
   );
