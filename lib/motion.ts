@@ -95,6 +95,12 @@ export interface MotionPreset {
   drawPath: Variants;
   /** Uebergang fuer Layout- und Positionswechsel. */
   layout: Transition;
+  /**
+   * Zustandswechsel durch Hover, Fokus oder Auswahl — dieselbe Zeit, die die
+   * CSS-Utilities ueber --transition-fast verwenden. Sie steht hier, damit auch
+   * ein von JavaScript animierter Hover-Zustand keine eigene Zahl erfindet.
+   */
+  hover: Transition;
   /** Verzoegerung des n-ten Elements einer Reihe, gedeckelt. */
   stagger: (index: number) => number;
   /** Timing fuer hochzaehlende Zahlen. */
@@ -148,6 +154,7 @@ function buildPreset(reduced: boolean): MotionPreset {
       }),
     },
     layout: reduced ? { duration: 0 } : SPRING,
+    hover: { duration: duration(DURATION.hover), ease: EASE_OUT },
     stagger: (index: number) => (reduced ? 0 : staggerDelay(index)),
     number: {
       duration: reduced ? 0 : springEasing.duration * 1000,

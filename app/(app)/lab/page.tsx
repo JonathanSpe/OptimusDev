@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 
 import {
-  BundleMap,
+  BundleFocus,
   CategoryDialPanel,
-  PriorityCard,
   ProgressChart,
   ScoreHero,
   SupplementPanel,
@@ -53,24 +52,15 @@ export default function LabPage() {
         <CategoryDialPanel categories={sampleCategories} />
       </div>
 
-      <div className="max-w-map-column">
-        <BundleMap bundles={sampleBundles} />
-      </div>
+      {/* Landkarte und Ansatzpunkte stehen nebeneinander und nehmen zusammen
+       * die volle Inhaltsbreite: das Feld braucht Platz, damit die Punkte
+       * auseinanderliegen, die Rangfolge braucht Lesebreite. */}
+      <BundleFocus bundles={sampleBundles} findings={samplePriorityFindings} />
 
       {/* Der Verlauf braucht die volle Bento-Breite: fuenf Linien ueber vier
        * Termine, und rechts daneben die Namen an den Linienenden. */}
       <div className="max-w-map-column">
         <ProgressChart score={sampleScore} categories={sampleCategorySeries} />
-      </div>
-
-      {/* Die Prioritaetskarte teilt sich die schmalere Bento-Spalte mit den
-       * Ringen: sie traegt einen Satz und drei Belege, und ein Satz ueber die
-       * volle Breite laesst sich nicht mehr in einem Zug lesen. */}
-      <div className="max-w-dial-column">
-        <PriorityCard
-          bundles={sampleBundles}
-          findings={samplePriorityFindings}
-        />
       </div>
 
       {/* Die Praeparate-Liste braucht die volle Bento-Breite: Name, Marker,

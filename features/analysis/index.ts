@@ -1,3 +1,9 @@
+/*
+ * Landkarte und Ansatzpunkte sind EIN Baustein: BundleFocus. Die beiden
+ * Haelften sind einzeln exportiert, weil sie einzeln getestet werden — auf eine
+ * Seite gehoert die Klammer, nicht die Haelfte.
+ */
+export { BundleFocus, type BundleFocusProps } from "./components/bundle-focus";
 export { BundleMap, type BundleMapProps } from "./components/bundle-map";
 export {
   CategoryDial,
@@ -6,9 +12,9 @@ export {
   type CategoryDialProps,
 } from "./components/category-dial";
 export {
-  PriorityCard,
-  type PriorityCardProps,
-} from "./components/priority-card";
+  PriorityList,
+  type PriorityListProps,
+} from "./components/priority-list";
 export {
   ProgressChart,
   type ProgressChartProps,
@@ -29,9 +35,11 @@ export {
   MIN_MEASUREMENTS_FOR_VERDICT,
   isAdjustedActionHint,
   toFocusBundles,
+  toFocusEntries,
   toMarkerReading,
   toPriorityBundle,
   toSupplementStatus,
+  type FocusEntry,
   type MarkerReading,
   type MarkerVerdict,
   type SupplementStatus,

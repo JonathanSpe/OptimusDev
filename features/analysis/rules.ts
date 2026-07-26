@@ -2,10 +2,10 @@
  * ============================================================================
  * DIE REGELN DER ANALYSE — einmal hingeschrieben, von allen gelesen.
  * ============================================================================
- * Zwei Bausteine beantworten dieselbe Frage: die Landkarte hebt die
- * Ansatzpunkte hervor, die Prioritaetskarte nennt den ersten davon. Staende die
- * Regel zweimal im Code, wuerden die beiden irgendwann auseinanderlaufen — die
- * Karte betont ein Buendel, die Kachel nennt ein anderes. Dem Leser faellt
+ * Zwei Haelften beantworten dieselbe Frage: das Feld der Landkarte nummeriert
+ * die Ansatzpunkte, die Rangliste daneben schreibt sie aus. Staende die Regel
+ * zweimal im Code, wuerden die beiden irgendwann auseinanderlaufen — das Feld
+ * betont ein Buendel, die Liste nennt ein anderes. Dem Leser faellt
  * nicht auf, dass dahinter zwei Kopien einer Regel stecken; ihm faellt auf,
  * dass die Analyse sich widerspricht, und dann glaubt er keiner der beiden.
  *
@@ -25,11 +25,16 @@ import type { Bundle, FindingMarker, Supplement } from "./sample-data";
 export const CONFIDENCE_SOLID = 4;
 
 /*
- * Betonung ohne Schwelle: betont werden nicht "alle unter X", sondern die drei
- * NIEDRIGSTEN der belastbar gemessenen Buendel. Das ist eine Rangfolge, keine
- * Grenze — sie behauptet nicht, dass 72 schlecht ist, sondern dass es unter den
- * gut gemessenen das dritt-niedrigste ist. Drei, weil eine Liste von
- * Ansatzpunkten, die laenger ist als drei, keine Ansatzpunkte mehr sind.
+ * Betonung ohne Schwelle: betont werden nicht "alle unter X", sondern die
+ * NIEDRIGSTEN der belastbar gemessenen Buendel, HOECHSTENS drei. Das ist eine
+ * Rangfolge, keine Grenze — sie behauptet nicht, dass 72 schlecht ist, sondern
+ * dass es unter den gut gemessenen das dritt-niedrigste ist. Drei, weil eine
+ * Liste von Ansatzpunkten, die laenger ist als drei, keine Ansatzpunkte mehr
+ * sind.
+ *
+ * Qualifizieren weniger als drei, stehen weniger da. AUFGEFUELLT WIRD NIE — ein
+ * dritter Rang, der nur existiert, damit die Liste voll aussieht, behauptet
+ * einen Ansatzpunkt, den die Daten nicht hergeben.
  */
 export const FOCUS_COUNT = 3;
 
@@ -44,14 +49,30 @@ export function toFocusBundles(bundles: readonly Bundle[]): readonly Bundle[] {
     .slice(0, FOCUS_COUNT);
 }
 
-/** Dieselbe Auswahl als Id-Menge — die Landkarte fragt je Punkt nach. */
-export function toFocusIds(bundles: readonly Bundle[]): ReadonlySet<string> {
-  return new Set(toFocusBundles(bundles).map((bundle) => bundle.id));
+/** Ein Ansatzpunkt mit seiner Nummer. Rang 1 ist der niedrigste. */
+export interface FocusEntry {
+  bundle: Bundle;
+  /** 1-basiert. Dieselbe Nummer traegt die Marke im Feld und die Zeile daneben. */
+  rank: number;
 }
 
 /**
- * Der EINE Ansatzpunkt: das niedrigste belastbar gemessene Buendel. Kein
- * belastbares Buendel — kein Ansatzpunkt; dann empfiehlt die Analyse nichts.
+ * Dieselbe Auswahl, nummeriert. Feld und Liste ziehen ihre Nummer aus DIESER
+ * Funktion — zwei Nummerierungen nebeneinander waeren zwei Rangfolgen.
+ */
+export function toFocusEntries(
+  bundles: readonly Bundle[],
+): readonly FocusEntry[] {
+  return toFocusBundles(bundles).map((bundle, position) => ({
+    bundle,
+    rank: position + 1,
+  }));
+}
+
+/**
+ * Der EINE Ansatzpunkt: das niedrigste belastbar gemessene Buendel, Rang 1.
+ * Kein belastbares Buendel — kein Ansatzpunkt; dann empfiehlt die Analyse
+ * nichts. Fuer eine Zusammenfassung, die nur den ersten nennen will.
  */
 export function toPriorityBundle(
   bundles: readonly Bundle[],
