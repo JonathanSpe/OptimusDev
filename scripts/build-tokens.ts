@@ -602,16 +602,30 @@ function buildContrastCases(): ContrastCase[] {
       background: light(`color.status.${status}Subtle`),
     });
     /*
-     * Auf der Analyse-Oberflaeche steht jede Bewertung auf einer DECKENDEN
-     * Karte (Kategorie-Ringe: Wertbogen und Zahl im Bandton). Die Flaeche ist
-     * heute dieselbe wie background.default — geprueft wird sie trotzdem
-     * einzeln, damit ein spaeter getoentes surface.card hier auffliegt und
-     * nicht erst auf dem Schirm.
+     * Auf der Analyse-Oberflaeche steht jeder Befund auf einer DECKENDEN
+     * Karte. Die Flaeche ist heute dieselbe wie background.default — geprueft
+     * wird sie trotzdem einzeln, damit ein spaeter getoentes surface.card hier
+     * auffliegt und nicht erst auf dem Schirm.
      */
     cases.push({
       label: `status.${status} auf surface.card`,
       foreground: light(`color.status.${status}`),
       background: light("color.surface.card"),
+    });
+  }
+
+  /*
+   * Die beiden tragenden Marken der Kategorie-Ringe sind GRAFIK, kein Text:
+   * fuer sie gilt die Deko-Schwelle (WCAG 1.4.11, 3:1). Sie stehen hier, weil
+   * am Ring sonst nichts mehr die Aussage traegt — faellt der Strich des
+   * letzten Tests unter die Schwelle, verliert der Ring seinen Bezugspunkt.
+   */
+  for (const mark of ["value", "notch"]) {
+    cases.push({
+      label: `gauge.${mark} auf surface.card`,
+      foreground: light(`color.gauge.${mark}`),
+      background: light("color.surface.card"),
+      decorative: true,
     });
   }
 

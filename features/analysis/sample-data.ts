@@ -1,12 +1,16 @@
 /*
  * ============================================================================
- * ⚠️  ACHTUNG — SCORE, ZIEL, BAENDER UND LIMITER SIND PLATZHALTER.
+ * ⚠️  ACHTUNG — SCORE, ZIEL UND LIMITER SIND PLATZHALTER.
  * ============================================================================
  * Der Optimus Score ist eine BEWERTUNG. Die Zahlen hier sind erfunden und
  * entstehen aus keiner Berechnung: sie zeigen die Gestaltung, nicht den
  * Zustand einer Person. Vor jedem Release muessen Score-Formel, Zielwert, die
- * Bandgrenzen, die Konfidenzstufen und die Herleitung des Limiters gegen das
- * Bluttest-Framework abgeglichen und freigegeben werden.
+ * Konfidenzstufen und die Herleitung des Limiters gegen das Bluttest-Framework
+ * abgeglichen und freigegeben werden.
+ *
+ * Bewertungs-BAENDER gibt es bewusst keine mehr. Eine Schwelle, ab der ein
+ * Score gruen oder rot waere, ist eine klinische Aussage — sie wird gesetzt,
+ * nicht geschaetzt. Bis eine freigegeben ist, faerbt nichts einen Wert ein.
  *
  * Sobald das Repository steht, kommen die Werte ueber data/ und die
  * TanStack-Query-Hooks dieses Feature-Ordners.
@@ -47,9 +51,12 @@ export interface ScoreSummary {
 }
 
 /**
- * Der Zielwert der Score-Skala. Er steht EINMAL: die gestrichelte Ziellinie im
- * Verlauf, der Zielstrich der Kategorie-Ringe und die Grenze zum gruenen Band
- * sind dieselbe Zahl. Zwei Ziele auf einer Oberflaeche waeren zwei Aussagen.
+ * Der persoenliche Zielwert des GESAMTSCORES. Er zeichnet die gestrichelte
+ * Linie im Verlauf der Score-Kachel und steht dort als "noch bis Ziel".
+ *
+ * Er gilt AUSSCHLIESSLICH fuer den Gesamtscore. Die Kategorie-Ringe kennen
+ * keinen Zielwert: ein Ziel je Kategorie waere eine erfundene Schwelle, ihr
+ * Bezug ist deshalb der letzte Test.
  *
  * ENTSCHEIDUNG: 75 ist ein PLATZHALTER — kein klinisch gesetzter Wert.
  */
@@ -58,28 +65,9 @@ export const SCORE_TARGET = 75;
 /** Hoechste Konfidenzstufe. Die Skala hat fuenf Schritte, keine Prozente. */
 export const CONFIDENCE_MAX = 5;
 
-/**
- * Untergrenze des mittleren Bands. Darunter gilt eine Kategorie als kritisch.
- *
- * ENTSCHEIDUNG: 65 ist wie SCORE_TARGET ein PLATZHALTER. Die Schnitte kommen
- * spaeter aus dem Bluttest-Framework; bis dahin zeigen sie nur, dass es
- * ueberhaupt drei Baender gibt.
- */
-const BAND_WARNING_MIN = 65;
-
-/** Bewertungsband eines Scores — traegt die Statusfarbe der Analyse. */
-export type ScoreBand = "critical" | "warning" | "success";
-
-/**
- * Score -> Band. Die obere Schwelle IST der Zielwert: gruen beginnt genau
- * dort, wo das Ziel steht, sonst behauptet die Farbe etwas anderes als der
- * Zielstrich am Instrument.
- */
-export function toScoreBand(score: number): ScoreBand {
-  if (score < BAND_WARNING_MIN) return "critical";
-  if (score < SCORE_TARGET) return "warning";
-  return "success";
-}
+/** Beide Enden der Score-Skala. Sie ist fest — nur so sind Ringe vergleichbar. */
+export const SCORE_MIN = 0;
+export const SCORE_MAX = 100;
 
 /**
  * Eine der vier BEWERTUNGS-Kategorien K1–K4 der Analyse.
@@ -93,6 +81,12 @@ export interface CategoryScore {
   name: string;
   /** Punkte auf derselben Skala 0–100 wie der Gesamtscore. */
   score: number;
+  /**
+   * Derselbe Score beim VORHERIGEN Test — die einzige Bezugsgroesse der
+   * Kategorie. Optional, weil der erste Test keine hat: dann fehlt am Ring die
+   * Bezugsmarke, statt dass eine erfunden wird.
+   */
+  previousScore?: number;
   /*
    * Wie belastbar die Bewertung ist: 1–5, abhaengig von Zahl und Alter der
    * Messungen dahinter. EIGENES Feld und niemals aus dem Score abgeleitet — ein
@@ -111,6 +105,7 @@ const limiterCategory: CategoryScore = {
   id: "k2",
   name: "Regeneration & Hormonbalance",
   score: 61,
+  previousScore: 64,
   confidence: 2,
 };
 
@@ -119,14 +114,20 @@ export const sampleLimiterId = limiterCategory.id;
 
 /*
  * Vier Kategorien in fester Reihenfolge. Die Werte sind bewusst ungleich
- * verteilt — je ein Ring pro Band und Konfidenzen von 2 bis 5, damit im Raster
- * sichtbar wird, dass Score und Konfidenz zwei getrennte Kanaele sind.
+ * verteilt, und jede Kategorie zeigt eine andere BEWEGUNG gegenueber dem
+ * letzten Test — deutlich hoch (k1), gefallen (k2), leicht hoch (k3),
+ * unveraendert (k4). Nur so zeigt das Raster, was der Strich am Ring leistet:
+ * bei k4 liegt er genau unter dem Bogenende, bei k2 vor ihm.
+ *
+ * Die Konfidenzen von 2 bis 5 laufen absichtlich NICHT parallel zum Score —
+ * k4 hat denselben Stand wie beim letzten Test, aber nur Stufe 3.
  */
 export const sampleCategories: readonly CategoryScore[] = [
   {
     id: "k1",
     name: "Energie & Stoffwechsel",
     score: 78,
+    previousScore: 71,
     confidence: 4,
   },
   limiterCategory,
@@ -134,12 +135,14 @@ export const sampleCategories: readonly CategoryScore[] = [
     id: "k3",
     name: "Herz-Kreislauf & Langzeit",
     score: 84,
+    previousScore: 80,
     confidence: 5,
   },
   {
     id: "k4",
     name: "Immunsystem & Mikronährstoffe",
     score: 72,
+    previousScore: 72,
     confidence: 3,
   },
 ];

@@ -45,7 +45,6 @@ export default function LabPage() {
       <div className="max-w-dial-column">
         <CategoryDialPanel
           categories={sampleCategories}
-          target={sampleScore.target}
           limiterId={sampleLimiterId}
         />
       </div>

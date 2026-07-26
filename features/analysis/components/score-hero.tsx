@@ -10,7 +10,7 @@ import { useState } from "react";
 import { useMotionPreset } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-import type { ScorePoint, ScoreSummary } from "../sample-data";
+import { SCORE_MAX, type ScorePoint, type ScoreSummary } from "../sample-data";
 
 /*
  * DER OPTIMUS SCORE — die Kopfzeile der Analyse und die einzige dunkle Flaeche
@@ -33,9 +33,6 @@ export interface ScoreHeroProps {
   score: ScoreSummary;
   className?: string;
 }
-
-/** Punkte der Score-Skala. Die Achse ist fest, damit Verlaeufe vergleichbar sind. */
-const SCORE_MAX = 100;
 
 /*
  * Die Kurve rechts neben dem Score. Sie hat eine FESTE Groesse und waechst
