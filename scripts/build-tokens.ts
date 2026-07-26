@@ -601,6 +601,18 @@ function buildContrastCases(): ContrastCase[] {
       foreground: light(`color.status.${status}`),
       background: light(`color.status.${status}Subtle`),
     });
+    /*
+     * Auf der Analyse-Oberflaeche steht jede Bewertung auf einer DECKENDEN
+     * Karte (Kategorie-Ringe: Wertbogen und Zahl im Bandton). Die Flaeche ist
+     * heute dieselbe wie background.default — geprueft wird sie trotzdem
+     * einzeln, damit ein spaeter getoentes surface.card hier auffliegt und
+     * nicht erst auf dem Schirm.
+     */
+    cases.push({
+      label: `status.${status} auf surface.card`,
+      foreground: light(`color.status.${status}`),
+      background: light("color.surface.card"),
+    });
   }
 
   return cases;

@@ -128,6 +128,20 @@
   --color-track-optimal: var(--track-optimal);
 
   /*
+   * Das Zifferblatt der Kategorie-Ringe: Spur, Teilstriche, Zielstrich und die
+   * Segmente des Konfidenz-Balkens. Durchweg NEUTRAL — Farbe traegt allein der
+   * Wertbogen, und die kommt aus den Status-Rollen. Die Utilities heissen
+   * dial-*, die Tokens gauge-*: dieselbe Trennung wie bei on-rail, damit der
+   * Name der Rolle nicht am Namen der Komponente haengt.
+   */
+  --color-dial-track: var(--color-gauge-track);
+  --color-dial-graduation: var(--color-gauge-graduation);
+  --color-dial-target: var(--color-gauge-target);
+  --color-dial-target-strong: var(--color-gauge-target-strong);
+  --color-dial-confidence: var(--color-gauge-confidence-filled);
+  --color-dial-confidence-empty: var(--color-gauge-confidence-empty);
+
+  /*
    * Status — RESERVIERT. Nur für Zustände (Erfolg, Warnung, Fehler), nie
    * dekorativ und nie ohne Icon + Text-Label. Siehe tokens/README.md.
    */
@@ -186,8 +200,9 @@
    */
   --container-measure: var(--size-measure);
   --container-content: var(--size-content-max);
-  /* Spaltenbreite der Score-Kachel im Analyse-Bento. */
+  /* Spaltenbreiten der beiden Bento-Spalten der Analyse. */
   --container-score-column: var(--size-score-column);
+  --container-dial-column: var(--size-dial-column);
 }
 
 /*

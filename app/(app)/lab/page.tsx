@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 
-import { ScoreHero, sampleScore } from "@/features/analysis";
+import {
+  CategoryDialPanel,
+  ScoreHero,
+  sampleCategories,
+  sampleLimiterId,
+  sampleScore,
+} from "@/features/analysis";
 
 /*
  * TEMPORAER: Werkbank fuer die Gestaltung der ANALYSE-Oberflaeche. Was hier
@@ -26,14 +32,22 @@ export default function LabPage() {
       </header>
 
       {/*
-       * Die Kachel bekommt hier die Breite, die sie im Analyse-Bento haben wird
-       * (die Score-Spalte neben den Kategorie-Ringen). NUR im Labor: die
-       * Komponente selbst bleibt fluid und richtet sich nach ihrem Elternteil —
-       * eine Breite in der Komponente waere eine Annahme ueber ein Layout, das
-       * sie nicht kennt.
+       * Jeder Baustein bekommt hier die Breite, die er im Analyse-Bento haben
+       * wird: die Score-Kachel ihre Spalte, die Kategorie-Ringe die schmalere
+       * daneben. NUR im Labor — die Komponenten selbst bleiben fluid und
+       * richten sich nach ihrem Elternteil. Eine Breite in der Komponente waere
+       * eine Annahme ueber ein Layout, das sie nicht kennt.
        */}
       <div className="max-w-score-column">
         <ScoreHero score={sampleScore} />
+      </div>
+
+      <div className="max-w-dial-column">
+        <CategoryDialPanel
+          categories={sampleCategories}
+          target={sampleScore.target}
+          limiterId={sampleLimiterId}
+        />
       </div>
     </div>
   );

@@ -98,6 +98,7 @@
   --size-card-min: 18.75rem;
   --size-measure: 70ch;
   --size-score-column: 40rem;
+  --size-dial-column: 30rem;
   --size-content-max: 112.5rem;
 
   /* Schrift-Familien */
@@ -192,6 +193,12 @@
   --color-track-zone-base: rgba(30,25,26,0.06);
   --color-track-zone-reference: rgba(30,25,26,0.12);
   --color-track-zone-optimal: rgba(30,25,26,0.20);
+  --color-gauge-track: rgba(30,25,26,0.08);
+  --color-gauge-graduation: rgba(30,25,26,0.16);
+  --color-gauge-target: rgba(30,25,26,0.38);
+  --color-gauge-target-strong: rgba(30,25,26,0.60);
+  --color-gauge-confidence-filled: rgba(30,25,26,0.42);
+  --color-gauge-confidence-empty: rgba(30,25,26,0.12);
   --color-brand-default: #A32432;
   --color-brand-hover: #881E2A;
   --color-brand-secondary: #C96773;
@@ -271,6 +278,12 @@
   --color-track-zone-base: rgba(255,255,255,0.08);
   --color-track-zone-reference: rgba(255,255,255,0.14);
   --color-track-zone-optimal: rgba(255,255,255,0.24);
+  --color-gauge-track: rgba(255,255,255,0.10);
+  --color-gauge-graduation: rgba(255,255,255,0.18);
+  --color-gauge-target: rgba(255,255,255,0.42);
+  --color-gauge-target-strong: rgba(255,255,255,0.66);
+  --color-gauge-confidence-filled: rgba(255,255,255,0.48);
+  --color-gauge-confidence-empty: rgba(255,255,255,0.14);
   --color-brand-default: #B64652;
   --color-brand-hover: #C96773;
   --color-brand-secondary: #881E2A;
