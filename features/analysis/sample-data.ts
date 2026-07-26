@@ -97,9 +97,10 @@ export interface CategoryScore {
 }
 
 /*
- * Der Engpass steht als eigene Konstante, weil ZWEI Bausteine ihn zeigen: die
- * Score-Kachel als "begrenzt durch" und der Ring als Wort-Tag "Engpass". Aus
- * einer Quelle koennen die beiden nicht auseinanderlaufen.
+ * Der Engpass steht als eigene Konstante, damit die Score-Kachel ihr "begrenzt
+ * durch" aus derselben Quelle zieht wie das Kategorien-Raster seinen Eintrag.
+ * Am Ring selbst ist er nicht mehr markiert: ein zweites Etikett neben Score,
+ * letztem Test und Konfidenz war ein vierter Kanal auf 78 Pixeln.
  */
 const limiterCategory: CategoryScore = {
   id: "k2",
@@ -108,9 +109,6 @@ const limiterCategory: CategoryScore = {
   previousScore: 64,
   confidence: 2,
 };
-
-/** Id der Kategorie, die den Gesamtscore derzeit deckelt. Genau EINE. */
-export const sampleLimiterId = limiterCategory.id;
 
 /*
  * Vier Kategorien in fester Reihenfolge. Die Werte sind bewusst ungleich

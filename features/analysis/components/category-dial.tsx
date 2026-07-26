@@ -104,8 +104,6 @@ function polar(angle: number, radius: number): { x: number; y: number } {
 
 export interface CategoryDialProps {
   category: CategoryScore;
-  /** Der Engpass: die Kategorie, die den Gesamtscore derzeit deckelt. */
-  isLimiter?: boolean;
   /** Position in der Reihe. Steuert Auftritt und Bogenlauf ueber den Stagger. */
   index?: number;
   onOpenDetails?: (id: string) => void;
@@ -114,7 +112,6 @@ export interface CategoryDialProps {
 
 export function CategoryDial({
   category,
-  isLimiter = false,
   index = 0,
   onOpenDetails,
   className,
@@ -269,43 +266,38 @@ export function CategoryDial({
         </p>
       </div>
 
-      {/* Feste Hoehe fuer Name und Tag: die Konfidenzpunkte aller vier Ringe
+      {/* Feste Hoehe fuer den Namen: die Konfidenzzeilen aller vier Ringe
        * stehen dadurch auf einer Linie, egal wie lang ein Name umbricht. */}
       <p className="text-foreground mt-3 flex h-8 items-start justify-center text-center text-xs leading-4 font-medium text-balance">
         {category.name}
       </p>
 
-      <div className="flex h-5 items-center justify-center">
-        {isLimiter ? (
-          /* Ein WORT, keine Farbfläche: dass die Kategorie tief liegt, sagt
-           * schon der Bogen. Das Tag sagt das andere — dass sie den
-           * Gesamtscore deckelt, genau wie "begrenzt durch" auf der
-           * Score-Kachel. */
-          <span className="border-border text-muted-foreground text-2xs rounded-full border px-2 leading-4">
-            Engpass
-            <span className="sr-only"> — begrenzt derzeit den Gesamtscore</span>
-          </span>
-        ) : null}
-      </div>
-
       {/*
-       * Konfidenz als fuenf Punkte. Gefuellte Punkte sind dichter UND groesser:
-       * die Stufe ist damit auch ohne Farbe ablesbar. Jeder Punkt sitzt in
-       * einer gleich grossen Zelle, sonst verschoebe der Groessenunterschied
-       * den Abstand. Der Wert steht in der Beschriftung der Gruppe.
+       * Konfidenz als fuenf Punkte, MIT dem Wort davor. Ohne Beschriftung sind
+       * fuenf Punkte unter einem Ring nur ein Muster — man haelt sie fuer eine
+       * zweite Bewertung des Scores. Der zweite Kanal muss sich benennen, sonst
+       * ist er keiner. Gefuellte Punkte sind dichter UND groesser, damit die
+       * Stufe auch ohne Farbe ablesbar bleibt; jeder Punkt sitzt in einer
+       * gleich grossen Zelle, sonst verschoebe der Groessenunterschied den
+       * Abstand. Der genaue Wert steht in der Beschriftung der Gruppe.
        */}
-      <div aria-hidden="true" className="flex items-center gap-1.5">
-        {Array.from({ length: CONFIDENCE_MAX }, (_, step) => (
-          <span key={step} className="grid size-1.5 place-items-center">
-            <span
-              className={
-                step < category.confidence
-                  ? "bg-dial-confidence size-1.5 rounded-full"
-                  : "bg-dial-confidence-empty size-1 rounded-full"
-              }
-            />
-          </span>
-        ))}
+      <div aria-hidden="true" className="mt-1 flex items-center gap-2">
+        <span className="text-muted-foreground text-2xs leading-4">
+          Konfidenz
+        </span>
+        <span className="flex items-center gap-1.5">
+          {Array.from({ length: CONFIDENCE_MAX }, (_, step) => (
+            <span key={step} className="grid size-1.5 place-items-center">
+              <span
+                className={
+                  step < category.confidence
+                    ? "bg-dial-confidence size-1.5 rounded-full"
+                    : "bg-dial-confidence-empty size-1 rounded-full"
+                }
+              />
+            </span>
+          ))}
+        </span>
       </div>
     </motion.div>
   );
@@ -313,8 +305,6 @@ export function CategoryDial({
 
 export interface CategoryDialPanelProps {
   categories: readonly CategoryScore[];
-  /** Id der Kategorie, die den Gesamtscore deckelt. Genau eine oder keine. */
-  limiterId?: string;
   onOpenDetails?: (id: string) => void;
   className?: string;
 }
@@ -342,7 +332,6 @@ function EmptyCategories({ className }: { className?: string }) {
 
 export function CategoryDialPanel({
   categories,
-  limiterId,
   onOpenDetails,
   className,
 }: CategoryDialPanelProps) {
@@ -367,10 +356,12 @@ export function CategoryDialPanel({
       >
         Kategorien
       </h2>
-      {/* Die Legende steht einmal ueber dem Raster statt an jedem Ring: drei
-       * Kanaele muss man einmal erklaert bekommen, nicht viermal. */}
+      {/* Die Legende erklaert nur noch, was am Ring selbst keinen Platz fuer
+       * ein Wort hat. Die Konfidenz steht seit ihrer Beschriftung nicht mehr
+       * hier: eine Legende, die eine beschriftete Sache noch einmal erklaert,
+       * laesst den Leser zweimal suchen. */}
       <p className="text-muted-foreground text-2xs mt-1">
-        Ring = Score · Strich = letzter Test · Punkte = Konfidenz
+        Ring = Score · Strich = letzter Test
       </p>
 
       <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-6">
@@ -378,7 +369,6 @@ export function CategoryDialPanel({
           <CategoryDial
             key={category.id}
             category={category}
-            isLimiter={category.id === limiterId}
             /* Die Karte selbst ist Element 0 der Reihe, die Ringe folgen ihr. */
             index={position + 1}
             onOpenDetails={onOpenDetails}

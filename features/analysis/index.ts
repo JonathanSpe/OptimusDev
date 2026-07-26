@@ -15,7 +15,6 @@ export {
   SCORE_MIN,
   SCORE_TARGET,
   sampleCategories,
-  sampleLimiterId,
   sampleScore,
   type CategoryScore,
   type ScorePoint,

@@ -4,7 +4,6 @@ import {
   CategoryDialPanel,
   ScoreHero,
   sampleCategories,
-  sampleLimiterId,
   sampleScore,
 } from "@/features/analysis";
 
@@ -43,10 +42,7 @@ export default function LabPage() {
       </div>
 
       <div className="max-w-dial-column">
-        <CategoryDialPanel
-          categories={sampleCategories}
-          limiterId={sampleLimiterId}
-        />
+        <CategoryDialPanel categories={sampleCategories} />
       </div>
     </div>
   );
