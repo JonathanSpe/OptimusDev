@@ -31,6 +31,16 @@ German-language health-tech web app ("Optimus"). Next.js App Router + TypeScript
 - Font: IBM Plex Sans via `next/font/google` (self-hosted at build). NEVER add Google Fonts `<link>` tags (GDPR).
 - Default theme: light. Dark mode tokens exist; keep new styles theme-compatible (use semantic tokens, no literal white/black).
 
+## Motion rules
+
+- `lib/motion.ts` is the single source for everything JavaScript animates. Components NEVER hardcode a duration, easing, spring or delay — they call `useMotionPreset()`. CSS hover/focus transitions keep using the `--transition-fast` token (same 150ms).
+- Durations: hover 150ms, fade 220ms, layout 320ms. Entrances use ease-out `[0.22, 1, 0.36, 1]`; layout changes and counting numbers use one spring (stiffness 220, damping 30, mass 1) — the same spring is sampled into a WAAPI `linear()` easing for `@number-flow/react`, so both run the same physics.
+- Stagger is 40ms per item, capped at 6 items (240ms total). A list must stand complete within that.
+- Entrances run ONCE. No re-animating on scroll, no looping decoration, no motion that has to finish before content is readable.
+- Numbers animate their VALUE, not their opacity: a number that fades in reads as loading, a number that counts up reads as a result.
+- `prefers-reduced-motion` collapses every duration to 0 — same variants, no time. Never gate content behind an animation.
+- Two shared variants: `fadeRise` (entrance) and `drawPath` (line drawing left to right).
+
 ## Quality bar
 
 - TypeScript strict; no `any`, no `@ts-ignore` (use `@ts-expect-error` with a reason if unavoidable).

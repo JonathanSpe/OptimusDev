@@ -351,6 +351,11 @@ function gradientStop(gradient: string, pick: "lightest" | "darkest"): Rgba {
   });
 }
 
+/** Deckende Farbe zurueck in eine Zeichenkette, die parseColor wieder liest. */
+function toRgbString({ r, g, b }: Rgba): string {
+  return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+}
+
 type ContrastCase = {
   label: string;
   foreground: string;
@@ -523,6 +528,48 @@ function buildContrastCases(): ContrastCase[] {
       background: light(`color.category.${key}.surface`),
     });
   }
+
+  /*
+   * DIE SCORE-KACHEL — die einzige dunkle Flaeche im Produkt. Ihr Grund ist ein
+   * Verlauf mit einem Marken-Schein darueber, sie ist also nicht ueberall
+   * gleich hell. Geprueft wird die HELLSTE Stelle, denn nur dort kann heller
+   * Text zu wenig Abstand bekommen: der dichteste Stopp des Scheins, gelegt
+   * ueber den hellsten Stopp des Verlaufs. Die Delta-Pille hellt zusaetzlich
+   * auf und bekommt deshalb ihren eigenen Fall.
+   */
+  const scoreLightest = composite(
+    gradientStop(light("color.surface.scoreGlow"), "lightest"),
+    gradientStop(light("color.surface.scoreGradient"), "lightest"),
+  );
+  const scorePill = composite(
+    parseColor(light("color.surface.scorePill")),
+    scoreLightest,
+  );
+
+  for (const text of ["onScore", "onScoreMuted"]) {
+    cases.push({
+      label: `text.${text} auf surface.score (hellste Stelle)`,
+      foreground: light(`color.text.${text}`),
+      background: toRgbString(scoreLightest),
+    });
+  }
+
+  cases.push({
+    label: "status.successOnScore auf surface.scorePill",
+    foreground: light("color.status.successOnScore"),
+    background: toRgbString(scorePill),
+  });
+
+  /*
+   * Die gestrichelte Ziellinie ist kein Text, muss aber als Linie erkennbar
+   * bleiben — dafuer gilt die Deko-Schwelle.
+   */
+  cases.push({
+    label: "border.onScore auf surface.score (hellste Stelle)",
+    foreground: light("color.border.onScore"),
+    background: toRgbString(scoreLightest),
+    decorative: true,
+  });
 
   cases.push({
     label: "text.onBrand auf brand.default",

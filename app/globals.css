@@ -94,6 +94,18 @@
   --color-cat-k5: var(--color-category-k5-surface);
   --color-cat-k5-ink: var(--color-category-k5-icon);
 
+  /*
+   * Text, Linien und Status AUF der dunklen Score-Kachel der Analyse. Eigene
+   * Familie aus demselben Grund wie on-rail: die Kachel ist die einzige dunkle
+   * Flaeche im Produkt, und die hellen Rollen der Inhaltsflaeche fallen dort
+   * durch jeden Kontrast.
+   */
+  --color-on-score: var(--color-text-on-score);
+  --color-on-score-muted: var(--color-text-on-score-muted);
+  --color-score-line: var(--color-border-on-score);
+  --color-score-pill: var(--color-surface-score-pill);
+  --color-success-on-score: var(--color-status-success-on-score);
+
   /* Marke — nur als Akzent verwenden (Buttons, Icons, Highlights). */
   --color-brand: var(--brand);
   --color-brand-hover: var(--brand-hover);
@@ -132,6 +144,13 @@
    */
   --text-metric: var(--font-size-3xl);
 
+  /*
+   * Der Optimus Score (96px). Eigene Stufe, ausschliesslich fuer diese eine
+   * Zahl — die Typoskala des Fliesstexts endet bei text-metric.
+   */
+  --text-score: var(--font-size-score);
+  --text-score--line-height: 1;
+
   /* Kleinste Beschriftungsstufe (11px) — Bereichsgrenzen, Kontextzeilen. */
   --text-2xs: var(--font-size-2xs);
   --text-2xs--line-height: calc(1 / 0.6875);
@@ -167,6 +186,8 @@
    */
   --container-measure: var(--size-measure);
   --container-content: var(--size-content-max);
+  /* Spaltenbreite der Score-Kachel im Analyse-Bento. */
+  --container-score-column: var(--size-score-column);
 }
 
 /*
@@ -446,6 +467,25 @@
   background-color: var(--color-surface-rail-card);
   border: 1px solid var(--color-border-card);
   box-shadow: var(--shadow-card);
+}
+
+/*
+ * DIE SCORE-KACHEL — die einzige dunkle Flaeche im Produkt, und die einzige
+ * Stelle, an der die Marke flaechig auftreten darf. Drei Ebenen von unten nach
+ * oben: deckende Basis (falls background-image nicht greift), Verlauf von
+ * warmem Neutral in die Marke, darueber ein weicher Schein von oben rechts.
+ *
+ * KEIN Rahmen: die Kachel steht durch ihre Flaeche, nicht durch eine Kante —
+ * eine Linie um so dunkles Material herum wirkt aufgeklebt. Der tiefe Schatten
+ * uebernimmt die Trennung vom Grund. Text darauf ausschliesslich aus der
+ * on-score-Familie (text-on-score, text-on-score-muted); alles andere faellt
+ * durch den Kontrast.
+ */
+@utility surface-score {
+  background-color: var(--color-surface-score);
+  background-image:
+    var(--color-surface-score-glow), var(--color-surface-score-gradient);
+  box-shadow: var(--shadow-float);
 }
 
 @layer base {

@@ -39,6 +39,9 @@
   --backdrop-dark-tint: #1F1417;
   --backdrop-dark-cool: #14161B;
   --backdrop-dark-deep: #08080A;
+  --score-base: #201A1C;
+  --score-warm: #2A1E23;
+  --score-tint: #3B2029;
   --category-k1-tint: #E5D7F9;
   --category-k1-ink: #704891;
   --category-k2-tint: #E5E6FF;
@@ -60,6 +63,7 @@
   --category-k5-tint-dark: #28324A;
   --category-k5-ink-dark: #A2CBF3;
   --success-100: #D6F0E7;
+  --success-300: #7AE0BE;
   --success-400: #34B894;
   --success-600: #0F7059;
   --success-900: #0A2E26;
@@ -93,6 +97,7 @@
   /* Layout-Breiten */
   --size-card-min: 18.75rem;
   --size-measure: 70ch;
+  --size-score-column: 40rem;
   --size-content-max: 112.5rem;
 
   /* Schrift-Familien */
@@ -109,6 +114,7 @@
   --font-size-xl: 1.5rem;
   --font-size-2xl: 2rem;
   --font-size-3xl: 2.5rem;
+  --font-size-score: 6rem;
 
   /* Schriftschnitte */
   --font-weight-regular: 400;
@@ -160,6 +166,10 @@
   --color-surface-glass-edge: rgba(255,255,255,0.60);
   --color-surface-glass-edge-quiet: rgba(255,255,255,0.22);
   --color-surface-rail-fallback: #F6F6F7;
+  --color-surface-score: #201A1C;
+  --color-surface-score-gradient: linear-gradient(148deg, #201A1C 0%, #2A1E23 54%, #3B2029 100%);
+  --color-surface-score-glow: radial-gradient(80% 65% at 88% -10%, #A3243270 0%, #A324322E 45%, #A3243200 72%);
+  --color-surface-score-pill: rgba(255,255,255,0.12);
   --color-text-default: #1E191A;
   --color-text-muted: #6B5F62;
   --color-text-faint: #85787B;
@@ -170,9 +180,12 @@
   --color-text-on-rail-muted: #6B5F62;
   --color-text-on-rail-faint: #85787B;
   --color-text-on-rail-brand: #A32432;
+  --color-text-on-score: #FFFFFF;
+  --color-text-on-score-muted: #C9C0C2;
   --color-border-default: rgba(30,25,26,0.10);
   --color-border-on-rail: rgba(30,25,26,0.10);
   --color-border-on-rail-strong: rgba(30,25,26,0.18);
+  --color-border-on-score: rgba(255,255,255,0.42);
   --color-border-input: rgba(30,25,26,0.10);
   --color-border-card: rgba(30,25,26,0.08);
   --color-border-brand: #E0A3AA;
@@ -190,6 +203,7 @@
   --color-status-critical-subtle: #FBE3D5;
   --color-status-success-on-rail: #0F7059;
   --color-status-warning-on-rail: #8A5A00;
+  --color-status-success-on-score: #7AE0BE;
   --color-category-k1-surface: #E5D7F9;
   --color-category-k1-icon: #704891;
   --color-category-k2-surface: #E5E6FF;
@@ -231,6 +245,10 @@
   --color-surface-glass-edge: rgba(255,255,255,0.16);
   --color-surface-glass-edge-quiet: rgba(255,255,255,0.05);
   --color-surface-rail-fallback: #1E191A;
+  --color-surface-score: #201A1C;
+  --color-surface-score-gradient: linear-gradient(148deg, #201A1C 0%, #2A1E23 54%, #3B2029 100%);
+  --color-surface-score-glow: radial-gradient(80% 65% at 88% -10%, #A3243270 0%, #A324322E 45%, #A3243200 72%);
+  --color-surface-score-pill: rgba(255,255,255,0.12);
   --color-text-default: #FAF7F8;
   --color-text-muted: #A29699;
   --color-text-faint: #85787B;
@@ -241,9 +259,12 @@
   --color-text-on-rail-muted: #A29699;
   --color-text-on-rail-faint: #85787B;
   --color-text-on-rail-brand: #E0A3AA;
+  --color-text-on-score: #FFFFFF;
+  --color-text-on-score-muted: #C9C0C2;
   --color-border-default: #332C2E;
   --color-border-on-rail: rgba(255,255,255,0.10);
   --color-border-on-rail-strong: rgba(255,255,255,0.18);
+  --color-border-on-score: rgba(255,255,255,0.42);
   --color-border-input: rgba(255,255,255,0.15);
   --color-border-card: rgba(255,255,255,0.14);
   --color-border-brand: #881E2A;
@@ -261,6 +282,7 @@
   --color-status-critical-subtle: #3B1305;
   --color-status-success-on-rail: #34B894;
   --color-status-warning-on-rail: #E8A93D;
+  --color-status-success-on-score: #7AE0BE;
   --color-category-k1-surface: #332A41;
   --color-category-k1-icon: #CDB8EA;
   --color-category-k2-surface: #2C2F45;
