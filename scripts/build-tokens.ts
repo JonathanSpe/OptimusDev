@@ -629,6 +629,27 @@ function buildContrastCases(): ContrastCase[] {
     });
   }
 
+  /*
+   * Dieselbe Deko-Schwelle fuer die Landkarte: die Marke traegt dort die ganze
+   * Aussage, und die Trennung der Datenlage ist die einzige Linie mit Inhalt.
+   * Der Marken-Akzent ist brand.default — er hebt einzelne Punkte hervor und
+   * muss sich dafuer von der Karte abheben, nicht nur von den anderen Marken.
+   */
+  for (const mark of ["mark", "divider"]) {
+    cases.push({
+      label: `plot.${mark} auf surface.card`,
+      foreground: light(`color.plot.${mark}`),
+      background: light("color.surface.card"),
+      decorative: true,
+    });
+  }
+  cases.push({
+    label: "brand.default auf surface.card (Marken-Akzent)",
+    foreground: light("color.brand.default"),
+    background: light("color.surface.card"),
+    decorative: true,
+  });
+
   return cases;
 }
 

@@ -145,6 +145,122 @@ export const sampleCategories: readonly CategoryScore[] = [
   },
 ];
 
+/**
+ * Ein BUENDEL — die kleinste bewertete Einheit der Analyse: mehrere Marker, die
+ * zusammen eine Aussage tragen. Jedes Buendel gehoert zu genau einer Kategorie,
+ * und die Nummer sagt zu welcher: "2.1" ist das erste Buendel der zweiten.
+ *
+ * ACHTUNG: Die Buendel-Scores rollen NICHT rechnerisch in die Kategorie-Scores
+ * hoch. Eine Aggregation waere eine Formel, und die steht noch nicht fest — hier
+ * stehen zwei Ebenen Platzhalter nebeneinander, keine Rechnung.
+ */
+export interface Bundle {
+  /** Fachliche Nummer, z. B. "2.1". Sie ist zugleich die Beschriftung am Punkt. */
+  id: string;
+  name: string;
+  /** Kategorie, zu der das Buendel zaehlt — Id aus sampleCategories. */
+  categoryId: string;
+  /** Punkte auf derselben Skala 0–100 wie Gesamt- und Kategorie-Score. */
+  score: number;
+  /** Belastbarkeit der Aussage, 1–5. Eigener Kanal, nie aus dem Score. */
+  confidence: number;
+}
+
+/*
+ * Zehn Buendel ueber die vier Kategorien. Die Streuung ist bewusst gebaut, und
+ * ein Fall traegt die ganze Aussage der Landkarte: 2.1 hat den NIEDRIGSTEN
+ * Score von allen (50) und trotzdem nichts zu tun — bei Konfidenz 2 weiss man
+ * zu wenig, um zu handeln. Die Punkte, auf die es ankommt, liegen rechts unten
+ * (4.1, 4.2, 2.2): niedrig UND belastbar.
+ *
+ * Innerhalb einer Konfidenzstufe liegen die Scores mindestens acht Punkte
+ * auseinander, damit sich in der Senkrechten keine zwei Marken ueberdecken.
+ */
+export const sampleBundles: readonly Bundle[] = [
+  {
+    id: "1.1",
+    name: "Glukosestoffwechsel",
+    categoryId: "k1",
+    score: 86,
+    confidence: 3,
+  },
+  {
+    id: "1.2",
+    name: "Schilddrüsenfunktion",
+    categoryId: "k1",
+    score: 74,
+    confidence: 3,
+  },
+  {
+    id: "1.3",
+    name: "Leberstoffwechsel",
+    categoryId: "k1",
+    score: 82,
+    confidence: 4,
+  },
+  {
+    id: "2.1",
+    name: "Cortisol-Tagesverlauf",
+    categoryId: "k2",
+    score: 50,
+    confidence: 2,
+  },
+  {
+    id: "2.2",
+    name: "Sexualhormone",
+    categoryId: "k2",
+    score: 72,
+    confidence: 4,
+  },
+  {
+    id: "3.1",
+    name: "Lipidprofil",
+    categoryId: "k3",
+    score: 92,
+    confidence: 5,
+  },
+  {
+    id: "3.2",
+    name: "Gefässentzündung",
+    categoryId: "k3",
+    score: 78,
+    confidence: 5,
+  },
+  {
+    id: "4.1",
+    name: "Eisenhaushalt",
+    categoryId: "k4",
+    score: 58,
+    confidence: 5,
+  },
+  {
+    id: "4.2",
+    name: "Vitamin-D-Status",
+    categoryId: "k4",
+    score: 64,
+    confidence: 4,
+  },
+  {
+    id: "4.3",
+    name: "B-Vitamine & Homocystein",
+    categoryId: "k4",
+    score: 94,
+    confidence: 2,
+  },
+];
+
+/**
+ * Name der Kategorie zu einer Id. EINE Quelle fuer den Namen: das Buendel
+ * speichert nur die Id, sonst stuenden dieselben vier Namen an zwei Stellen und
+ * liefen beim ersten Umbenennen auseinander.
+ */
+export function categoryNameById(categoryId: string): string {
+  return (
+    sampleCategories.find((category) => category.id === categoryId)?.name ??
+    "Ohne Kategorie"
+  );
+}
+
 export const sampleScore: ScoreSummary = {
   target: SCORE_TARGET,
   /*

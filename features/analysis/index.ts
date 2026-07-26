@@ -1,3 +1,4 @@
+export { BundleMap, type BundleMapProps } from "./components/bundle-map";
 export {
   CategoryDial,
   CategoryDialPanel,
@@ -14,8 +15,11 @@ export {
   SCORE_MAX,
   SCORE_MIN,
   SCORE_TARGET,
+  categoryNameById,
+  sampleBundles,
   sampleCategories,
   sampleScore,
+  type Bundle,
   type CategoryScore,
   type ScorePoint,
   type ScoreSummary,

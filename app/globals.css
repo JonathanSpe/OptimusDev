@@ -141,6 +141,16 @@
   --color-dial-confidence-empty: var(--color-gauge-confidence-empty);
 
   /*
+   * Die Buendel-Landkarte: Raster, Trennung der Datenlage und die Marken. EIN
+   * Ton fuer alle Marken — die Kategorie steckt in der Beschriftung, nicht in
+   * der Farbe. Betont wird ueber Groesse plus den Marken-Akzent (bg-brand).
+   * Utilities map-*, Tokens plot-*: dieselbe Trennung wie bei dial-/gauge-.
+   */
+  --color-map-grid: var(--color-plot-grid);
+  --color-map-divider: var(--color-plot-divider);
+  --color-map-mark: var(--color-plot-mark);
+
+  /*
    * Status — RESERVIERT. Nur für Zustände (Erfolg, Warnung, Fehler), nie
    * dekorativ und nie ohne Icon + Text-Label. Siehe tokens/README.md.
    */
@@ -202,6 +212,7 @@
   /* Spaltenbreiten der beiden Bento-Spalten der Analyse. */
   --container-score-column: var(--size-score-column);
   --container-dial-column: var(--size-dial-column);
+  --container-map-column: var(--size-map-column);
 }
 
 /*

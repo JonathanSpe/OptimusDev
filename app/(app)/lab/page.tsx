@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 
 import {
+  BundleMap,
   CategoryDialPanel,
   ScoreHero,
+  sampleBundles,
   sampleCategories,
   sampleScore,
 } from "@/features/analysis";
@@ -43,6 +45,10 @@ export default function LabPage() {
 
       <div className="max-w-dial-column">
         <CategoryDialPanel categories={sampleCategories} />
+      </div>
+
+      <div className="max-w-map-column">
+        <BundleMap bundles={sampleBundles} />
       </div>
     </div>
   );

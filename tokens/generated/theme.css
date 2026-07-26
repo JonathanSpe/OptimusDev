@@ -99,6 +99,7 @@
   --size-measure: 70ch;
   --size-score-column: 28rem;
   --size-score-fact: 7rem;
+  --size-map-column: 60rem;
   --size-dial-column: 30rem;
   --size-content-max: 112.5rem;
 
@@ -199,6 +200,9 @@
   --color-gauge-notch: rgba(30,25,26,0.55);
   --color-gauge-confidence-filled: rgba(30,25,26,0.42);
   --color-gauge-confidence-empty: rgba(30,25,26,0.12);
+  --color-plot-grid: rgba(30,25,26,0.08);
+  --color-plot-divider: rgba(30,25,26,0.50);
+  --color-plot-mark: rgba(30,25,26,0.62);
   --color-brand-default: #A32432;
   --color-brand-hover: #881E2A;
   --color-brand-secondary: #C96773;
@@ -283,6 +287,9 @@
   --color-gauge-notch: rgba(255,255,255,0.58);
   --color-gauge-confidence-filled: rgba(255,255,255,0.48);
   --color-gauge-confidence-empty: rgba(255,255,255,0.14);
+  --color-plot-grid: rgba(255,255,255,0.10);
+  --color-plot-divider: rgba(255,255,255,0.52);
+  --color-plot-mark: rgba(255,255,255,0.66);
   --color-brand-default: #B64652;
   --color-brand-hover: #C96773;
   --color-brand-secondary: #881E2A;
