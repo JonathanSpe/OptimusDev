@@ -64,9 +64,6 @@ const RING_OUTER = RADIUS + STROKE / 2;
 const NOTCH_OVERHANG = 3;
 const BOX = 78;
 const CENTER = BOX / 2;
-/** Breite von Name und Punkten unter dem Ring. Sie haelt die vier Zellen als
- * Paare zusammen, statt sie ueber die ganze Karte zu ziehen. */
-const CELL_WIDTH = 160;
 
 interface ArcSpan {
   startAngle: number;
@@ -185,7 +182,12 @@ export function CategoryDial({
         `Konfidenz ${category.confidence} von ${CONFIDENCE_MAX}`,
       ].join(", ")}
       className={cn(
-        "group relative mx-auto flex flex-col items-center transition",
+        /*
+         * Die Zelle ist so breit wie ihre Obergrenze und keinen Pixel breiter:
+         * das Raster darum (dial-grid) misst sie mit max-content, statt ihr
+         * einen Anteil der Karte zuzuteilen.
+         */
+        "group w-dial-cell relative flex flex-col items-center transition",
         /*
          * ENTSCHEIDUNG: Die Zelle hebt sich im Hover nur um einen Pixel und
          * bekommt keinen Schatten — sie hat keine eigene Flaeche, ein Schatten
@@ -194,7 +196,6 @@ export function CategoryDial({
         "motion-safe:hover:-translate-y-px motion-reduce:transition-none",
         className,
       )}
-      style={{ width: CELL_WIDTH }}
     >
       {/*
        * TODO(L2-Kategorieansicht): Hier wird spaeter die Kategorie geoeffnet
@@ -266,9 +267,11 @@ export function CategoryDial({
         </p>
       </div>
 
-      {/* Feste Hoehe fuer den Namen: die Konfidenzzeilen aller vier Ringe
-       * stehen dadurch auf einer Linie, egal wie lang ein Name umbricht. */}
-      <p className="text-foreground mt-3 flex h-8 items-start justify-center text-center text-xs leading-4 font-medium text-balance">
+      {/* Keine Mindesthoehe: Name und Konfidenz sitzen dicht unter dem Ring und
+       * gehoeren sichtbar zu ihm. Auf einer Linie stehen die Konfidenzzeilen
+       * trotzdem — nicht durch reservierten Leerraum, sondern weil bei der
+       * Zellbreite (size.dialCell) jeder der vier Namen zweizeilig bricht. */}
+      <p className="text-foreground mt-2 text-center text-xs leading-4 font-medium text-balance">
         {category.name}
       </p>
 
@@ -375,13 +378,12 @@ export function CategoryDialPanel({
       </p>
 
       {/*
-       * Zwei Ringe je Zeile, vier erst ab 48rem KARTENBREITE: vier Zellen zu
-       * 160px plus ihre Abstaende und der Innenrand der Karte brauchen 46rem —
-       * darunter schoeben sich die Namen unter den Ringen ineinander. Ein
-       * Fenster-Breakpoint traefe hier daneben, weil dieselbe Karte im Bento
-       * ueber die volle Breite und ueber sieben Spalten stehen kann.
+       * Ein Block statt einer Verteilung: die Stufen (eine Spalte, 2x2, eine
+       * Reihe) stecken in dial-grid und messen die KARTE, nicht das Fenster.
+       * Der Block steht links buendig unter der Ueberschrift — die Luft, die
+       * die Karte uebrig hat, bleibt an ihrem rechten Rand.
        */}
-      <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-6 @3xl:grid-cols-4">
+      <div className="dial-grid mt-6">
         {categories.map((category, position) => (
           <CategoryDial
             key={category.id}

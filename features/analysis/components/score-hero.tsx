@@ -22,6 +22,11 @@ import { SCORE_MAX, type ScorePoint, type ScoreSummary } from "../sample-data";
  * letzten Test ging, wie der Weg dahin aussah und was den Wert gerade deckelt.
  * Alles Weitere ist Sache der Abschnitte darunter.
  *
+ * Einen SOLLWERT kennt sie nicht. Eine Zahl, ab der ein Score gut waere, ist
+ * eine klinische Aussage — sie wird gesetzt, nicht geschaetzt. Bis eine
+ * freigegeben ist, misst sich der Score an seinem eigenen letzten Stand; das
+ * ist derselbe Bezug, den auch die Kategorie-Ringe haben.
+ *
  * Sie ist bewusst KOMPAKT. Die dunkle Flaeche ist die lauteste im Produkt —
  * ihre Groesse ist deshalb kein Ausdruck von Wichtigkeit, sondern eine
  * Lautstaerke. Wichtig ist die ZAHL, und die traegt sich selbst: alles andere
@@ -76,16 +81,15 @@ function toLongDate(isoDate: string): string {
 
 interface Geometry {
   path: string;
-  targetY: number;
   points: readonly { point: ScorePoint; x: number; y: number }[];
 }
 
 /**
- * Geometrie aus den Daten — ohne Diagramm-Bibliothek. Die Skala umfasst immer
- * auch den Zielwert: eine Ziellinie ausserhalb des Bildes waere kein Ziel.
+ * Geometrie aus den Daten — ohne Diagramm-Bibliothek. Die Skala spannt sich
+ * ueber die gemessenen Werte und sonst nichts.
  */
-function toGeometry(history: readonly ScorePoint[], target: number): Geometry {
-  const values = [...history.map((entry) => entry.value), target];
+function toGeometry(history: readonly ScorePoint[]): Geometry {
+  const values = history.map((entry) => entry.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
   /*
@@ -110,7 +114,6 @@ function toGeometry(history: readonly ScorePoint[], target: number): Geometry {
 
   return {
     path,
-    targetY: y(target),
     points: history.map((point, index) => ({
       point,
       x: x(index),
@@ -120,7 +123,13 @@ function toGeometry(history: readonly ScorePoint[], target: number): Geometry {
 }
 
 interface Delta {
+  /** Score beim vorherigen Test. */
+  from: number;
+  /** Score beim aktuellen Test. */
+  to: number;
+  /** to − from. Das Vorzeichen ist die Richtung. */
   amount: number;
+  /** Datum des vorherigen Tests. */
   since: string;
 }
 
@@ -136,6 +145,8 @@ function toDelta(history: readonly ScorePoint[]): Delta | null {
   if (!current || !previous) return null;
 
   return {
+    from: previous.value,
+    to: current.value,
     amount: current.value - previous.value,
     since: previous.date,
   };
@@ -190,7 +201,7 @@ function FactRow({ facts }: { facts: readonly Fact[] }) {
      * waere hier falsch: im Bento kann die Kachel schmal stehen, waehrend das
      * Fenster breit ist.
      */
-    <dl className="score-facts border-score-line/30 mt-5 border-t pt-4">
+    <dl className="score-facts border-score-line/30 border-t pt-4">
       {facts.map((fact, index) => (
         <motion.div
           key={fact.label}
@@ -215,7 +226,6 @@ function FactRow({ facts }: { facts: readonly Fact[] }) {
 
 interface ScoreTrendProps {
   history: readonly ScorePoint[];
-  target: number;
   /** Beschreibung der ganzen Grafik fuer Screenreader. */
   label: string;
 }
@@ -229,9 +239,9 @@ interface ScoreTrendProps {
  * fuer Screenreader unsichtbar, sonst liest jemand vier zusammenhanglose Punkte
  * vor.
  */
-function ScoreTrend({ history, target, label }: ScoreTrendProps) {
+function ScoreTrend({ history, label }: ScoreTrendProps) {
   const motionPreset = useMotionPreset();
-  const geometry = toGeometry(history, target);
+  const geometry = toGeometry(history);
 
   return (
     <div
@@ -245,21 +255,8 @@ function ScoreTrend({ history, target, label }: ScoreTrendProps) {
         height={SPARK_HEIGHT}
         className="overflow-visible"
       >
-        {/*
-         * Die Ziellinie bleibt als Bezug stehen, aber nur noch als Hauch: den
-         * Abstand zum Ziel nennt die Fusszeile in Worten, hier genuegt die
-         * Andeutung einer Hoehe. Gestrichelt, damit sie nie mit dem Verlauf
-         * verwechselt wird.
-         */}
-        <line
-          x1={0}
-          x2={SPARK_WIDTH}
-          y1={geometry.targetY}
-          y2={geometry.targetY}
-          className="stroke-score-line/40"
-          strokeWidth={1}
-          strokeDasharray="3 4"
-        />
+        {/* Nur die Kurve. Eine zweite Linie im Bild waere eine zweite Aussage,
+         * und die einzige, die es hier zu machen gibt, macht der Verlauf. */}
         <motion.path
           d={geometry.path}
           fill="none"
@@ -342,23 +339,27 @@ export function ScoreHero({ score, index = 0, className }: ScoreHeroProps) {
   }
 
   const delta = toDelta(score.history);
-  const remaining = score.target - current.value;
 
   const facts: Fact[] = [
     {
-      label: "noch bis Ziel",
-      value:
-        remaining > 0
-          ? `${numberFormat.format(remaining)} Punkte`
-          : "Ziel erreicht",
+      /*
+       * ENTSCHEIDUNG: Die Fusszeile nennt die beiden WERTE, die Pille oben
+       * nennt ihre Differenz. Beide rechnen auf demselben Verlauf, sagen aber
+       * Verschiedenes — stuende hier noch einmal "+4 seit 26.05.", waere es
+       * dieselbe Aussage zweimal auf derselben Kachel.
+       */
+      label: "seit letztem Test",
+      value: delta
+        ? `von ${numberFormat.format(delta.from)} auf ${numberFormat.format(delta.to)} Punkte`
+        : "erster Test",
     },
-    { label: "begrenzt durch", value: score.limiter },
+    { label: "schwächster Bereich", value: score.limiter },
     { label: "nächster Test", value: `in ${score.nextTestInDays} Tagen` },
   ];
 
   const trendLabel = `Verlauf des Scores: ${score.history
     .map((entry) => `${entry.value} am ${toLongDate(entry.date)}`)
-    .join(", ")}. Ziel ${score.target} Punkte.`;
+    .join(", ")}.`;
 
   return (
     <motion.section
@@ -379,6 +380,14 @@ export function ScoreHero({ score, index = 0, className }: ScoreHeroProps) {
         "@container",
         /* Kein Rahmen — die Flaeche traegt die Kachel. Siehe surface-score. */
         "surface-score rounded-panel relative overflow-hidden p-5 @sm:p-6",
+        /*
+         * Zwei Bloecke, oben und unten: die Kachel bekommt ihre Hoehe von der
+         * Zeile des Bentos (align-items: stretch) und verteilt den Zuwachs
+         * zwischen Score und Fusszeile, statt ihn unten als Loch stehen zu
+         * lassen. gap-5 ist der Mindestabstand — mehr wird daraus nur, wenn die
+         * Nachbarkachel hoeher ist.
+         */
+        "flex flex-col justify-between gap-5",
         className,
       )}
     >
@@ -424,11 +433,7 @@ export function ScoreHero({ score, index = 0, className }: ScoreHeroProps) {
           </div>
         </div>
 
-        <ScoreTrend
-          history={score.history}
-          target={score.target}
-          label={trendLabel}
-        />
+        <ScoreTrend history={score.history} label={trendLabel} />
       </div>
 
       <FactRow facts={facts} />

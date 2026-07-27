@@ -259,6 +259,8 @@
   --container-score-column: var(--size-score-column);
   --container-dial-column: var(--size-dial-column);
   --container-map-column: var(--size-map-column);
+  /* Breite einer Kategorie-Zelle im Ringfeld: w-dial-cell. */
+  --container-dial-cell: var(--size-dial-cell);
 }
 
 /*
@@ -567,6 +569,39 @@
     auto-fit,
     minmax(min(var(--size-score-fact), 100%), 1fr)
   );
+}
+
+/*
+ * Das Ringfeld der Kategorien — der Gegenentwurf zu panel-grid und
+ * score-facts: hier wird NICHT verteilt. Die Spalten sind max-content und die
+ * Gruppe steht mit justify-content: start als EIN kompakter Block links an der
+ * Kartenkante. Vier Ringe, die sich auf die volle Kartenbreite verteilen,
+ * stehen jeder allein in einer zu grossen Zelle; als Block nebeneinander sind
+ * sie vier Instrumente auf einem Brett, und die Luft steht am rechten Rand.
+ *
+ * Drei Stufen, alle an der KARTENBREITE (die Karte ist ein @container) und
+ * keine am Fenster — dieselbe Karte steht im Bento mal ueber sieben Spalten
+ * und mal ueber zwoelf:
+ *
+ *   < 16rem   eine Spalte — nur fuer sehr schmale Karten
+ *   >= 16rem  2x2 (zwei Zellen plus Spalt brauchen 15.5rem)
+ *   >= 40rem  eine Reihe (vier Zellen plus Spalten brauchen 32rem)
+ */
+@utility dial-grid {
+  display: grid;
+  /* Der Spalt trennt zwei Konfidenzzeilen, die beide fast die ganze Zelle
+   * fuellen — enger als space-4 laufen sie zu einem Band zusammen. */
+  gap: var(--space-6) var(--space-4);
+  grid-template-columns: max-content;
+  justify-content: start;
+
+  @container (min-width: 16rem) {
+    grid-template-columns: repeat(2, max-content);
+  }
+
+  @container (min-width: 40rem) {
+    grid-template-columns: repeat(4, max-content);
+  }
 }
 
 /*

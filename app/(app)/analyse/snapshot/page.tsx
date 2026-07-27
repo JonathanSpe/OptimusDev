@@ -20,27 +20,29 @@ export const metadata: Metadata = {
  * setzt den Seitenkopf und reicht die Daten an das Bento weiter; Anordnung und
  * Auftritt liegen in features/analysis.
  *
- * Die Daten sind noch ein Mock aus features/analysis/sample-data.ts
- * (⚠️ Scores, Zielwert und Limiter sind Platzhalter) und wandern spaeter hinter
- * eine Repository-Abfrage. Ein Auth-Guard fuer (app) kommt in einer spaeteren
- * Stufe dazu.
+ * KEIN Vorspann unter der Ueberschrift. Ein Absatz, der aufzaehlt, was gleich
+ * darunter steht, ist eine Inhaltsangabe der Seite: er kostet die erste
+ * Bildschirmhoehe und sagt nichts, was die Kacheln nicht selbst sagen.
+ *
+ * ⚠️ ALLE ZAHLEN SIND PLATZHALTER — sie sind ein Mock aus
+ * features/analysis/sample-data.ts (Scores, Limiter, Wirkfenster) und
+ * entstehen aus keiner Berechnung. Der Hinweis steht hier und auf /lab, nicht
+ * auf der Seite: sichtbar gehoert er in eine Kennzeichnung des Produkts, nicht
+ * in einen Satz unter der Ueberschrift. Die Daten wandern spaeter hinter eine
+ * Repository-Abfrage. Ein Auth-Guard fuer (app) kommt in einer spaeteren Stufe
+ * dazu.
  */
 export default function AnalyseSnapshotPage() {
   return (
-    <div className="space-y-8">
-      {/* Nur der Text bekommt eine Lesebreite — das Raster darunter nicht. */}
-      <header className="max-w-measure">
+    /* Genau EIN Schritt der Abstandsskala zwischen Kopf und Raster. */
+    <div className="space-y-6">
+      <header>
         <p className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase">
           Analyse · Snapshot
         </p>
         <h1 className="text-foreground mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
           Deine Auswertung
         </h1>
-        <p className="text-muted-foreground mt-3 text-lg">
-          Was aus deinem letzten Bluttest folgt: dein Score, die vier
-          Kategorien, die Bündel, an denen Arbeit sich zuerst lohnt — und ob
-          wirkt, was du nimmst. Alle Zahlen sind Platzhalter.
-        </p>
       </header>
 
       <AnalysisBoard

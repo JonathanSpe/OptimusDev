@@ -36,10 +36,15 @@ import { SupplementPanel } from "./supplement-row";
  *   Leiste), waehrend dieselbe Kachel auf einem 1000er Schirm ueber die volle
  *   Breite laeuft. Ein Fenster-Breakpoint kann das nicht wissen.
  *
- * Die Zeilen sind oben ausgerichtet und ziehen sich NICHT auf gleiche Hoehe.
- * Die Score-Kachel ist die einzige dunkle Flaeche im Produkt; auf die Hoehe der
- * Kategorie-Ringe gestreckt waere aus ihrer Kompaktheit ein Plakat geworden —
- * und Groesse ist bei dieser Kachel Lautstaerke, keine Wichtigkeit.
+ * Die Zeilen ziehen sich auf EINE Hoehe (align-items: stretch). Zwei Kacheln
+ * nebeneinander, die unten verschieden weit reichen, geben der Zeile eine
+ * ausgefranste Kante — und die liest sich als Versehen, nicht als Absicht. Eine
+ * gestreckte Kachel bekommt deshalb keine Fuellung untergeschoben: sie verteilt
+ * ihre eigenen Bloecke ueber die Hoehe (siehe ScoreHero, oben Score, unten
+ * Fusszeile). Feste Hoehen gibt es hier keine.
+ *
+ * EIN Abstandstoken fuer Spalten UND Zeilen: gap-4. Die Kacheln bringen keine
+ * eigenen senkrechten Abstaende mit — sonst laegen zwei Rhythmen uebereinander.
  */
 
 /*
@@ -83,7 +88,7 @@ export function AnalysisBoard({
   className,
 }: AnalysisBoardProps) {
   return (
-    <div className={cn("grid grid-cols-12 items-start gap-4", className)}>
+    <div className={cn("grid grid-cols-12 gap-4", className)}>
       {/* Zeile 1 — der Befund: wo du stehst und woraus er sich zusammensetzt. */}
       <ScoreHero
         score={score}
