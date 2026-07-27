@@ -39,7 +39,7 @@ German-language health-tech web app ("Optimus"). Next.js App Router + TypeScript
 - Entrances run ONCE. No re-animating on scroll, no looping decoration, no motion that has to finish before content is readable.
 - Numbers animate their VALUE, not their opacity: a number that fades in reads as loading, a number that counts up reads as a result.
 - `prefers-reduced-motion` collapses every duration to 0 — same variants, no time. Never gate content behind an animation.
-- Two shared variants: `fadeRise` (entrance) and `drawPath` (line drawing left to right).
+- Three shared variants: `fadeRise` (entrance), `fadeIn` (entrance without travel, for elements whose position is their meaning) and `drawPath` (line drawing left to right).
 
 ## Quality bar
 

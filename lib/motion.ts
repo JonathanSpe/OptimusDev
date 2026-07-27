@@ -103,6 +103,13 @@ export interface MotionPreset {
   reduced: boolean;
   /** Auftritt: von unten einblenden. Laeuft einmal. */
   fadeRise: Variants;
+  /**
+   * Auftritt OHNE Weg: nur die Deckkraft. Fuer Elemente, deren LAGE ihre
+   * Aussage ist — eine Linie in einem Feld, die zwoelf Pixel weit einschwebt,
+   * steht kurz auf einem Wert, den niemand gemessen hat. Nimmt wie fadeRise
+   * einen Reihenplatz.
+   */
+  fadeIn: Variants;
   /** Pfad von links nach rechts zeichnen. Nimmt wie fadeRise einen Reihenplatz. */
   drawPath: Variants;
   /**
@@ -146,6 +153,17 @@ function buildPreset(reduced: boolean): MotionPreset {
       visible: (index: number = 0) => ({
         opacity: 1,
         y: 0,
+        transition: {
+          duration: duration(DURATION.fade),
+          ease: EASE_OUT,
+          delay: reduced ? 0 : staggerDelay(index),
+        },
+      }),
+    },
+    fadeIn: {
+      hidden: { opacity: 0 },
+      visible: (index: number = 0) => ({
+        opacity: 1,
         transition: {
           duration: duration(DURATION.fade),
           ease: EASE_OUT,

@@ -645,6 +645,20 @@ function buildContrastCases(): ContrastCase[] {
     "crosshair",
     "timelineWindow",
     "timelineNow",
+    /*
+     * Die Entwicklungskurve: die tragende Linie und die Haarlinien der
+     * bewegten Kategorien. Die Haarlinie steht hier, weil sie eine Kategorie
+     * VERORTET — faellt sie unter 3:1, ist die Zurueckhaltung keine mehr,
+     * sondern eine fehlende Angabe.
+     *
+     * plot.hairlineMuted fehlt ABSICHTLICH: dieser Ton gilt nur, waehrend eine
+     * andere Linie betont ist — dann ist gerade jene die Angabe, und die
+     * uebrigen sind ihr Hintergrund. Ihre Werte stehen ausserdem im Chip und in
+     * der Tabelle.
+     */
+    "trendLine",
+    "hairline",
+    "hairlineActive",
   ]) {
     cases.push({
       label: `plot.${mark} auf surface.card`,
@@ -693,6 +707,29 @@ function buildContrastCases(): ContrastCase[] {
     foreground: light("color.text.muted"),
     background: toRgbString(plotField),
   });
+
+  /*
+   * Die Kategorie-Chips der Entwicklung sind eingelassene Flaechen auf der
+   * Karte — geprueft wird deshalb der ZUSAMMENGERECHNETE Grund, und zwar in
+   * der tieferen der beiden Stufen (chipActive): dort steht das Delta, und
+   * dort ist der Abstand am kleinsten.
+   */
+  const chipActive = composite(
+    parseColor(light("color.surface.chipActive")),
+    parseColor(light("color.surface.card")),
+  );
+  for (const role of [
+    "text.default",
+    "text.muted",
+    "status.success",
+    "status.warning",
+  ]) {
+    cases.push({
+      label: `${role} auf surface.chipActive`,
+      foreground: light(`color.${role}`),
+      background: toRgbString(chipActive),
+    });
+  }
 
   return cases;
 }

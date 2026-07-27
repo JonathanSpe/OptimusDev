@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import {
   BundleFocus,
   CategoryDialPanel,
-  ChangePanel,
-  ProgressChart,
+  ProgressionPanel,
   ScoreHero,
   SupplementPanel,
   sampleBundles,
@@ -59,22 +58,22 @@ export default function LabPage() {
        * der Kachel bringt der Baustein selbst mit. */}
       <BundleFocus bundles={sampleBundles} />
 
-      {/* Der Verlauf braucht die volle Bento-Breite: fuenf Linien ueber vier
-       * Termine, und rechts daneben die Namen an den Linienenden. */}
+      {/* Die Entwicklung braucht die volle Bento-Breite: die Linie muss Strecke
+       * haben, sonst ist ihre Steigung eine Behauptung, und die drei Chips
+       * stehen darunter in einer Reihe. Sie ersetzt Verlauf UND
+       * Aufschluesselung — beide beantworteten dieselbe Frage. */}
       <div className="max-w-map-column">
-        <ProgressChart score={sampleScore} categories={sampleCategorySeries} />
+        <ProgressionPanel
+          score={sampleScore}
+          categories={sampleCategorySeries}
+          changes={sampleMarkerChanges}
+        />
       </div>
 
       {/* Die Praeparate-Liste braucht die volle Bento-Breite: Name, Marker,
        * Zeitleiste, Delta und Status stehen in einer Zeile. */}
       <div className="max-w-map-column">
         <SupplementPanel supplements={sampleSupplements} />
-      </div>
-
-      {/* Die Aufschluesselung ebenso: die Spur in der Mitte braucht Laenge,
-       * sonst sind kleine Bewegungen nicht mehr von null zu unterscheiden. */}
-      <div className="max-w-map-column">
-        <ChangePanel changes={sampleMarkerChanges} />
       </div>
     </div>
   );

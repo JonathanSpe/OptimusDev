@@ -15,6 +15,7 @@
 
 import type {
   Bundle,
+  CategorySeries,
   FindingMarker,
   MarkerChange,
   Supplement,
@@ -259,6 +260,106 @@ export function toChangeOrder(
       Math.abs(toChangeReading(left).ratio);
     return move !== 0 ? move : left.name.localeCompare(right.name, "de");
   });
+}
+
+/*
+ * ============================================================================
+ * DAS RAUSCHBAND — welche Kategorie sich wirklich bewegt hat.
+ * ============================================================================
+ * Zwischen zwei Tests bewegt sich jede Kategorie ein wenig. Das meiste davon
+ * ist Streuung: Tagesform, Abnahmezeitpunkt, Labor. Eine Entwicklung, die
+ * jeden dieser Ausschlaege als Linie zeichnet, zeigt vier Trends, wo es
+ * vielleicht einen gibt — und der Leser kann nicht unterscheiden, welcher
+ * davon etwas bedeutet.
+ *
+ * Deshalb entscheidet EINE Regel, was ueberhaupt gezeigt wird: der Betrag der
+ * Veraenderung seit dem vorherigen Test gegen ein Rauschband. Was darunter
+ * bleibt, bekommt keine Linie und keinen Chip — es wird in einem Satz genannt
+ * und damit nicht verschwiegen, aber auch nicht zum Trend erklaert.
+ *
+ * ⚠️ PLATZHALTER, klinisch nicht freigegeben.
+ */
+
+/*
+ * ENTSCHEIDUNG: Die Schwelle steht als NACHSCHLAGETABELLE mit Rueckfallwert,
+ * nicht als eine Konstante. Die echten Baender kommen aus dem
+ * Verlaufs-Framework (Teil 2) und sind dann PRO MARKER verschieden — ein
+ * Prozent Kreatinin ist Rauschen, ein Prozent TSH nicht. Eine einzige globale
+ * Zahl muesste man dafuer spaeter ueberall wieder aufbrechen; ein Eintrag je
+ * Kategorie laesst sich ersetzen, ohne dass eine Komponente davon erfaehrt.
+ *
+ * Bis dahin traegt jede Kategorie denselben Platzhalter: drei Punkte auf der
+ * Skala 0–100.
+ */
+const CATEGORY_NOISE: Readonly<Record<string, number>> = {
+  k1: 3,
+  k2: 3,
+  k3: 3,
+  k4: 3,
+};
+
+/** ⚠️ PLATZHALTER — Band fuer Kategorien ohne eigenen Eintrag. */
+export const CATEGORY_NOISE_FALLBACK = 3;
+
+/** Das Rauschband EINER Kategorie. Die einzige Stelle, die die Tabelle liest. */
+export function toCategoryNoise(categoryId: string): number {
+  return CATEGORY_NOISE[categoryId] ?? CATEGORY_NOISE_FALLBACK;
+}
+
+/** Die Bewegung einer Kategorie zwischen den letzten beiden Tests. */
+export interface CategoryMovement {
+  id: string;
+  name: string;
+  /** Stand beim vorherigen Test; null, wenn es keinen gibt. */
+  previous: number | null;
+  /** Datum dieses Vergleichs (ISO); null ohne Vorwert. */
+  previousDate: string | null;
+  current: number;
+  currentDate: string;
+  /** Punkte gegenueber dem vorherigen Test. 0, solange es keinen gibt. */
+  delta: number;
+  /** Das Band, gegen das diese Kategorie geprueft wurde. */
+  noise: number;
+  /** true = unterhalb des Bandes, also kein belastbarer Trend. */
+  insideNoise: boolean;
+}
+
+/**
+ * Alle Kategorien mit ihrer Bewegung, die groesste zuerst — und die EINE
+ * Auswahl, an der Linien, Chips und Fusszeile haengen. Sie steht hier und nicht
+ * in der Komponente: eine Kategorie, die eine Haarlinie bekommt, aber keinen
+ * Chip, waere derselbe Widerspruch wie zwei Rangfolgen nebeneinander.
+ *
+ * Bei Gleichstand entscheidet der Name, damit die Reihenfolge zwischen zwei
+ * Renderings dieselbe bleibt.
+ */
+export function toCategoryMovements(
+  categories: readonly CategorySeries[],
+): readonly CategoryMovement[] {
+  return categories
+    .map((category) => {
+      const current = category.history.at(-1) ?? category.history[0];
+      const previous = category.history.at(-2) ?? null;
+      const noise = toCategoryNoise(category.id);
+      const delta = previous === null ? 0 : current.value - previous.value;
+
+      return {
+        id: category.id,
+        name: category.name,
+        previous: previous?.value ?? null,
+        previousDate: previous?.date ?? null,
+        current: current.value,
+        currentDate: current.date,
+        delta,
+        noise,
+        /* Ohne Vorwert gibt es keine Bewegung — und damit auch keinen Trend. */
+        insideNoise: previous === null || Math.abs(delta) < noise,
+      };
+    })
+    .toSorted((left, right) => {
+      const move = Math.abs(right.delta) - Math.abs(left.delta);
+      return move !== 0 ? move : left.name.localeCompare(right.name, "de");
+    });
 }
 
 /*

@@ -98,6 +98,7 @@
   --size-card-min: 18.75rem;
   --size-measure: 70ch;
   --size-score-column: 28rem;
+  --size-chip-min: 13rem;
   --size-score-fact: 7rem;
   --size-map-column: 60rem;
   --size-dial-column: 30rem;
@@ -173,6 +174,8 @@
   --color-surface-score-gradient: linear-gradient(148deg, #201A1C 0%, #2A1E23 54%, #3B2029 100%);
   --color-surface-score-glow: radial-gradient(80% 65% at 88% -10%, #A3243270 0%, #A324322E 45%, #A3243200 72%);
   --color-surface-score-pill: rgba(255,255,255,0.12);
+  --color-surface-chip: rgba(30,25,26,0.035);
+  --color-surface-chip-active: rgba(30,25,26,0.07);
   --color-text-default: #1E191A;
   --color-text-muted: #6B5F62;
   --color-text-faint: #85787B;
@@ -214,6 +217,12 @@
   --color-plot-timeline-track: rgba(30,25,26,0.08);
   --color-plot-timeline-window: rgba(30,25,26,0.48);
   --color-plot-timeline-now: rgba(30,25,26,0.82);
+  --color-plot-trend-line: #A32432;
+  --color-plot-trend-wash: linear-gradient(180deg, #A3243224 0%, #A324320A 45%, #A3243200 100%);
+  --color-plot-trend-glow: radial-gradient(closest-side, #A3243252 0%, #A324321A 55%, #A3243200 100%);
+  --color-plot-hairline: rgba(30,25,26,0.50);
+  --color-plot-hairline-active: rgba(30,25,26,0.88);
+  --color-plot-hairline-muted: rgba(30,25,26,0.22);
   --color-brand-default: #A32432;
   --color-brand-hover: #881E2A;
   --color-brand-secondary: #C96773;
@@ -271,6 +280,8 @@
   --color-surface-score-gradient: linear-gradient(148deg, #201A1C 0%, #2A1E23 54%, #3B2029 100%);
   --color-surface-score-glow: radial-gradient(80% 65% at 88% -10%, #A3243270 0%, #A324322E 45%, #A3243200 72%);
   --color-surface-score-pill: rgba(255,255,255,0.12);
+  --color-surface-chip: rgba(255,255,255,0.05);
+  --color-surface-chip-active: rgba(255,255,255,0.10);
   --color-text-default: #FAF7F8;
   --color-text-muted: #A29699;
   --color-text-faint: #85787B;
@@ -312,6 +323,12 @@
   --color-plot-timeline-track: rgba(255,255,255,0.10);
   --color-plot-timeline-window: rgba(255,255,255,0.50);
   --color-plot-timeline-now: rgba(255,255,255,0.88);
+  --color-plot-trend-line: #C96773;
+  --color-plot-trend-wash: linear-gradient(180deg, #C9677329 0%, #C967730F 45%, #C9677300 100%);
+  --color-plot-trend-glow: radial-gradient(closest-side, #C9677347 0%, #C9677317 55%, #C9677300 100%);
+  --color-plot-hairline: rgba(255,255,255,0.52);
+  --color-plot-hairline-active: rgba(255,255,255,0.92);
+  --color-plot-hairline-muted: rgba(255,255,255,0.24);
   --color-brand-default: #B64652;
   --color-brand-hover: #C96773;
   --color-brand-secondary: #881E2A;

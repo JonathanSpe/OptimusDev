@@ -747,3 +747,50 @@ export const sampleMarkerChanges: readonly MarkerChange[] = toMarkerChanges(
   sampleMarkers,
   sampleMarkerGroups,
 );
+
+/*
+ * ⚠️ PLATZHALTER — welche Marker eine BEWERTUNGS-Kategorie tragen.
+ *
+ * Diese Zuordnung ist die Bruecke zwischen den beiden Ebenen, die sich sonst
+ * nirgends beruehren: die Anzeige-Gruppen der Kacheln (Hormone,
+ * Herz-Gesundheit, …) ordnen Marker, die Kategorien K1–K4 bewerten sie. Sie
+ * decken sich NICHT, und deshalb laesst sich die eine nicht aus der anderen
+ * ableiten.
+ *
+ * Ein Marker steht bei genau EINER Kategorie. Derselbe Wert an zwei Stellen
+ * waere zweimal derselbe Beleg — und in einer Aufschluesselung, die erklaeren
+ * soll, woher eine Bewegung kommt, ist das eine doppelte Zaehlung.
+ *
+ * Die echte Zuordnung kommt mit dem Bluttest-Framework aus dem Buendel-Modell:
+ * Kategorie → Buendel → Marker. Bis dahin steht sie hier flach und muss vor
+ * dem Release freigegeben werden.
+ */
+const CATEGORY_MARKERS: Readonly<Record<string, readonly string[]>> = {
+  k1: ["tsh", "freies-t3", "ferritin"],
+  k2: ["testosteron-gesamt", "shbg"],
+  k3: [
+    "apob",
+    "ldl-cholesterin",
+    "hdl-cholesterin",
+    "hs-crp",
+    "triglyceride",
+    "gesamt-cholesterin",
+  ],
+  k4: ["vitamin-d-25-oh", "albumin", "kreatinin"],
+};
+
+/**
+ * Die Marker hinter der Bewegung EINER Kategorie. Marker ohne zweite Messung
+ * sind hier gar nicht erst enthalten — sie stehen schon in toMarkerChanges
+ * nicht, weil es zu ihnen keine Veraenderung gibt.
+ */
+export function toCategoryEvidence(
+  categoryId: string,
+  changes: readonly MarkerChange[],
+): readonly MarkerChange[] {
+  const wanted = CATEGORY_MARKERS[categoryId] ?? [];
+  return wanted.flatMap((id) => {
+    const change = changes.find((entry) => entry.id === id);
+    return change ? [change] : [];
+  });
+}

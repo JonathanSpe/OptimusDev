@@ -171,6 +171,22 @@
   --color-line-crosshair: var(--color-plot-crosshair);
 
   /*
+   * Die Entwicklungskurve: EINE tragende Linie in der Marke, darunter die
+   * Haarlinien der bewegten Kategorien in drei Dichten — ruhend, betont und
+   * zurueckgetreten. Flaeche und Schein sind Verlaeufe und stehen deshalb
+   * weiter unten als eigene Utilities. Utilities trend-*, Tokens plot.trend*
+   * und plot.hairline*.
+   */
+  --color-trend-line: var(--color-plot-trend-line);
+  --color-trend-hairline: var(--color-plot-hairline);
+  --color-trend-hairline-active: var(--color-plot-hairline-active);
+  --color-trend-hairline-muted: var(--color-plot-hairline-muted);
+
+  /* Eingelassene Flaeche der Kategorie-Chips, ruhend und gehalten. */
+  --color-chip: var(--color-surface-chip);
+  --color-chip-active: var(--color-surface-chip-active);
+
+  /*
    * Wirkzeitleiste der Praeparate-Zeile: Spur, erwartetes Fenster, Heute-Marke.
    * Utilities timeline-*, Tokens plot.timeline*.
    */
@@ -526,6 +542,22 @@
 }
 
 /*
+ * Die Chip-Reihe der Entwicklung. INTRINSISCH wie panel-grid und score-facts:
+ * die Spaltenzahl ergibt sich aus der Breite der KACHEL, nicht aus
+ * Fenster-Breakpoints. Aus drei Chips werden dann zwei und schliesslich einer.
+ * auto-fit statt auto-fill, damit zwei Chips die Reihe ausfuellen und rechts
+ * keine leere Spalte stehen bleibt — die Zahl der Chips ist hier ein Befund.
+ */
+@utility chip-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--size-chip-min), 100%), 1fr)
+  );
+}
+
+/*
  * Der weiche Schein hinter einer betonten Marke der Landkarte und das Band,
  * das beim Auftritt einmal ueber das Feld laeuft. Beide sind Verlaeufe und
  * gehen deshalb ueber background-image statt ueber eine Farb-Utility — dieselbe
@@ -537,6 +569,19 @@
 
 @utility map-scan {
   background-image: var(--color-plot-scan);
+}
+
+/*
+ * Flaeche und Schein der Entwicklungskurve. Beide sind Verlaeufe und laufen
+ * deshalb ueber background-image; die Form der Flaeche kommt von aussen als
+ * clip-path, damit die Farbe hier bleibt und die Geometrie in der Komponente.
+ */
+@utility trend-wash {
+  background-image: var(--color-plot-trend-wash);
+}
+
+@utility trend-glow {
+  background-image: var(--color-plot-trend-glow);
 }
 
 /*

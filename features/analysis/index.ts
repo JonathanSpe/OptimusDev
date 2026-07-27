@@ -12,12 +12,6 @@ export {
 } from "./components/bundle-focus";
 export { BundleMap, type BundleMapProps } from "./components/bundle-map";
 export {
-  ChangePanel,
-  ChangeRow,
-  type ChangePanelProps,
-  type ChangeRowProps,
-} from "./components/change-row";
-export {
   CategoryDial,
   CategoryDialPanel,
   type CategoryDialPanelProps,
@@ -27,10 +21,19 @@ export {
   PriorityList,
   type PriorityListProps,
 } from "./components/priority-list";
+/*
+ * Die Entwicklung ist EIN Baustein: Verlauf und Aufschluesselung derselben
+ * Bewegung. Sie ersetzt die frueheren zwei Kacheln (ProgressChart, ChangePanel)
+ * — zwei Antworten auf dieselbe Frage waren eine Aufgabe fuer den Leser. Die
+ * Tabelle ist einzeln exportiert, weil sie einzeln getestet wird;
+ * ProgressionPanel stellt sie selbst UNTER die Kachel.
+ */
 export {
-  ProgressChart,
-  type ProgressChartProps,
-} from "./components/progress-chart";
+  ProgressionPanel,
+  ProgressionTable,
+  type ProgressionPanelProps,
+  type ProgressionTableProps,
+} from "./components/progression-panel";
 export { ScoreHero, type ScoreHeroProps } from "./components/score-hero";
 export {
   SupplementPanel,
@@ -43,10 +46,13 @@ export {
  * Datenlage zu duenn fuer ein Urteil ist. ⚠️ Platzhalterstufen, siehe rules.
  */
 export {
+  CATEGORY_NOISE_FALLBACK,
   CHANGE_FLAT,
   CONFIDENCE_SOLID,
   MIN_MEASUREMENTS_FOR_VERDICT,
   isAdjustedActionHint,
+  toCategoryMovements,
+  toCategoryNoise,
   toChangeOrder,
   toChangeReading,
   toFocusBundles,
@@ -54,6 +60,7 @@ export {
   toMarkerReading,
   toPriorityBundle,
   toSupplementStatus,
+  type CategoryMovement,
   type ChangeDirection,
   type ChangeReading,
   type ChangeVerdict,
@@ -79,6 +86,7 @@ export {
   samplePriorityFindings,
   sampleScore,
   sampleSupplements,
+  toCategoryEvidence,
   toCategoryScore,
   toMarkerChanges,
   type Bundle,
