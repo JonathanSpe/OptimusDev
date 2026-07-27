@@ -37,6 +37,11 @@ import { PriorityList } from "./priority-list";
 
 export interface BundleFocusProps {
   bundles: readonly Bundle[];
+  /**
+   * Platz in der Auftrittsreihe der SEITE. Er verzoegert nur den Auftritt der
+   * Kachel; der Scan im Feld laeuft weiter nach seiner eigenen Traverse.
+   */
+  index?: number;
   className?: string;
 }
 
@@ -142,7 +147,11 @@ export function BundleTable({ bundles, focus, className }: BundleTableProps) {
   );
 }
 
-export function BundleFocus({ bundles, className }: BundleFocusProps) {
+export function BundleFocus({
+  bundles,
+  index = 0,
+  className,
+}: BundleFocusProps) {
   const motionPreset = useMotionPreset();
   const titleId = useId();
   /*
@@ -162,16 +171,22 @@ export function BundleFocus({ bundles, className }: BundleFocusProps) {
     <div className={cn("flex flex-col gap-4", className)}>
       <motion.section
         variants={motionPreset.fadeRise}
+        custom={index}
         initial="hidden"
         animate="visible"
         aria-labelledby={titleId}
-        className="surface-card rounded-2xl p-6"
+        /* Die Kachel ist ihr eigener Container: ob Feld und Rangfolge
+         * nebeneinander stehen, entscheidet IHRE Breite. */
+        className="surface-card @container rounded-2xl p-6"
       >
         {/* Die Flaeche bekommt die groessere Spalte. Sie braucht nicht nur
          * Platz fuer die Punkte, sondern auch fuer die drei Namen NEBEN den
          * Punkten: wird sie schmaler, weichen die Beschriftungen nach links
-         * aus, und das Feld liest sich von rechts nach links. */}
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+         * aus, und das Feld liest sich von rechts nach links. Unter 56rem
+         * Kachelbreite bliebe dem Feld weniger als 30rem — dann steht die
+         * Rangfolge lieber UNTER der Flaeche, und die Flaeche bekommt die
+         * ganze Kachel. */}
+        <div className="grid gap-8 @4xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <div className="flex flex-col">
             <h2
               id={titleId}
@@ -201,7 +216,7 @@ export function BundleFocus({ bundles, className }: BundleFocusProps) {
           {/* Keine Linie zwischen den Haelften auf schmalen Spalten: dort
            * stehen sie untereinander, und ein Strich quer waere eine Trennung,
            * wo eine Fortsetzung gemeint ist. */}
-          <div className="lg:border-border lg:border-l lg:pl-8">
+          <div className="@4xl:border-border @4xl:border-l @4xl:pl-8">
             <PriorityList
               entries={focus}
               activeId={activeId}

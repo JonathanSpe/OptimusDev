@@ -305,6 +305,11 @@ export function CategoryDial({
 
 export interface CategoryDialPanelProps {
   categories: readonly CategoryScore[];
+  /**
+   * Platz in der Auftrittsreihe der SEITE. Er verzoegert nur den Auftritt der
+   * Karte; die Reihe der Ringe darin bleibt ihre eigene.
+   */
+  index?: number;
   onOpenDetails?: (id: string) => void;
   className?: string;
 }
@@ -332,6 +337,7 @@ function EmptyCategories({ className }: { className?: string }) {
 
 export function CategoryDialPanel({
   categories,
+  index = 0,
   onOpenDetails,
   className,
 }: CategoryDialPanelProps) {
@@ -345,10 +351,14 @@ export function CategoryDialPanel({
   return (
     <motion.section
       variants={motionPreset.fadeRise}
+      custom={index}
       initial="hidden"
       animate="visible"
       aria-labelledby={titleId}
-      className={cn("surface-card rounded-2xl p-6", className)}
+      /* Die Karte ist ihr eigener Container — die Zahl der Ringe je Zeile
+       * haengt an IHRER Breite, nicht am Fenster. Im Bento steht sie mal ueber
+       * die volle Breite und mal in sieben von zwoelf Spalten. */
+      className={cn("surface-card @container rounded-2xl p-6", className)}
     >
       <h2
         id={titleId}
@@ -364,7 +374,14 @@ export function CategoryDialPanel({
         Ring = Score · Strich = letzter Test
       </p>
 
-      <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-6">
+      {/*
+       * Zwei Ringe je Zeile, vier erst ab 48rem KARTENBREITE: vier Zellen zu
+       * 160px plus ihre Abstaende und der Innenrand der Karte brauchen 46rem —
+       * darunter schoeben sich die Namen unter den Ringen ineinander. Ein
+       * Fenster-Breakpoint traefe hier daneben, weil dieselbe Karte im Bento
+       * ueber die volle Breite und ueber sieben Spalten stehen kann.
+       */}
+      <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-6 @3xl:grid-cols-4">
         {categories.map((category, position) => (
           <CategoryDial
             key={category.id}

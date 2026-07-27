@@ -253,10 +253,38 @@
    */
   --container-measure: var(--size-measure);
   --container-content: var(--size-content-max);
+  /* Breite der Bildspalte in der Praeparate-Liste: w-capsule. */
+  --container-capsule: var(--size-capsule);
   /* Spaltenbreiten der beiden Bento-Spalten der Analyse. */
   --container-score-column: var(--size-score-column);
   --container-dial-column: var(--size-dial-column);
   --container-map-column: var(--size-map-column);
+}
+
+/*
+ * DIE ZWEI FENSTERSTUFEN DES ANALYSE-BENTOS — und es bleiben zwei.
+ *
+ * Sie ordnen nur die SPALTEN des Rasters um; wie sich eine Kachel innen
+ * einrichtet, entscheidet sie an ihrer eigenen Breite (Container-Queries).
+ * Deshalb braucht das Bento keine dritte Stufe: die Kacheln haben schon eine.
+ *
+ *   bento       976px — ab hier teilen sich Score und Kategorie-Ringe eine
+ *                Zeile (5 / 7 Spalten)
+ *   bento-wide  1360px — ab hier auch Entwicklung und Praeparate (7 / 5)
+ *
+ * Beide Zahlen sind aus dem Shell gerechnet und nicht gerundet: Leisten,
+ * Panel-Abstand und Innenabstand ziehen rund 10rem vom Fenster ab. Unterhalb
+ * dieser Stufen bekaeme die jeweils schmalere Spalte weniger, als ihr Inhalt
+ * braucht — und die Kachel wuerde bloss enger, statt anders zu stehen.
+ *
+ * Sie stehen HIER und nicht in tokens/tokens.json, weil Tailwind einen
+ * Breakpoint als Literal in die Media-Query schreibt: ein var() waere dort
+ * ungueltiges CSS. Die Token-Datei bleibt damit die Quelle fuer alles, was ein
+ * var() sein kann — Breakpoints koennen es nicht.
+ */
+@theme {
+  --breakpoint-bento: 61rem;
+  --breakpoint-bento-wide: 85rem;
 }
 
 /*
@@ -624,6 +652,17 @@
   background-image:
     var(--color-surface-score-glow), var(--color-surface-score-gradient);
   box-shadow: var(--shadow-float);
+}
+
+/*
+ * Eine freigestellte Kapsel liegt OHNE Kachel und ohne Rahmen auf der Karte —
+ * ihr eigener Schatten ist alles, was sie von der Flaeche abhebt. Deshalb
+ * drop-shadow und nicht box-shadow: box-shadow legt den Schatten unter das
+ * RECHTECK des Bildes, drop-shadow unter seinen Alphakanal, also unter die
+ * Kapsel selbst. Der Wert wechselt mit dem Modus (siehe semantic.*.shadow).
+ */
+@utility capsule-shadow {
+  filter: drop-shadow(var(--shadow-capsule));
 }
 
 @layer base {

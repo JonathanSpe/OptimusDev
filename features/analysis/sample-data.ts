@@ -520,11 +520,17 @@ export interface Supplement {
   /** Tage seit Einnahmebeginn zum Bewertungsstichtag. */
   daysOn: number;
   /**
-   * Beobachtete Veraenderung am Zielmarker seit Einnahmebeginn. null, wenn es
-   * keinen vergleichbaren Messpunkt gibt (zu frueh, nicht beurteilbar, oder
-   * noch keine zweite Messung).
+   * Der Zielmarker bei Einnahmebeginn und heute, in targetUnit. null heisst:
+   * es gibt keinen vergleichbaren Messpunkt (zu frueh, kein messbarer Marker
+   * oder noch keine zweite Messung).
+   *
+   * Hier stehen die beiden MESSWERTE und nicht ihre Differenz: die Zeile zeigt
+   * den Weg ("41 → 68 ng/ml"), und ein zusaetzlich gespeichertes Delta waere
+   * eine zweite Quelle fuer dieselbe Aussage — sie koennten auseinanderlaufen.
+   * Die Differenz rechnet toObservedChange in rules.ts.
    */
-  observedDelta: number | null;
+  baseline: number | null;
+  current: number | null;
   /**
    * ⚠️ PLATZHALTER — Richtung, in der eine Wirkung am Marker sichtbar waere.
    * Vitamin D steigt bei Wirkung, LDL faellt; ohne diese Richtung ist jede
@@ -554,9 +560,9 @@ export interface Supplement {
  * Fuenf Praeparate, je einer der fuenf Zustaende. Der Bewertungsstichtag ist
  * der letzte Test (21.07.2026) — dieselben Termine wie Score und Verlauf.
  *
- * Die Marker-Werte, die hinter den Deltas stehen, sind dieselben wie auf dem
- * Dashboard (Vitamin D 17→44, Ferritin 41→68), damit dieselbe Messung nicht
- * an zwei Stellen verschiedene Zahlen traegt.
+ * Die Marker-Werte sind dieselben wie auf dem Dashboard (Vitamin D 17→44,
+ * Ferritin 41→68), damit dieselbe Messung nicht an zwei Stellen verschiedene
+ * Zahlen traegt.
  */
 export const sampleSupplements: readonly Supplement[] = [
   {
@@ -568,7 +574,8 @@ export const sampleSupplements: readonly Supplement[] = [
     startedOn: "2026-01-27",
     effectWindowDays: { from: 56, to: 112 },
     daysOn: 175,
-    observedDelta: 27,
+    baseline: 17,
+    current: 44,
     expectedDirection: "up",
     strongDelta: 15,
     weakDelta: 5,
@@ -583,7 +590,8 @@ export const sampleSupplements: readonly Supplement[] = [
     startedOn: "2026-01-27",
     effectWindowDays: { from: 56, to: 120 },
     daysOn: 175,
-    observedDelta: 27,
+    baseline: 41,
+    current: 68,
     expectedDirection: "up",
     strongDelta: 40,
     weakDelta: 15,
@@ -600,7 +608,8 @@ export const sampleSupplements: readonly Supplement[] = [
     effectWindowDays: { from: 60, to: 120 },
     daysOn: 175,
     /* Flach seit Einnahmebeginn — nach dem Wirkfenster ist das "keine Reaktion". */
-    observedDelta: 0,
+    baseline: 148,
+    current: 148,
     expectedDirection: "down",
     strongDelta: 30,
     weakDelta: 10,
@@ -616,7 +625,8 @@ export const sampleSupplements: readonly Supplement[] = [
     startedOn: "2026-06-23",
     effectWindowDays: { from: 42, to: 84 },
     daysOn: 28,
-    observedDelta: null,
+    baseline: null,
+    current: null,
     expectedDirection: "up",
     strongDelta: 0.1,
     weakDelta: 0.04,
@@ -631,7 +641,8 @@ export const sampleSupplements: readonly Supplement[] = [
     startedOn: "2026-03-24",
     effectWindowDays: { from: 28, to: 56 },
     daysOn: 119,
-    observedDelta: null,
+    baseline: null,
+    current: null,
     expectedDirection: "up",
     strongDelta: 1,
     weakDelta: 0.5,

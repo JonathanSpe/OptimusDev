@@ -102,6 +102,7 @@
   --size-score-fact: 7rem;
   --size-map-column: 60rem;
   --size-dial-column: 30rem;
+  --size-capsule: 2.75rem;
   --size-content-max: 112.5rem;
 
   /* Schrift-Familien */
@@ -252,6 +253,7 @@
   --chart-5: #DFD7D9;
   --color-focus: #A32432;
   --color-focus-on-rail: #A32432;
+  --shadow-capsule: 0 2px 4px rgba(19,16,17,0.22);
 }
 
 .dark {
@@ -358,4 +360,5 @@
   --chart-5: #6B5F62;
   --color-focus: #D5858F;
   --color-focus-on-rail: #D5858F;
+  --shadow-capsule: 0 2px 5px rgba(0,0,0,0.55);
 }

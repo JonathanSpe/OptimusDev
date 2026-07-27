@@ -160,6 +160,9 @@ function kebab(segment: string): string {
 const SEMANTIC_NAME_OVERRIDES: Record<string, string> = {
   "background.canvas": "--background-canvas",
   "background.grain": "--background-grain",
+  /* Ein Schatten, keine Farbe: er steht bei den semantischen Tokens, weil er
+   * den Modus wechselt, heisst aber wie die uebrigen Schatten. */
+  "shadow.capsule": "--shadow-capsule",
   "surface.glass": "--surface-glass",
   "surface.glassStrong": "--surface-glass-strong",
   "surface.glassSubtle": "--surface-glass-subtle",

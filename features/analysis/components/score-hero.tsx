@@ -31,6 +31,12 @@ import { SCORE_MAX, type ScorePoint, type ScoreSummary } from "../sample-data";
 
 export interface ScoreHeroProps {
   score: ScoreSummary;
+  /**
+   * Platz in der Auftrittsreihe der SEITE. Er verzoegert nur den Auftritt der
+   * Kachel; ihre eigene Reihe (Punkte, Fusszeile) bleibt davon unberuehrt —
+   * sie ist eine Liste fuer sich.
+   */
+  index?: number;
   className?: string;
 }
 
@@ -317,7 +323,7 @@ function EmptyScore({ className }: { className?: string }) {
   );
 }
 
-export function ScoreHero({ score, className }: ScoreHeroProps) {
+export function ScoreHero({ score, index = 0, className }: ScoreHeroProps) {
   const motionPreset = useMotionPreset();
 
   /*
@@ -357,13 +363,22 @@ export function ScoreHero({ score, className }: ScoreHeroProps) {
   return (
     <motion.section
       variants={motionPreset.fadeRise}
+      custom={index}
       initial="hidden"
       animate="visible"
       onAnimationStart={() => setCountedValue(current.value)}
       aria-labelledby="score-hero-titel"
-      /* Kein Rahmen — die Flaeche traegt die Kachel. Siehe surface-score. */
       className={cn(
-        "surface-score rounded-panel relative overflow-hidden p-5 sm:p-6",
+        /*
+         * Die Kachel ist ihr eigener Container: ihre Breitenstufen sind
+         * intrinsisch (flex-wrap fuer die Kurve, score-facts fuer die
+         * Fusszeile) und brauchen heute keine Query — die Registrierung sorgt
+         * dafuer, dass eine kuenftige Stufe an der KACHEL misst und nicht am
+         * Fenster.
+         */
+        "@container",
+        /* Kein Rahmen — die Flaeche traegt die Kachel. Siehe surface-score. */
+        "surface-score rounded-panel relative overflow-hidden p-5 @sm:p-6",
         className,
       )}
     >

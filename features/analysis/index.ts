@@ -1,4 +1,13 @@
 /*
+ * Das Bento der Analyse: die Anordnung der Kacheln und ihre Auftrittsreihe.
+ * Es gestaltet nichts — die Route komponiert damit, statt selbst ein Raster
+ * aufzuspannen.
+ */
+export {
+  AnalysisBoard,
+  type AnalysisBoardProps,
+} from "./components/analysis-board";
+/*
  * Landkarte und Ansatzpunkte sind EIN Baustein: BundleFocus. Die beiden
  * Haelften sind einzeln exportiert, weil sie einzeln getestet werden — auf eine
  * Seite gehoert die Klammer, nicht die Haelfte. BundleTable ist die Tabellen-
@@ -58,6 +67,7 @@ export {
   toFocusBundles,
   toFocusEntries,
   toMarkerReading,
+  toObservedChange,
   toPriorityBundle,
   toSupplementStatus,
   type CategoryMovement,
@@ -67,6 +77,7 @@ export {
   type FocusEntry,
   type MarkerReading,
   type MarkerVerdict,
+  type ObservedChange,
   type SupplementStatus,
 } from "./rules";
 /*

@@ -659,7 +659,11 @@ function EvidenceList({ movement, evidence }: EvidenceListProps) {
             return (
               <li
                 key={change.id}
-                className="border-border/60 grid gap-x-4 gap-y-0.5 border-b py-2 last:border-b-0 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-baseline"
+                /* Drei Spalten erst ab 36rem KACHELBREITE: darunter stehen
+                 * Name, Messwerte und Urteil untereinander. Die Kachel steht
+                 * im Bento mal ueber sieben, mal ueber zwoelf Spalten — das
+                 * Fenster sagt darueber nichts. */
+                className="border-border/60 grid gap-x-4 gap-y-0.5 border-b py-2 last:border-b-0 @xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] @xl:items-baseline"
               >
                 <span className="text-foreground text-xs font-medium">
                   {change.name}
@@ -674,7 +678,7 @@ function EvidenceList({ movement, evidence }: EvidenceListProps) {
                 </span>
                 <span
                   className={cn(
-                    "text-2xs tabular-nums sm:justify-self-end",
+                    "text-2xs tabular-nums @xl:justify-self-end",
                     verdict.tone,
                   )}
                 >
@@ -830,6 +834,11 @@ export interface ProgressionPanelProps {
    * eine Bewegung kommt.
    */
   changes?: readonly MarkerChange[];
+  /**
+   * Platz in der Auftrittsreihe der SEITE. Er verzoegert nur den Auftritt der
+   * Kachel; Linie und Chips behalten ihre eigene Reihenfolge.
+   */
+  index?: number;
   className?: string;
 }
 
@@ -859,6 +868,7 @@ export function ProgressionPanel({
   score,
   categories,
   changes = [],
+  index = 0,
   className,
 }: ProgressionPanelProps) {
   const motionPreset = useMotionPreset();
@@ -930,11 +940,14 @@ export function ProgressionPanel({
     <div className={cn("flex flex-col gap-4", className)}>
       <motion.section
         variants={motionPreset.fadeRise}
+        custom={index}
         initial="hidden"
         animate="visible"
         onAnimationStart={() => setCountedValue(current.value)}
         aria-labelledby={titleId}
-        className="surface-card rounded-2xl p-6"
+        /* Die Kachel ist ihr eigener Container: die Chip-Reihe und die
+         * Detailflaeche richten sich nach IHRER Breite. */
+        className="surface-card @container rounded-2xl p-6"
       >
         <h2
           id={titleId}

@@ -383,6 +383,38 @@ export function toCategoryMovements(
 export type SupplementStatus =
   "wirkt" | "wirktSchwach" | "keineReaktion" | "zuFrueh" | "nichtBeurteilbar";
 
+/** Was sich am Zielmarker seit Einnahmebeginn getan hat. */
+export interface ObservedChange {
+  /** Messwert bei Einnahmebeginn, in targetUnit. */
+  baseline: number;
+  /** Messwert am Bewertungsstichtag, in targetUnit. */
+  current: number;
+  /** current − baseline, in targetUnit. Vorzeichen ist die Richtung. */
+  delta: number;
+  /**
+   * Dieselbe Bewegung relativ zum Ausgangswert. null, wenn der Ausgangswert 0
+   * ist — eine Steigerung "um unendlich viel Prozent" ist keine Angabe.
+   */
+  ratio: number | null;
+}
+
+/**
+ * Die beobachtete Veraenderung, oder null, wenn es keine zwei vergleichbaren
+ * Messwerte gibt. EINE Stelle rechnet diese Differenz; Zeile und Status ziehen
+ * beide von hier, sonst zeigt die Zeile eine Bewegung, die der Status nicht
+ * kennt.
+ */
+export function toObservedChange(prep: Supplement): ObservedChange | null {
+  const { baseline, current } = prep;
+  if (baseline === null || current === null) return null;
+  return {
+    baseline,
+    current,
+    delta: current - baseline,
+    ratio: baseline === 0 ? null : (current - baseline) / baseline,
+  };
+}
+
 /**
  * Leitet den Status eines Praeparats ab. Die Reihenfolge der Pruefungen ist
  * die Regel — siehe Kommentarblock oben.
@@ -397,7 +429,8 @@ export function toSupplementStatus(prep: Supplement): SupplementStatus {
     return "zuFrueh";
   }
 
-  if (prep.observedDelta === null) {
+  const change = toObservedChange(prep);
+  if (change === null) {
     return "nichtBeurteilbar";
   }
 
@@ -406,7 +439,7 @@ export function toSupplementStatus(prep: Supplement): SupplementStatus {
    * ein Abfall bei "down" sind dieselbe Aussage ("es tut, was es soll").
    */
   const aligned =
-    prep.expectedDirection === "up" ? prep.observedDelta : -prep.observedDelta;
+    prep.expectedDirection === "up" ? change.delta : -change.delta;
 
   if (aligned >= prep.strongDelta) {
     return "wirkt";
