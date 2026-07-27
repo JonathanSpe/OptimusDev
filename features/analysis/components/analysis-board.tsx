@@ -89,7 +89,9 @@ export function AnalysisBoard({
 }: AnalysisBoardProps) {
   return (
     <div className={cn("grid grid-cols-12 gap-4", className)}>
-      {/* Zeile 1 — der Befund: wo du stehst und woraus er sich zusammensetzt. */}
+      {/* Zeile 1 — der Stand: wo du stehst und woraus er sich zusammensetzt.
+       * ("Befund" ist seit der Sprachrunde das sichtbare Wort fuer ein Bundle
+       * und wird hier deshalb nicht mehr allgemein verwendet.) */}
       <ScoreHero
         score={score}
         index={ENTRANCE.score}

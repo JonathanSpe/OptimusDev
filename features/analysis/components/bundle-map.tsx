@@ -7,7 +7,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { useMotionPreset } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-import type { FocusEntry } from "../rules";
+import { toEvidenceLevel, type FocusEntry } from "../rules";
 import {
   CONFIDENCE_MAX,
   SCORE_MAX,
@@ -17,9 +17,12 @@ import {
 
 /*
  * ============================================================================
- * DAS FELD DER BUENDEL-LANDKARTE
+ * DAS FELD DER BEFUND-LANDKARTE
  * ============================================================================
- * Alle Buendel in einer Flaeche: Konfidenz nach rechts, Score nach oben.
+ * ⚠️ Sichtbar heisst ein `Bundle` "Befund" und `confidence` "Datenlage" — siehe
+ * den Kopf von bundle-focus.tsx. Die Bezeichner hier bleiben englisch.
+ *
+ * Alle Befunde in einer Flaeche: Datenlage nach rechts, Score nach oben.
  *
  * Das Feld beantwortet eine Frage, die keine Liste beantworten kann: WO lohnt
  * sich Arbeit? Ein niedriger Wert allein sagt das nicht. Erst zusammen mit der
@@ -34,7 +37,7 @@ import {
  * der Kachel; hier soll man auf den ersten Blick sehen, wo etwas liegt, und
  * nicht anfangen, Werte abzulesen, die man ohnehin nicht genau treffen kann.
  *
- * Das Feld gehoert zur Liste daneben und umgekehrt: dieselben drei Buendel,
+ * Das Feld gehoert zur Liste daneben und umgekehrt: dieselben drei Befunde,
  * dieselben Nummern, eine gemeinsame Hervorhebung. Der aktive Zustand liegt
  * deshalb NICHT hier, sondern in der Klammer um beide (bundle-focus.tsx).
  *
@@ -198,9 +201,9 @@ function BundleMark({
           }}
           type="button"
           tabIndex={isRoving ? 0 : -1}
-          aria-label={`Bündel ${bundle.id}, ${bundle.name}, ${category}, Score ${bundle.score} von ${SCORE_MAX}, Konfidenz ${bundle.confidence} von ${CONFIDENCE_MAX}${
-            rank === undefined ? "" : `, Ansatzpunkt ${rank}`
-          }`}
+          aria-label={`Befund ${bundle.id}, ${bundle.name}, ${category}, Score ${bundle.score} von ${SCORE_MAX}, Datenlage ${toEvidenceLevel(
+            bundle.confidence,
+          )}${rank === undefined ? "" : `, Ansatzpunkt ${rank}`}`}
           aria-describedby={isActive ? tooltipId : undefined}
           onMouseEnter={() => onActivate(bundle.id)}
           onMouseLeave={() => onActivate(null)}
@@ -242,9 +245,12 @@ function BundleMark({
               {bundle.name}
             </p>
             <p className="text-muted-foreground text-2xs mt-0.5">{category}</p>
-            <p className="text-popover-foreground text-2xs mt-1 tabular-nums">
-              Score {bundle.score} · Konfidenz {bundle.confidence} von{" "}
-              {CONFIDENCE_MAX}
+            {/* Die Karte am Punkt ist der Ort, an dem die Datenlage in Worten
+             * steht: die Punkte unter den Ringen zeigen eine Stufe, hier wird
+             * sie benannt. */}
+            <p className="text-popover-foreground text-2xs mt-1">
+              <span className="tabular-nums">Score {bundle.score}</span> ·
+              Datenlage {toEvidenceLevel(bundle.confidence)}
             </p>
           </div>
         ) : null}
@@ -419,7 +425,7 @@ export function BundleMap({
   const rankById = new Map(focus.map((entry) => [entry.bundle.id, entry.rank]));
   const placedLabels = toPlacedLabels(focus, field, toY);
 
-  /* Tastaturreihenfolge = Leserichtung des Feldes: erst Konfidenz, dann Score. */
+  /* Tastaturreihenfolge = Leserichtung des Feldes: erst Datenlage, dann Score. */
   const navOrder = bundles
     .toSorted(
       (left, right) =>
@@ -484,7 +490,7 @@ export function BundleMap({
         <div
           ref={fieldRef}
           role="group"
-          aria-label="Bündel nach Konfidenz und Score. Mit den Pfeiltasten zwischen den Bündeln wechseln."
+          aria-label="Befunde nach Datenlage und Score. Mit den Pfeiltasten zwischen den Befunden wechseln."
           className="bg-map-field relative h-80 flex-1 rounded-xl"
         >
           {/* Der Anker. Er steht ab dem ersten Frame — er ist die Flaeche und
@@ -636,25 +642,23 @@ export function BundleMap({
         </div>
       </div>
 
-      {/* Die waagerechte Richtung, an ihren beiden Enden. */}
+      {/*
+       * Die waagerechte Richtung, an ihren beiden Enden — und in denselben
+       * Worten, die auch die Karte am Punkt und die Tabelle benutzen
+       * (toEvidenceLevel). Drei Stellen, EIN Wortschatz.
+       *
+       * Dass die Score-Richtung ein Ausschnitt ist, steht nicht mehr als
+       * eigener Absatz darunter, sondern im Erklaersatz der Kachel
+       * ("verglichen werden sie nur untereinander"). Die Kachel erklaert sich
+       * einmal, nicht dreimal.
+       */}
       <div
         aria-hidden="true"
         className="text-muted-foreground text-3xs mt-2 flex justify-between pl-6 tracking-wider uppercase"
       >
-        <span>Konfidenz gering</span>
-        <span>hoch</span>
+        <span>Datenlage gering</span>
+        <span>gut</span>
       </div>
-
-      {/*
-       * Der Ausschnitt steht AN der Achse und nicht im Kleingedruckten: eine
-       * beschnittene Achse ohne Ansage ist eine Uebertreibung, und weil hier
-       * keine Zahl mehr steht, kann der Ausschnitt auch nicht mehr aus zwei
-       * Zahlen abgelesen werden.
-       */}
-      <p className="text-muted-foreground text-2xs mt-3">
-        Die Score-Richtung ist ein Ausschnitt: sie zeigt nur die Spanne der
-        vorhandenen Bündel und beginnt nicht bei null.
-      </p>
     </div>
   );
 }

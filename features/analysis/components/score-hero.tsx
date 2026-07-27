@@ -309,7 +309,11 @@ function EmptyScore({ className }: { className?: string }) {
       <p className="text-on-score-muted text-2xs font-semibold tracking-wide uppercase">
         Optimus Score
       </p>
-      <p className="text-on-score mt-3 text-xl font-semibold">
+      <p className="text-on-score-muted max-w-measure mt-1 text-xs">
+        Dein Gesamtwert über alle Kategorien, verglichen mit deinem letzten
+        Test.
+      </p>
+      <p className="text-on-score mt-4 text-xl font-semibold">
         Noch kein Score
       </p>
       <p className="text-on-score-muted max-w-measure mt-1.5 text-sm">
@@ -381,56 +385,64 @@ export function ScoreHero({ score, index = 0, className }: ScoreHeroProps) {
         /* Kein Rahmen — die Flaeche traegt die Kachel. Siehe surface-score. */
         "surface-score rounded-panel relative overflow-hidden p-5 @sm:p-6",
         /*
-         * Zwei Bloecke, oben und unten: die Kachel bekommt ihre Hoehe von der
-         * Zeile des Bentos (align-items: stretch) und verteilt den Zuwachs
-         * zwischen Score und Fusszeile, statt ihn unten als Loch stehen zu
-         * lassen. gap-5 ist der Mindestabstand — mehr wird daraus nur, wenn die
-         * Nachbarkachel hoeher ist.
+         * DREI Bloecke: Kopf, Mitte, Fusszeile. Die Kachel bekommt ihre Hoehe
+         * von der Zeile des Bentos (align-items: stretch), und der Zuwachs
+         * geht an die MITTE — nicht an die Abstaende dazwischen. Ein
+         * justify-between ueber zwei Bloecke schob frueher genau diesen
+         * Zuwachs als Loch in die Kachelmitte; jetzt steht dort Inhalt.
+         * gap-5 bleibt der Abstand und wird nie mehr als das.
          */
-        "flex flex-col justify-between gap-5",
+        "flex flex-col gap-5",
         className,
       )}
     >
+      <div>
+        <h2
+          id="score-hero-titel"
+          className="text-on-score-muted text-2xs font-semibold tracking-wide uppercase"
+        >
+          Optimus Score
+        </h2>
+        <p className="text-on-score-muted max-w-measure mt-1 text-xs">
+          Dein Gesamtwert über alle Kategorien, verglichen mit deinem letzten
+          Test.
+        </p>
+      </div>
+
       {/*
-       * EINE Zeile, zwei Gruppen: links der Wert mit seiner Veraenderung,
-       * gleich daneben der Weg dorthin. Die Kurve steht damit NEBEN der Zahl
-       * statt unter ihr — nebeneinander ist sie eine Fussnote, darunter waere
-       * sie eine zweite Aussage in voller Breite.
+       * DIE MITTE TRAEGT DIE STRECKUNG. Links der Wert mit seiner
+       * Veraenderung, gleich daneben der Weg dorthin — und beides senkrecht
+       * zentriert in dem Platz, den die Zeile der Kachel zuteilt. Waechst die
+       * Nachbarkachel, waechst dieser Block mit und die Gruppe rueckt in seine
+       * Mitte, statt am Kopf kleben zu bleiben.
        *
        * KEIN justify-between: die Kurve gehoert zur Zahl, nicht zum Rand. An
        * die Kachelkante geheftet wandert sie mit jeder Breitenaenderung davon
-       * und laesst in der Mitte ein Loch stehen. Sie sitzt deshalb mit festem
-       * Abstand hinter der Pille; bleibt in einer schmalen Kachel zu wenig
-       * Platz, rutscht sie als Ganzes in die naechste Zeile.
+       * und laesst waagerecht dasselbe Loch stehen, das senkrecht gerade
+       * geschlossen wurde. Sie sitzt deshalb mit festem Abstand hinter der
+       * Pille; bleibt in einer schmalen Kachel zu wenig Platz, rutscht sie als
+       * Ganzes in die naechste Zeile — content-center haelt beide Zeilen dann
+       * als Gruppe zusammen, statt sie auseinanderzuziehen.
        */}
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
-        <div className="min-w-0">
-          <h2
-            id="score-hero-titel"
-            className="text-on-score-muted text-2xs font-semibold tracking-wide uppercase"
-          >
-            Optimus Score
-          </h2>
-
-          <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-2">
-            <p className="text-on-score text-score font-semibold tracking-tight tabular-nums">
-              <span aria-hidden="true">
-                <NumberFlow
-                  value={countedValue}
-                  locales="de-DE"
-                  willChange
-                  transformTiming={motionPreset.number}
-                  spinTiming={motionPreset.number}
-                  /* Der Wert soll steigen, auch wenn er von 0 kommt. */
-                  trend={1}
-                />
-              </span>
-              <span className="sr-only">
-                {current.value} von {SCORE_MAX} Punkten
-              </span>
-            </p>
-            {delta ? <DeltaPill delta={delta} /> : null}
-          </div>
+      <div className="flex flex-1 flex-wrap content-center items-center gap-x-6 gap-y-4">
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-2">
+          <p className="text-on-score text-score font-semibold tracking-tight tabular-nums">
+            <span aria-hidden="true">
+              <NumberFlow
+                value={countedValue}
+                locales="de-DE"
+                willChange
+                transformTiming={motionPreset.number}
+                spinTiming={motionPreset.number}
+                /* Der Wert soll steigen, auch wenn er von 0 kommt. */
+                trend={1}
+              />
+            </span>
+            <span className="sr-only">
+              {current.value} von {SCORE_MAX} Punkten
+            </span>
+          </p>
+          {delta ? <DeltaPill delta={delta} /> : null}
         </div>
 
         <ScoreTrend history={score.history} label={trendLabel} />

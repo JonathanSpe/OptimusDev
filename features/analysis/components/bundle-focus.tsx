@@ -6,26 +6,28 @@ import { useId, useState } from "react";
 import { useMotionPreset } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-import { toFocusEntries, type FocusEntry } from "../rules";
-import {
-  CONFIDENCE_MAX,
-  SCORE_MAX,
-  categoryNameById,
-  type Bundle,
-} from "../sample-data";
+import { toEvidenceLevel, toFocusEntries, type FocusEntry } from "../rules";
+import { SCORE_MAX, categoryNameById, type Bundle } from "../sample-data";
 import { BundleMap } from "./bundle-map";
 import { PriorityList } from "./priority-list";
 
 /*
  * ============================================================================
- * DIE BUENDEL-LANDKARTE — EINE Kachel, zwei Haelften.
+ * DIE BEFUND-LANDKARTE — EINE Kachel, zwei Haelften.
  * ============================================================================
- * Links die Flaeche: alle Buendel nach Konfidenz und Score. Rechts die
- * Ansatzpunkte: dieselben Buendel, die in der Flaeche eine Nummer tragen. Sie
+ * ⚠️ UI-WORT UND FACHBEGRIFF SIND ENTKOPPELT. Im Code, im Vertrag und in den
+ * Daten heisst die Einheit weiter `Bundle` — sichtbar heisst sie "Befund"
+ * (Mehrzahl "Befunde"), und "Bündel" kommt in keinem sichtbaren Text und in
+ * keinem aria-label mehr vor. Dieselbe Trennung gilt fuer `confidence`, das
+ * sichtbar "Datenlage" heisst. Die Felder umzubenennen waere eine
+ * Vertragsaenderung fuer eine Textentscheidung.
+ *
+ * Links die Flaeche: alle Befunde nach Datenlage und Score. Rechts die
+ * Ansatzpunkte: dieselben Befunde, die in der Flaeche eine Nummer tragen. Sie
  * stehen nicht zufaellig nebeneinander — sie teilen die Auswahl (rules.ts), die
  * Nummern und die Hervorhebung, und deshalb liegt der aktive Zustand HIER und
  * in keiner der beiden Haelften. Zwei Kacheln mit je eigenem Zustand koennten
- * verschiedene Buendel hervorheben, und der Leser haette zwei Rangfolgen statt
+ * verschiedene Befunde hervorheben, und der Leser haette zwei Rangfolgen statt
  * einer.
  *
  * Unter der Kachel, aber AUSSERHALB von ihr, steht dieselbe Datenlage als
@@ -45,22 +47,38 @@ export interface BundleFocusProps {
   className?: string;
 }
 
-/** Leerzustand: Buendel entstehen erst mit der ersten Auswertung. */
+/*
+ * DIE EINE ERKLAERZEILE DER KACHEL — und sie steht genau einmal im Code,
+ * damit der Leerzustand nicht anders erklaert als die gefuellte Kachel.
+ *
+ * EIN Satz sagt beides: wie die Flaeche zu lesen ist (oben, rechts) und dass
+ * sie relativ vergleicht. Der Nachsatz ersetzt den frueheren Extra-Absatz
+ * "Die Score-Richtung ist ein Ausschnitt …" — die Ehrlichkeit bleibt, der
+ * zweite Absatz geht. Zwei Erklaerungen an einer Kachel heissen, dass die
+ * erste nicht gereicht hat.
+ */
+const MAP_EXPLAINER =
+  "Oben stehen die starken Befunde, rechts die mit guter Datenlage — verglichen werden sie nur untereinander.";
+
+/** Leerzustand: Befunde entstehen erst mit der ersten Auswertung. */
 function EmptyBundleFocus({ className }: { className?: string }) {
   return (
     <section
-      aria-label="Bündel-Landkarte"
+      aria-label="Befund-Landkarte"
       className={cn("surface-card rounded-2xl p-6", className)}
     >
       <p className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase">
-        Bündel-Landkarte
+        Befund-Landkarte
       </p>
-      <p className="text-foreground mt-3 text-sm font-medium">
-        Noch keine Bündel
+      <p className="text-muted-foreground max-w-measure mt-1 text-xs">
+        {MAP_EXPLAINER}
+      </p>
+      <p className="text-foreground mt-4 text-sm font-medium">
+        Noch keine Befunde
       </p>
       <p className="text-muted-foreground max-w-measure mt-1 text-sm">
-        Sobald dein erster Bluttest ausgewertet ist, liegt hier jedes Bündel
-        nach Score und Konfidenz — und daneben die Ansatzpunkte.
+        Sobald dein erster Bluttest ausgewertet ist, liegt hier jeder Befund
+        nach Score und Datenlage — und daneben die Ansatzpunkte.
       </p>
     </section>
   );
@@ -83,11 +101,11 @@ export function BundleTable({ bundles, focus, className }: BundleTableProps) {
   return (
     <details className={cn("max-w-measure", className)}>
       <summary className="text-muted-foreground focus-visible:outline-ring text-2xs w-fit cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2">
-        Alle Bündel als Tabelle
+        Alle Befunde als Tabelle
       </summary>
       <table className="mt-3 w-full text-left">
         <caption className="text-muted-foreground text-2xs sr-only">
-          Alle Bündel mit Kategorie, Score, Konfidenz und Rang unter den
+          Alle Befunde mit Kategorie, Score, Datenlage und Rang unter den
           Ansatzpunkten — dieselben Werte wie in der Landkarte.
         </caption>
         <thead>
@@ -96,7 +114,7 @@ export function BundleTable({ bundles, focus, className }: BundleTableProps) {
               scope="col"
               className="text-muted-foreground text-2xs pb-2 font-medium"
             >
-              Bündel
+              Befund
             </th>
             <th
               scope="col"
@@ -108,7 +126,7 @@ export function BundleTable({ bundles, focus, className }: BundleTableProps) {
               scope="col"
               className="text-muted-foreground text-2xs pb-2 text-right font-medium"
             >
-              Konfidenz
+              Datenlage
             </th>
             <th
               scope="col"
@@ -133,8 +151,11 @@ export function BundleTable({ bundles, focus, className }: BundleTableProps) {
               <td className="text-foreground py-2 text-right text-xs tabular-nums">
                 {bundle.score} von {SCORE_MAX}
               </td>
-              <td className="text-foreground py-2 text-right text-xs tabular-nums">
-                {bundle.confidence} von {CONFIDENCE_MAX}
+              {/* Auch hier das Wort und nicht die Stufe: die Tabelle ist die
+               * vollstaendige Fassung derselben Aussage, nicht eine zweite
+               * Skala daneben. */}
+              <td className="text-foreground py-2 text-right text-xs">
+                {toEvidenceLevel(bundle.confidence)}
               </td>
               <td className="text-foreground py-2 text-right text-xs tabular-nums">
                 {rankById.get(bundle.id) ?? "–"}
@@ -192,17 +213,15 @@ export function BundleFocus({
               id={titleId}
               className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase"
             >
-              Bündel-Landkarte
+              Befund-Landkarte
             </h2>
             {/*
-             * Die Einleitung erklaert die beiden Richtungen und die
-             * Hervorhebung — und sonst nichts. Insbesondere sagt sie NICHTS
-             * ueber das Kreuz in der Flaeche: es ist ein Anker fuers Auge, und
-             * jeder Satz darueber machte eine Schwelle daraus.
+             * Die eine Erklaerzeile. Sie sagt NICHTS ueber das Kreuz in der
+             * Flaeche: es ist ein Anker fuers Auge, und jeder Satz darueber
+             * machte eine Schwelle daraus.
              */}
-            <p className="text-muted-foreground max-w-measure text-2xs mt-1">
-              Waagerecht die Konfidenz, senkrecht der Score. Hervorgehoben sind
-              die Bündel, an denen Arbeit sich zuerst lohnt.
+            <p className="text-muted-foreground max-w-measure mt-1 text-xs">
+              {MAP_EXPLAINER}
             </p>
             <BundleMap
               bundles={bundles}

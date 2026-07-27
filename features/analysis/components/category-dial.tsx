@@ -9,6 +9,7 @@ import { useEffect, useId, useState } from "react";
 import { useMotionPreset } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
+import { toEvidenceLevel } from "../rules";
 import {
   CONFIDENCE_MAX,
   SCORE_MAX,
@@ -29,8 +30,13 @@ import {
  * 84. Seine LAENGE ist die Aussage. Faerbte ihn ein Wert ein, waere die
  * Schwelle wieder da — nur unausgesprochen.
  *
- * Score und Konfidenz sind ZWEI KANAELE. Der Bogen traegt den Score, die Punkte
+ * Score und Datenlage sind ZWEI KANAELE. Der Bogen traegt den Score, die Punkte
  * darunter die Belastbarkeit der Aussage; sie werden nie ineinander gerechnet.
+ *
+ * ⚠️ UI-WORT UND FACHBEGRIFF SIND ENTKOPPELT: im Code heisst der zweite Kanal
+ * `confidence`, sichtbar heisst er "Datenlage" und tritt als Wort auf
+ * (gering/mittel/gut, siehe toEvidenceLevel in rules.ts). Wer hier "Konfidenz"
+ * zurueckschreibt, schreibt einen Fachbegriff in eine Kundenoberflaeche.
  */
 
 const DEGREE = Math.PI / 180;
@@ -179,7 +185,9 @@ export function CategoryDial({
         previousScore === undefined
           ? "kein Vorwert"
           : `letzter Test ${previousScore}`,
-        `Konfidenz ${category.confidence} von ${CONFIDENCE_MAX}`,
+        /* In Worten, nicht in Punkten: "3 von 5" waere eine Skala, die nur wir
+         * kennen. Dieselbe Stufe zeigen sichtbar die Punkte darunter. */
+        `Datenlage ${toEvidenceLevel(category.confidence)}`,
       ].join(", ")}
       className={cn(
         /*
@@ -267,26 +275,31 @@ export function CategoryDial({
         </p>
       </div>
 
-      {/* Keine Mindesthoehe: Name und Konfidenz sitzen dicht unter dem Ring und
-       * gehoeren sichtbar zu ihm. Auf einer Linie stehen die Konfidenzzeilen
-       * trotzdem — nicht durch reservierten Leerraum, sondern weil bei der
-       * Zellbreite (size.dialCell) jeder der vier Namen zweizeilig bricht. */}
-      <p className="text-foreground mt-2 text-center text-xs leading-4 font-medium text-balance">
+      {/*
+       * ZWEI ZEILEN, RESERVIERT. Bei der Zellbreite (size.dialCell) bricht
+       * heute jeder der vier Namen zweizeilig — aber "heute" ist kein Halt:
+       * ein kuerzerer Name in einer kuenftigen Kategorie stuende einzeilig da
+       * und zoege seine Datenlage-Zeile um eine Zeilenhoehe nach oben, aus der
+       * gemeinsamen Linie heraus. min-h-8 sind genau zwei Zeilen (2 x leading-4)
+       * und BEWUSST nicht mehr: drei reservierte Zeilen waeren Leerraum unter
+       * jedem Namen, und der Block loeste sich vom Ring.
+       */}
+      <p className="text-foreground mt-2 min-h-8 text-center text-xs leading-4 font-medium text-balance">
         {category.name}
       </p>
 
       {/*
-       * Konfidenz als fuenf Punkte, MIT dem Wort davor. Ohne Beschriftung sind
+       * Datenlage als fuenf Punkte, MIT dem Wort davor. Ohne Beschriftung sind
        * fuenf Punkte unter einem Ring nur ein Muster — man haelt sie fuer eine
        * zweite Bewertung des Scores. Der zweite Kanal muss sich benennen, sonst
        * ist er keiner. Gefuellte Punkte sind dichter UND groesser, damit die
        * Stufe auch ohne Farbe ablesbar bleibt; jeder Punkt sitzt in einer
        * gleich grossen Zelle, sonst verschoebe der Groessenunterschied den
-       * Abstand. Der genaue Wert steht in der Beschriftung der Gruppe.
+       * Abstand. Die Stufe in Worten steht in der Beschriftung der Gruppe.
        */}
       <div aria-hidden="true" className="mt-1 flex items-center gap-2">
         <span className="text-muted-foreground text-2xs leading-4">
-          Konfidenz
+          Datenlage
         </span>
         <span className="flex items-center gap-1.5">
           {Array.from({ length: CONFIDENCE_MAX }, (_, step) => (
@@ -332,7 +345,7 @@ function EmptyCategories({ className }: { className?: string }) {
       </p>
       <p className="text-muted-foreground max-w-measure mt-1 text-sm">
         Sobald dein erster Bluttest ausgewertet ist, steht hier je Kategorie ein
-        Score samt Konfidenz.
+        Score samt Datenlage.
       </p>
     </section>
   );
@@ -369,12 +382,14 @@ export function CategoryDialPanel({
       >
         Kategorien
       </h2>
-      {/* Die Legende erklaert nur noch, was am Ring selbst keinen Platz fuer
-       * ein Wort hat. Die Konfidenz steht seit ihrer Beschriftung nicht mehr
-       * hier: eine Legende, die eine beschriftete Sache noch einmal erklaert,
-       * laesst den Leser zweimal suchen. */}
-      <p className="text-muted-foreground text-2xs mt-1">
-        Ring = Score · Strich = letzter Test
+      {/* EIN Satz, und zwar in Sprache statt in Notation. "Ring = Score ·
+       * Strich = letzter Test" stand hier als Legende: sie las sich wie eine
+       * Bauanleitung und musste erst uebersetzt werden, bevor sie half. Mehr
+       * als diese eine Zeile bekommt die Kachel nicht — braucht sie mehr,
+       * erklaert sich das Instrument nicht selbst genug. */}
+      <p className="text-muted-foreground max-w-measure mt-1 text-xs">
+        Wie du in deinen vier Bereichen stehst; die kleine Marke im Ring zeigt,
+        wo du beim letzten Test warst.
       </p>
 
       {/*

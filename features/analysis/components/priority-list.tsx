@@ -5,25 +5,23 @@ import { motion } from "motion/react";
 import { useMotionPreset } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-import type { FocusEntry } from "../rules";
-import {
-  CONFIDENCE_MAX,
-  SCORE_MAX,
-  categoryNameById,
-  type Bundle,
-} from "../sample-data";
+import { toEvidenceLevel, type FocusEntry } from "../rules";
+import { SCORE_MAX, categoryNameById, type Bundle } from "../sample-data";
 
 /*
  * ============================================================================
- * DIE ANSATZPUNKTE — dieselben Buendel, die im Feld daneben eine Nummer tragen.
+ * DIE ANSATZPUNKTE — dieselben Befunde, die im Feld daneben eine Nummer tragen.
  * ============================================================================
+ * ⚠️ Sichtbar heisst ein `Bundle` "Befund" und `confidence` "Datenlage" — siehe
+ * den Kopf von bundle-focus.tsx. Die Bezeichner hier bleiben englisch.
+ *
  * Landkarte und Liste sind EIN Baustein. Das Feld zeigt, WO die drei liegen,
  * die Liste sagt, WELCHE es sind; die Nummer verbindet beides, und die Auswahl
  * kommt aus derselben Regel in rules.ts. Zwei getrennte Kacheln mit zwei
  * Reihenfolgen waeren zwei Behauptungen ueber dieselbe Sache.
  *
  * DAS HIER IST DER ERSTE BLICK, NICHT DIE BEGRUENDUNG. Eine Zeile traegt vier
- * Angaben — Name, Kategorie, Score, Konfidenz — und keine fuenfte. Kein
+ * Angaben — Name, Kategorie, Score, Datenlage — und keine fuenfte. Kein
  * ausformulierter Befund, keine Marker, kein Aufklappen: was ein Buendel
  * ausmacht, steht in der Buendelansicht, und die oeffnet man bewusst. Drei
  * ausformulierte Befunde nebeneinander sind keine Rangfolge mehr, sondern eine
@@ -39,9 +37,9 @@ interface PriorityRowProps extends FocusEntry {
 function toRowLabel(bundle: Bundle, rank: number): string {
   return `Ansatzpunkt ${rank}: ${bundle.name}, ${categoryNameById(
     bundle.categoryId,
-  )}, Score ${bundle.score} von ${SCORE_MAX}, Konfidenz ${
-    bundle.confidence
-  } von ${CONFIDENCE_MAX}. Hebt das Bündel in der Landkarte hervor.`;
+  )}, Score ${bundle.score} von ${SCORE_MAX}, Datenlage ${toEvidenceLevel(
+    bundle.confidence,
+  )}. Hebt den Befund in der Landkarte hervor.`;
 }
 
 function PriorityRow({
@@ -92,10 +90,8 @@ function PriorityRow({
           </span>
           <span className="text-muted-foreground text-2xs mt-0.5 block">
             {categoryNameById(bundle.categoryId)} ·{" "}
-            <span className="tabular-nums">
-              Score {bundle.score} · Konfidenz {bundle.confidence} von{" "}
-              {CONFIDENCE_MAX}
-            </span>
+            <span className="tabular-nums">Score {bundle.score}</span> ·
+            Datenlage {toEvidenceLevel(bundle.confidence)}
           </span>
         </span>
       </button>
@@ -127,9 +123,9 @@ export function PriorityList({
         /* Leerzustand mit Grund. "Keine Ansatzpunkte" allein liest sich wie
          * "alles gut" — gemeint ist aber "wir wissen zu wenig". */
         <p className="text-muted-foreground max-w-measure mt-4 text-sm">
-          Heute ist kein Bündel belastbar genug gemessen. Solange die Datenlage
-          das nicht hergibt, empfiehlt dir diese Analyse nichts — ein
-          Ansatzpunkt ohne belastbare Messung wäre geraten.
+          Bei keinem Befund ist die Datenlage heute gut genug. Solange das so
+          ist, empfiehlt dir diese Analyse nichts — ein Ansatzpunkt ohne
+          belastbare Messung wäre geraten.
         </p>
       ) : (
         <ol className="mt-4 space-y-1">
@@ -147,12 +143,14 @@ export function PriorityList({
         </ol>
       )}
 
-      {/* Wohin es weitergeht — und damit zugleich die Ansage, dass diese Liste
-       * bewusst nichts begruendet. */}
-      <p className="text-muted-foreground max-w-measure border-border text-2xs mt-6 border-t pt-4">
-        Die vollständige Begründung mit den einzelnen Markern erscheint erst
-        beim Öffnen eines Bündels.
-      </p>
+      {/*
+       * ENTSCHEIDUNG: Die Fusszeile "Die vollständige Begründung … erscheint
+       * erst beim Öffnen eines Bündels" ist WEG. Die Kachel erklaert sich in
+       * genau einer Zeile, und die steht oben unter ihrer Ueberschrift; dies
+       * hier war die dritte Erklaerung an derselben Kachel. Sie versprach
+       * ausserdem eine Ansicht, die es noch nicht gibt (TODO(L3) an der Zeile)
+       * — ein Hinweis auf ein Ziel, das nicht aufgeht, ist keine Hilfe.
+       */}
     </div>
   );
 }

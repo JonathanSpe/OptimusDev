@@ -271,14 +271,14 @@ function EffectTimeline({ prep }: { prep: Supplement }) {
           style={{ left: `${now}%` }}
         />
       </div>
+      {/* ENTSCHEIDUNG: "Band = Wirkfenster · Punkt = heute" ist WEG. Das war
+       * Notation, keine Sprache — und die Zeile darunter sagt dieselben drei
+       * Angaben ohnehin in Worten und Zahlen. */}
       <p className="text-muted-foreground text-2xs mt-1.5 tabular-nums">
         Seit {toLongDate(prep.startedOn)} · Tag{" "}
         {numberFormat.format(prep.daysOn)} · Wirkfenster Tag{" "}
         {numberFormat.format(prep.effectWindowDays.from)}–
         {numberFormat.format(prep.effectWindowDays.to)}
-      </p>
-      <p className="text-faint text-3xs mt-0.5">
-        Band = Wirkfenster · Punkt = heute
       </p>
     </div>
   );
@@ -488,6 +488,19 @@ export interface SupplementPanelProps {
   className?: string;
 }
 
+/*
+ * DIE EINE ERKLAERZEILE DER KACHEL — einmal im Code, damit der Leerzustand
+ * nicht anders erklaert als die gefuellte Kachel.
+ *
+ * ENTSCHEIDUNG: Sie ersetzt die frueheren zwei Erklaerungen (die Fusszeile
+ * ueber den Unterschied zwischen "keine Reaktion" und "zu früh" und die
+ * Notationszeile an der Zeitleiste). Der Unterschied selbst bleibt sichtbar —
+ * er steht in den beiden Statuswoertern und im aufgeklappten Wirkfenster, also
+ * dort, wo er auftritt, statt als Absatz unter der Liste.
+ */
+const SUPPLEMENT_EXPLAINER =
+  "Für jedes Präparat siehst du, ob sich sein Zielmarker seit Einnahmebeginn bewegt hat.";
+
 /** Leerzustand: ohne Einnahme gibt es nichts zu beurteilen. */
 function EmptySupplements({ className }: { className?: string }) {
   return (
@@ -498,7 +511,10 @@ function EmptySupplements({ className }: { className?: string }) {
       <p className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase">
         Wirkt, was du nimmst?
       </p>
-      <p className="text-foreground mt-3 text-sm font-medium">
+      <p className="text-muted-foreground max-w-measure mt-1 text-xs">
+        {SUPPLEMENT_EXPLAINER}
+      </p>
+      <p className="text-foreground mt-4 text-sm font-medium">
         Noch keine Präparate
       </p>
       <p className="text-muted-foreground max-w-measure mt-1 text-sm">
@@ -559,8 +575,14 @@ export function SupplementPanel({
         Wirkt, was du nimmst?
       </h2>
 
-      {/* Eine Zeile, die die Liste zusammenfasst, bevor man sie liest. */}
-      <p className="mt-1.5 text-sm">
+      <p className="text-muted-foreground max-w-measure mt-1 text-xs">
+        {SUPPLEMENT_EXPLAINER}
+      </p>
+
+      {/* Eine Zeile, die die Liste zusammenfasst, bevor man sie liest. Sie ist
+       * ein BEFUND aus den Daten (gezaehlte Staende), keine zweite Erklaerung
+       * der Kachel. */}
+      <p className="mt-3 text-sm">
         {summary.map((status, position) => (
           <Fragment key={status}>
             {position > 0 ? (
@@ -625,12 +647,6 @@ export function SupplementPanel({
           ))}
         </tbody>
       </table>
-
-      <p className="text-muted-foreground max-w-measure text-2xs mt-4">
-        „Keine Reaktion“ heißt: das Wirkfenster ist vorbei und am Zielmarker hat
-        sich nichts gezeigt. Das ist ein eigener Befund — nicht dasselbe wie „zu
-        früh“.
-      </p>
     </motion.section>
   );
 }

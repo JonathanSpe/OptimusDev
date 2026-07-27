@@ -852,7 +852,11 @@ function EmptyProgression({ className }: { className?: string }) {
       <p className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase">
         Entwicklung
       </p>
-      <p className="text-foreground mt-3 text-sm font-medium">
+      <p className="text-muted-foreground max-w-measure mt-1 text-xs">
+        Wohin sich dein Score über deine bisherigen Tests bewegt hat — und
+        welche Bereiche ihn bewegt haben.
+      </p>
+      <p className="text-foreground mt-4 text-sm font-medium">
         Noch keine Entwicklung
       </p>
       <p className="text-muted-foreground max-w-measure mt-1 text-sm">
@@ -956,7 +960,16 @@ export function ProgressionPanel({
           Entwicklung
         </h2>
 
-        <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        {/* Die eine Erklaerzeile der Kachel. Was darunter noch an Text steht
+         * (Rauschband-Satz, Belege einer geoeffneten Kategorie), sind BEFUNDE
+         * aus den Daten und keine Selbstbeschreibung — sie stehen nur da, wenn
+         * die Daten sie hergeben. */}
+        <p className="text-muted-foreground max-w-measure mt-1 text-xs">
+          Wohin sich dein Score über deine bisherigen Tests bewegt hat — und
+          welche Bereiche ihn bewegt haben.
+        </p>
+
+        <div className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <p className="text-foreground text-metric font-semibold tracking-tight tabular-nums">
             <span aria-hidden="true">
               <NumberFlow

@@ -38,6 +38,34 @@ import type {
 export const CONFIDENCE_SOLID = 4;
 
 /*
+ * ============================================================================
+ * DATENLAGE — dieselbe Groesse, in der Sprache des Lesers.
+ * ============================================================================
+ * Im Code, im Vertrag und in den Daten heisst diese Groesse weiter
+ * `confidence`. SICHTBAR heisst sie "Datenlage", und sie tritt als WORT auf,
+ * nicht als Zahl: "3 von 5" ist eine Skala, die nur wir kennen — wer sie liest,
+ * muss raten, ob 3 viel ist. UI-Wort und Fachbegriff sind hier bewusst
+ * entkoppelt; das Umbenennen der Felder waere eine Vertragsaenderung fuer eine
+ * Textentscheidung.
+ *
+ * Die Punkte unter dem Ring bleiben: sie zeigen die Stufe, das Wort benennt
+ * sie. Beide kommen aus derselben Zahl.
+ */
+export type EvidenceLevel = "gering" | "mittel" | "gut";
+
+/**
+ * Die Konfidenzstufe als Wort. "gut" beginnt genau dort, wo auch die Auswahl
+ * der Ansatzpunkte greift (CONFIDENCE_SOLID) — Wort und Regel duerfen nicht
+ * auseinanderlaufen, sonst empfiehlt die Analyse etwas, dessen Datenlage sie
+ * selbst nur "mittel" nennt.
+ */
+export function toEvidenceLevel(confidence: number): EvidenceLevel {
+  if (confidence >= CONFIDENCE_SOLID) return "gut";
+  if (confidence >= CONFIDENCE_SOLID - 1) return "mittel";
+  return "gering";
+}
+
+/*
  * Betonung ohne Schwelle: betont werden nicht "alle unter X", sondern die
  * NIEDRIGSTEN der belastbar gemessenen Buendel, HOECHSTENS drei. Das ist eine
  * Rangfolge, keine Grenze — sie behauptet nicht, dass 72 schlecht ist, sondern
