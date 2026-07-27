@@ -1,9 +1,15 @@
 /*
  * Landkarte und Ansatzpunkte sind EIN Baustein: BundleFocus. Die beiden
  * Haelften sind einzeln exportiert, weil sie einzeln getestet werden — auf eine
- * Seite gehoert die Klammer, nicht die Haelfte.
+ * Seite gehoert die Klammer, nicht die Haelfte. BundleTable ist die Tabellen-
+ * fassung derselben Daten; BundleFocus stellt sie selbst UNTER die Kachel.
  */
-export { BundleFocus, type BundleFocusProps } from "./components/bundle-focus";
+export {
+  BundleFocus,
+  BundleTable,
+  type BundleFocusProps,
+  type BundleTableProps,
+} from "./components/bundle-focus";
 export { BundleMap, type BundleMapProps } from "./components/bundle-map";
 export {
   ChangePanel,

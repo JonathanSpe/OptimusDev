@@ -50,6 +50,18 @@ export const DURATION = {
 export const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
 /**
+ * Der Scan laeuft LINEAR, als einzige Bewegung im Produkt.
+ *
+ * ENTSCHEIDUNG: Ein Scan legt Inhalt frei, waehrend er darueber laeuft — die
+ * Zeit, zu der eine Marke auftaucht, ist die Zeit, zu der das Band bei ihr
+ * ankommt. Beide Kurven muessen deshalb dieselbe sein, und bei EASE_OUT waere
+ * das eine Umkehrfunktion im Bauteil statt einer Zahl hier. Ausserdem
+ * auslaufender Scan luegt ueber seine eigene Position. Die Marken selbst treten
+ * danach ganz normal mit EASE_OUT auf.
+ */
+export const EASE_SCAN = "linear" as const;
+
+/**
  * EINE Feder fuer Layout und Zahlen. Leicht ueberschwingend, damit ein Wert
  * lebendig einrastet; das Ueberschwingen bleibt unter einem Prozent, sonst
  * wirkt eine Messzahl unseriös.
@@ -93,6 +105,18 @@ export interface MotionPreset {
   fadeRise: Variants;
   /** Pfad von links nach rechts zeichnen. Nimmt wie fadeRise einen Reihenplatz. */
   drawPath: Variants;
+  /**
+   * Die Traverse eines Scan-Bandes ueber ein Feld, von links nach rechts. Sie
+   * laeuft EINMAL; die Strecke gehoert der Komponente, die Zeit dieser Datei.
+   */
+  scan: Transition;
+  /**
+   * Auftritt eines Elements, das der Scan im Vorbeilaufen freilegt. `custom`
+   * ist seine LAGE auf der Traverse (0 = linker Rand, 1 = rechter Rand) und
+   * NICHT ein Reihenplatz — deshalb gilt hier auch kein Stagger-Deckel: der
+   * Deckel begrenzt eine Liste, hier begrenzt die Traverse sich selbst.
+   */
+  scanIn: Variants;
   /** Uebergang fuer Layout- und Positionswechsel. */
   layout: Transition;
   /**
@@ -153,6 +177,24 @@ function buildPreset(reduced: boolean): MotionPreset {
         },
       }),
     },
+    scan: { duration: duration(DURATION.layout), ease: EASE_SCAN },
+    scanIn: {
+      /*
+       * Verborgen heisst hier KLEIN, nicht verschoben: eine Marke, die von
+       * unten einfliegt, waere kurz an der falschen Stelle, und eine Position
+       * im Feld ist die ganze Aussage dieser Marke.
+       */
+      hidden: { opacity: 0, scale: reduced ? 1 : 0.4 },
+      visible: (fraction: number = 0) => ({
+        opacity: 1,
+        scale: 1,
+        transition: {
+          duration: duration(DURATION.fade),
+          ease: EASE_OUT,
+          delay: reduced ? 0 : scanDelay(fraction),
+        },
+      }),
+    },
     layout: reduced ? { duration: 0 } : SPRING,
     hover: { duration: duration(DURATION.hover), ease: EASE_OUT },
     stagger: (index: number) => (reduced ? 0 : staggerDelay(index)),
@@ -165,6 +207,11 @@ function buildPreset(reduced: boolean): MotionPreset {
 
 function staggerDelay(index: number): number {
   return Math.min(Math.max(index, 0), STAGGER_MAX_ITEMS - 1) * STAGGER_STEP;
+}
+
+/** Wann das Scan-Band an der Stelle `fraction` der Traverse ankommt. */
+function scanDelay(fraction: number): number {
+  return Math.min(Math.max(fraction, 0), 1) * DURATION.layout;
 }
 
 const STILL = buildPreset(true);

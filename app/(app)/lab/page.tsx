@@ -11,7 +11,6 @@ import {
   sampleCategories,
   sampleCategorySeries,
   sampleMarkerChanges,
-  samplePriorityFindings,
   sampleScore,
   sampleSupplements,
 } from "@/features/analysis";
@@ -55,9 +54,10 @@ export default function LabPage() {
       </div>
 
       {/* Landkarte und Ansatzpunkte stehen nebeneinander und nehmen zusammen
-       * die volle Inhaltsbreite: das Feld braucht Platz, damit die Punkte
-       * auseinanderliegen, die Rangfolge braucht Lesebreite. */}
-      <BundleFocus bundles={sampleBundles} findings={samplePriorityFindings} />
+       * die volle Inhaltsbreite: die Flaeche braucht Platz, damit die Punkte
+       * auseinanderliegen, die Rangfolge braucht Lesebreite. Die Tabelle unter
+       * der Kachel bringt der Baustein selbst mit. */}
+      <BundleFocus bundles={sampleBundles} />
 
       {/* Der Verlauf braucht die volle Bento-Breite: fuenf Linien ueber vier
        * Termine, und rechts daneben die Namen an den Linienenden. */}

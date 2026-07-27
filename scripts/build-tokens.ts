@@ -660,6 +660,40 @@ function buildContrastCases(): ContrastCase[] {
     decorative: true,
   });
 
+  /*
+   * Die Landkarte zeichnet ihre Marken NICHT direkt auf die Karte, sondern auf
+   * die Feldflaeche darueber. Geprueft wird deshalb genau dieser Grund — er ist
+   * der dunklere von beiden und damit der unguenstigere Fall. Die
+   * Beschriftungen der Ansatzpunkte stehen ebenfalls im Feld und muessen dort
+   * volle AA schaffen; sie sind Text, keine Grafik.
+   *
+   * plot.anchor fehlt hier ABSICHTLICH. Das Kreuz behauptet nichts und ist
+   * damit keine "Grafik, die zum Verstehen des Inhalts noetig ist" im Sinne von
+   * WCAG 1.4.11. Bekommt es je eine Bedeutung, gehoert es in diese Liste.
+   */
+  const plotField = composite(
+    parseColor(light("color.plot.field")),
+    parseColor(light("color.surface.card")),
+  );
+  for (const mark of ["mark", "markPriority"]) {
+    cases.push({
+      label: `plot.${mark} auf plot.field`,
+      foreground: light(`color.plot.${mark}`),
+      background: toRgbString(plotField),
+      decorative: true,
+    });
+  }
+  cases.push({
+    label: "text.default auf plot.field",
+    foreground: light("color.text.default"),
+    background: toRgbString(plotField),
+  });
+  cases.push({
+    label: "text.muted auf plot.field",
+    foreground: light("color.text.muted"),
+    background: toRgbString(plotField),
+  });
+
   return cases;
 }
 

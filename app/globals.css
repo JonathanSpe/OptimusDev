@@ -149,6 +149,16 @@
   --color-map-grid: var(--color-plot-grid);
   --color-map-divider: var(--color-plot-divider);
   --color-map-mark: var(--color-plot-mark);
+  /*
+   * Die Landkarte selbst kennt heute kein Raster mehr: sie ist eine Flaeche
+   * (map-field) mit einem Anker-Kreuz darin (map-anchor). Die drei
+   * Ansatzpunkte tragen den Marken-Akzent (map-priority) und den weichen
+   * Schein dahinter; grid und divider oben bleiben, weil die Verlaufskurven
+   * und die Zeitleiste sie weiterverwenden.
+   */
+  --color-map-field: var(--color-plot-field);
+  --color-map-anchor: var(--color-plot-anchor);
+  --color-map-priority: var(--color-plot-mark-priority);
 
   /*
    * Die Verlaufskurven teilen sich das Raster der Landkarte (map-grid) und
@@ -513,6 +523,30 @@
     auto-fit,
     minmax(min(var(--size-score-fact), 100%), 1fr)
   );
+}
+
+/*
+ * Der weiche Schein hinter einer betonten Marke der Landkarte und das Band,
+ * das beim Auftritt einmal ueber das Feld laeuft. Beide sind Verlaeufe und
+ * gehen deshalb ueber background-image statt ueber eine Farb-Utility — dieselbe
+ * Bauart wie surface-score.
+ */
+@utility map-glow {
+  background-image: var(--color-plot-mark-glow);
+}
+
+@utility map-scan {
+  background-image: var(--color-plot-scan);
+}
+
+/*
+ * Beschriftung, die MIT einer senkrechten Achse laeuft, von unten nach oben.
+ * Eigene Utility, weil Tailwind keine writing-mode-Stufe kennt und ein
+ * arbitraerer Wert in der Komponente genau das waere, was die Regeln verbieten.
+ */
+@utility text-vertical {
+  writing-mode: vertical-rl;
+  rotate: 180deg;
 }
 
 /*

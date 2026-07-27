@@ -2,8 +2,8 @@
  * ============================================================================
  * DIE REGELN DER ANALYSE — einmal hingeschrieben, von allen gelesen.
  * ============================================================================
- * Zwei Haelften beantworten dieselbe Frage: das Feld der Landkarte nummeriert
- * die Ansatzpunkte, die Rangliste daneben schreibt sie aus. Staende die Regel
+ * Zwei Haelften beantworten dieselbe Frage: die Flaeche der Landkarte
+ * nummeriert die Ansatzpunkte, die Liste daneben benennt sie. Staende die Regel
  * zweimal im Code, wuerden die beiden irgendwann auseinanderlaufen — das Feld
  * betont ein Buendel, die Liste nennt ein anderes. Dem Leser faellt
  * nicht auf, dass dahinter zwei Kopien einer Regel stecken; ihm faellt auf,
@@ -21,11 +21,18 @@ import type {
 } from "./sample-data";
 
 /*
- * ENTSCHEIDUNG: Es gibt eine Grenze auf der KONFIDENZ-Achse und keine auf der
- * Score-Achse. Eine Konfidenzgrenze sagt etwas ueber unsere Daten ("ab hier ist
- * belastbar gemessen") — das duerfen wir behaupten. Eine Scoregrenze wuerde
- * etwas ueber den Menschen sagen ("ab hier ist es schlecht"), und die ist
- * klinisch zu setzen, nicht zu schaetzen.
+ * ⚠️ PLATZHALTER, und die EINZIGE Stelle, an der diese Stufe steht.
+ *
+ * Ab hier gilt eine Messung als belastbar. Eine Konfidenzgrenze sagt etwas
+ * ueber unsere Daten ("ab hier ist belastbar gemessen") — das duerfen wir
+ * behaupten. Eine Grenze auf dem SCORE wuerde etwas ueber den Menschen sagen
+ * ("ab hier ist es schlecht"), und die ist klinisch zu setzen, nicht zu
+ * schaetzen; deshalb gibt es sie hier nicht und nirgends sonst.
+ *
+ * Die Landkarte ZEICHNET diese Stufe nicht mehr. Eine Linie in der Flaeche wird
+ * als Urteil gelesen, egal was daneben steht — die Stufe wirkt jetzt
+ * ausschliesslich hier, in der Auswahl der Ansatzpunkte, und wird dort in
+ * Worten genannt statt in einem Strich behauptet.
  */
 export const CONFIDENCE_SOLID = 4;
 

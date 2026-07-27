@@ -203,6 +203,11 @@
   --color-plot-grid: rgba(30,25,26,0.08);
   --color-plot-divider: rgba(30,25,26,0.50);
   --color-plot-mark: rgba(30,25,26,0.62);
+  --color-plot-field: rgba(30,25,26,0.04);
+  --color-plot-anchor: rgba(30,25,26,0.12);
+  --color-plot-mark-priority: #A32432;
+  --color-plot-mark-glow: radial-gradient(closest-side, #A324323D 0%, #A3243217 52%, #A3243200 100%);
+  --color-plot-scan: linear-gradient(90deg, #A3243200 0%, #A3243214 42%, #A324322E 50%, #A3243214 58%, #A3243200 100%);
   --color-plot-series: rgba(30,25,26,0.92);
   --color-plot-series-muted: rgba(30,25,26,0.52);
   --color-plot-crosshair: rgba(30,25,26,0.50);
@@ -296,6 +301,11 @@
   --color-plot-grid: rgba(255,255,255,0.10);
   --color-plot-divider: rgba(255,255,255,0.52);
   --color-plot-mark: rgba(255,255,255,0.66);
+  --color-plot-field: rgba(255,255,255,0.05);
+  --color-plot-anchor: rgba(255,255,255,0.14);
+  --color-plot-mark-priority: #C96773;
+  --color-plot-mark-glow: radial-gradient(closest-side, #C9677333 0%, #C9677314 52%, #C9677300 100%);
+  --color-plot-scan: linear-gradient(90deg, #C9677300 0%, #C9677312 42%, #C9677329 50%, #C9677312 58%, #C9677300 100%);
   --color-plot-series: rgba(255,255,255,0.94);
   --color-plot-series-muted: rgba(255,255,255,0.56);
   --color-plot-crosshair: rgba(255,255,255,0.54);
