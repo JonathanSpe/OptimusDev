@@ -111,6 +111,47 @@ export function toFocusEntries(
 }
 
 /**
+ * Rang je Buendel-Id — 1 bis 3 fuer die Ansatzpunkte, sonst kein Eintrag.
+ *
+ * Fuer Ansichten, die alle Buendel zeigen und nur wissen muessen, WELCHE davon
+ * eine Nummer tragen. Sie ziehen ihre Nummer damit aus derselben Auswahl wie
+ * jede Liste; ein zweites Kriterium ("die drei niedrigsten der Kategorie")
+ * waere eine zweite Rangfolge und wuerde in einer Spalte eine Zeile betonen,
+ * die die Analyse an anderer Stelle nicht empfiehlt.
+ */
+export function toFocusRanks(
+  bundles: readonly Bundle[],
+): ReadonlyMap<string, number> {
+  return new Map(
+    toFocusEntries(bundles).map((entry) => [entry.bundle.id, entry.rank]),
+  );
+}
+
+/*
+ * Die Reihenfolge der Buendel INNERHALB einer Kategorie: der staerkste zuerst.
+ *
+ * ENTSCHEIDUNG: absteigend nach Score und nicht nach Rang oder Kategorie-Nummer.
+ * Die Spalte liest sich damit wie der Ring ueber ihr — voll ist besser, und wer
+ * von oben nach unten liest, kommt beim Ansatzpunkt an. Eine Reihenfolge nach
+ * Nummer waere die Reihenfolge des Fachmodells und keine Aussage; eine nach Rang
+ * zoege die Ansatzpunkte nach oben und behauptete, der Rest sei Nachtrag.
+ *
+ * Bei Gleichstand entscheidet der Name, damit die Reihenfolge zwischen zwei
+ * Renderings dieselbe bleibt.
+ */
+export function toCategoryBundles(
+  bundles: readonly Bundle[],
+  categoryId: string,
+): readonly Bundle[] {
+  return bundles
+    .filter((bundle) => bundle.categoryId === categoryId)
+    .toSorted((left, right) => {
+      const score = right.score - left.score;
+      return score !== 0 ? score : left.name.localeCompare(right.name, "de");
+    });
+}
+
+/**
  * Der EINE Ansatzpunkt: das niedrigste belastbar gemessene Buendel, Rang 1.
  * Kein belastbares Buendel — kein Ansatzpunkt; dann empfiehlt die Analyse
  * nichts. Fuer eine Zusammenfassung, die nur den ersten nennen will.

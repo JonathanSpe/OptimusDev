@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 
 import {
   BundleFocus,
-  CategoryDialPanel,
+  CategoryFocus,
+  CategoryFocusTable,
   ProgressionPanel,
   ScoreHero,
   SupplementPanel,
@@ -44,18 +45,30 @@ export default function LabPage() {
        * richten sich nach ihrem Elternteil. Eine Breite in der Komponente waere
        * eine Annahme ueber ein Layout, das sie nicht kennt.
        */}
-      <div className="max-w-score-column">
+      {/* Die Score-Kachel in ihrer schmalen Spur — so steht sie in Zeile 1. */}
+      <div className="max-w-score-column-narrow">
         <ScoreHero score={sampleScore} />
       </div>
 
-      <div className="max-w-dial-column">
-        <CategoryDialPanel categories={sampleCategories} />
-      </div>
+      {/* DIESELBE Kachel ueber die ganze Breite: ab 32rem Kachelbreite legt sie
+       * sich hin (Zahl, Pille und Kurve in einer Reihe). Genau diese Form nimmt
+       * sie an, wenn das Fenster fuer zwei Spalten nicht reicht und sie ueber
+       * dem Bereichsfeld liegt. */}
+      <ScoreHero score={sampleScore} />
 
-      {/* Landkarte und Ansatzpunkte stehen nebeneinander und nehmen zusammen
-       * die volle Inhaltsbreite: die Flaeche braucht Platz, damit die Punkte
-       * auseinanderliegen, die Rangfolge braucht Lesebreite. Die Tabelle unter
-       * der Kachel bringt der Baustein selbst mit. */}
+      {/* Das Bereichsfeld braucht die volle Inhaltsbreite: vier Spalten mit
+       * Ring, Halbsatz, Datenlage und den Befundzeilen darunter. Es ersetzt die
+       * Kategorien-Kachel UND die Ansatzpunkte-Liste — beide beantworteten
+       * dieselbe Frage. */}
+      <CategoryFocus categories={sampleCategories} bundles={sampleBundles} />
+      <CategoryFocusTable
+        categories={sampleCategories}
+        bundles={sampleBundles}
+      />
+
+      {/* Die Landkarte bleibt als Baustein: der Snapshot zeigt sie nicht mehr,
+       * eine spaetere Detailansicht schon. Flaeche und Rangfolge stehen
+       * nebeneinander und nehmen zusammen die volle Inhaltsbreite. */}
       <BundleFocus bundles={sampleBundles} />
 
       {/* Die Entwicklung braucht die volle Bento-Breite: die Linie muss Strecke

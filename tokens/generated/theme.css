@@ -97,6 +97,7 @@
   /* Layout-Breiten */
   --size-card-min: 18.75rem;
   --size-measure: 70ch;
+  --size-score-column-narrow: 17rem;
   --size-score-column: 28rem;
   --size-chip-min: 13rem;
   --size-score-fact: 7rem;
@@ -205,6 +206,7 @@
   --color-gauge-notch: rgba(30,25,26,0.55);
   --color-gauge-confidence-filled: rgba(30,25,26,0.42);
   --color-gauge-confidence-empty: rgba(30,25,26,0.12);
+  --color-list-marker: rgba(30,25,26,0.30);
   --color-plot-grid: rgba(30,25,26,0.08);
   --color-plot-divider: rgba(30,25,26,0.50);
   --color-plot-mark: rgba(30,25,26,0.62);
@@ -312,6 +314,7 @@
   --color-gauge-notch: rgba(255,255,255,0.58);
   --color-gauge-confidence-filled: rgba(255,255,255,0.48);
   --color-gauge-confidence-empty: rgba(255,255,255,0.14);
+  --color-list-marker: rgba(255,255,255,0.34);
   --color-plot-grid: rgba(255,255,255,0.10);
   --color-plot-divider: rgba(255,255,255,0.52);
   --color-plot-mark: rgba(255,255,255,0.66);

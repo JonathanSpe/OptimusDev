@@ -141,6 +141,15 @@
   --color-dial-confidence-empty: var(--color-gauge-confidence-empty);
 
   /*
+   * Das Listenzeichen vor einer Befundzeile im Bereichsfeld. Es steht nur dort,
+   * wo KEINE Nummer sitzt — ein Ansatzpunkt traegt an derselben Stelle seine
+   * Scheibe. Utility finding-*, Token list.*: dieselbe Trennung wie bei
+   * dial-/gauge- und map-/plot-, damit der Name der Rolle nicht am Namen der
+   * Komponente haengt.
+   */
+  --color-finding-mark: var(--color-list-marker);
+
+  /*
    * Die Buendel-Landkarte: Raster, Trennung der Datenlage und die Marken. EIN
    * Ton fuer alle Marken — die Kategorie steckt in der Beschriftung, nicht in
    * der Farbe. Betont wird ueber Groesse plus den Marken-Akzent (bg-brand).
@@ -256,6 +265,7 @@
   /* Breite der Bildspalte in der Praeparate-Liste: w-capsule. */
   --container-capsule: var(--size-capsule);
   /* Spaltenbreiten der beiden Bento-Spalten der Analyse. */
+  --container-score-column-narrow: var(--size-score-column-narrow);
   --container-score-column: var(--size-score-column);
   --container-dial-column: var(--size-dial-column);
   --container-map-column: var(--size-map-column);
@@ -270,8 +280,8 @@
  * einrichtet, entscheidet sie an ihrer eigenen Breite (Container-Queries).
  * Deshalb braucht das Bento keine dritte Stufe: die Kacheln haben schon eine.
  *
- *   bento       976px — ab hier teilen sich Score und Kategorie-Ringe eine
- *                Zeile (5 / 7 Spalten)
+ *   bento       976px — ab hier teilen sich Score-Kachel und Bereichsfeld eine
+ *                Zeile (score-row: schmale Spur + Rest)
  *   bento-wide  1360px — ab hier auch Entwicklung und Praeparate (7 / 5)
  *
  * Beide Zahlen sind aus dem Shell gerechnet und nicht gerundet: Leisten,
@@ -601,6 +611,75 @@
 
   @container (min-width: 40rem) {
     grid-template-columns: repeat(4, max-content);
+  }
+}
+
+/*
+ * ZEILE 1 DES SNAPSHOTS — schmale Score-Spalte, daneben das Bereichsfeld.
+ *
+ * Die Score-Kachel ist hier eine SPUR und kein Anteil: sie stapelt Vorspann,
+ * Zahl, Pille, Kurve und zwei Angaben untereinander, und damit ist sie bei
+ * size.scoreColumnNarrow fertig. Bekaeme sie einen Bruchteil der Zeile, wuechse
+ * die dunkelste Flaeche des Produkts mit jedem Fenster mit, ohne dass mehr
+ * hineinkaeme — der Zuwachs gehoert dem Bereichsfeld, das vier Spalten
+ * unterzubringen hat. minmax(0, 1fr) statt 1fr, damit die vier Spalten darin
+ * schrumpfen duerfen und die Zeile nicht ueber das Raster hinausschieben.
+ *
+ * Die Utility setzt NUR die Spalten und wird mit der Fensterstufe aufgerufen
+ * (bento:score-row) — keine dritte Stufe, und der Breakpoint steht weiter an
+ * genau einer Stelle. Darunter bleibt das Raster einspaltig: die Kachel steht
+ * dann UEBER dem Feld, und welche Form sie dort annimmt, entscheidet sie an
+ * ihrer eigenen Breite (Container-Query in ScoreHero).
+ */
+@utility score-row {
+  grid-template-columns: var(--size-score-column-narrow) minmax(0, 1fr);
+}
+
+/*
+ * DAS BEREICHSFELD — vier Spalten, getrennt von Haarlinien.
+ *
+ * Anders als dial-grid wird hier VERTEILT (1fr statt max-content): eine Spalte
+ * traegt nicht mehr nur ein Instrument, sondern darunter die Befunde ihrer
+ * Kategorie. Die Haarlinie ist die Trennung, und eine Trennlinie muss den
+ * ganzen Platz abstecken, den sie trennt — sonst steht sie neben der Spalte
+ * statt zwischen zwei Spalten.
+ *
+ * Drei Stufen, alle an der KARTENBREITE (die Karte ist ein @container):
+ *
+ *   < 22rem   eine Spalte je Reihe
+ *   >= 22rem  2x2
+ *   >= 44rem  eine Reihe zu vier (704px: vier Spalten a 162px plus die
+ *             Trennungen — das Mass, ab dem 'Glukosestoffwechsel' und sein
+ *             Score in eine Zeile passen)
+ *
+ * Die Haarlinie sitzt nur INNEN. Sie liegt als border-left an jeder Spalte, die
+ * nicht die erste ihrer Reihe ist — deshalb die nth-child-Regeln und nicht
+ * divide-x: bei 2x2 waere die dritte Spalte die erste der zweiten Reihe und
+ * bekaeme von divide-x trotzdem einen Strich, mitten in die Karte hinein.
+ * Zurueckgesetzt werden muss nichts: die Auswahl der 2er-Stufe ist in der der
+ * 4er-Stufe enthalten.
+ */
+@utility area-grid {
+  display: grid;
+  gap: var(--space-6) var(--space-3);
+  grid-template-columns: minmax(0, 1fr);
+
+  @container (min-width: 22rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    > *:not(:nth-child(2n + 1)) {
+      border-left: 1px solid var(--color-border-default);
+      padding-left: var(--space-3);
+    }
+  }
+
+  @container (min-width: 44rem) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    > *:not(:nth-child(4n + 1)) {
+      border-left: 1px solid var(--color-border-default);
+      padding-left: var(--space-3);
+    }
   }
 }
 

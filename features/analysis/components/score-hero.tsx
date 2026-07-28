@@ -27,12 +27,43 @@ import { SCORE_MAX, type ScorePoint, type ScoreSummary } from "../sample-data";
  * freigegeben ist, misst sich der Score an seinem eigenen letzten Stand; das
  * ist derselbe Bezug, den auch die Kategorie-Ringe haben.
  *
+ * ZWEI FORMEN, EINE KACHEL — und die Kachel entscheidet selbst, welche:
+ *
+ *   SCHMAL (Container unter 32rem): eine stehende SPALTE. Vorspann, Zahl,
+ *   Pille, Kurve, Trennlinie, zwei Angaben — alles untereinander. So steht sie
+ *   in Zeile 1 des Snapshots neben dem Bereichsfeld, und ihre Breite ist eine
+ *   Spur (size.scoreColumnNarrow), kein Anteil.
+ *
+ *   BREIT (ab 32rem): eine LIEGENDE, flache Kachel. Zahl und Pille auf einer
+ *   Grundlinie, die Kurve daneben, die Angaben in einer Reihe. So steht sie,
+ *   wenn das Fenster fuer zwei Spalten nicht reicht und sie ueber dem Feld
+ *   liegt — quer ist sie dort flach, und flach heisst: das Feld bleibt sichtbar.
+ *
+ * Die Stufe ist eine CONTAINER-Query und keine Fenster-Query, und das ist der
+ * ganze Grund, warum EIN Bauteil zwei Formen kann: die Kachel weiss nicht, wie
+ * breit das Fenster ist, sie weiss nur, wie breit SIE ist. Beide Formen rendern
+ * dasselbe Markup in derselben Reihenfolge — es gibt keinen zweiten Zweig, der
+ * auseinanderlaufen koennte.
+ *
  * Sie ist bewusst KOMPAKT. Die dunkle Flaeche ist die lauteste im Produkt —
  * ihre Groesse ist deshalb kein Ausdruck von Wichtigkeit, sondern eine
- * Lautstaerke. Wichtig ist die ZAHL, und die traegt sich selbst: alles andere
- * steht klein daneben, der Verlauf als schmale Kurve rechts statt als breites
- * Band unter dem Score.
+ * Lautstaerke. Wichtig ist die ZAHL, und die traegt sich selbst.
  */
+
+/*
+ * DIE EINE ERKLAERZEILE — einmal im Code, damit der Leerzustand nicht anders
+ * erklaert als die gefuellte Kachel.
+ *
+ * Sie sagt, WORAUS die Zahl entsteht und WELCHE Skala sie hat. "Verglichen mit
+ * deinem letzten Test" stand hier vorher und war eine Verdopplung: den Vergleich
+ * macht die Pille darunter sichtbar, und zwar mit Zahl und Datum.
+ *
+ * ⚠️ PLATZHALTER: die 15 Marker sind gesetzt und nicht gerechnet. Sobald die
+ * Score-Formel steht, kommt die Zahl aus ihrer Markermenge — eine Kachel, die
+ * eine andere Anzahl behauptet als die Auswertung verwendet, ist schlimmer als
+ * eine ohne Anzahl.
+ */
+const SCORE_EXPLAINER = "Dein Gesamtwert aus 15 Blutmarkern, von 0 bis 100.";
 
 export interface ScoreHeroProps {
   score: ScoreSummary;
@@ -46,22 +77,23 @@ export interface ScoreHeroProps {
 }
 
 /*
- * Die Kurve rechts neben dem Score. Sie hat eine FESTE Groesse und waechst
- * nicht mit der Kachel: eine Randnotiz, die sich ueber die halbe Kachel zieht,
- * ist keine Randnotiz mehr. Gerechnet wird in echten Pixeln statt in einem
- * gedehnten viewBox — verzerrte Koordinaten machen die Strichstaerke
- * ungleichmaessig, aus Punkten Ellipsen, und die Zeichen-Animation
- * (pathLength arbeitet ueber stroke-dasharray) zerfaellt in Striche.
+ * Die Kurve. Sie hat eine FESTE Groesse in echten Pixeln statt eines gedehnten
+ * viewBox: verzerrte Koordinaten machen die Strichstaerke ungleichmaessig, aus
+ * Punkten Ellipsen, und die Zeichen-Animation (pathLength arbeitet ueber
+ * stroke-dasharray) zerfaellt in Striche.
+ *
+ * Das Mass ist die STEHENDE Spalte: 212px sind die Breite von
+ * size.scoreColumnNarrow minus ihrer Innenabstaende, die Kurve fuellt die Spalte
+ * also aus, ohne sie zu sprengen. In der liegenden Form ist dieselbe Kurve eine
+ * Randnotiz neben der Zahl — dort hat die Kachel Platz uebrig, hier nicht, und
+ * eine Kurve, die sich zwei Groessen leistet, hat zwei Steigungen fuer denselben
+ * Verlauf.
  */
-const SPARK_WIDTH = 140;
-const SPARK_HEIGHT = 44;
+const SPARK_WIDTH = 212;
+const SPARK_HEIGHT = 48;
 /** Rand, damit die Punkte an den Enden nicht angeschnitten werden. */
 const PAD_X = 4;
 const PAD_Y = 5;
-
-const numberFormat = new Intl.NumberFormat("de-DE", {
-  maximumFractionDigits: 0,
-});
 
 const deltaFormat = new Intl.NumberFormat("de-DE", {
   signDisplay: "exceptZero",
@@ -93,7 +125,7 @@ function toGeometry(history: readonly ScorePoint[]): Geometry {
   const min = Math.min(...values);
   const max = Math.max(...values);
   /*
-   * Nur wenig Luft um die Spanne: auf 44px Hoehe frisst jede Reserve den
+   * Nur wenig Luft um die Spanne: auf 48px Hoehe frisst jede Reserve den
    * Ausschlag, und eine Kurve, die kaum steigt, behauptet etwas Falsches. Den
    * Abstand zur Kante haelt schon PAD_Y.
    */
@@ -196,10 +228,10 @@ function FactRow({ facts }: { facts: readonly Fact[] }) {
   return (
     /*
      * score-facts ist ein intrinsisches Raster: die Spaltenzahl haengt an der
-     * Breite der KACHEL, nicht am Fenster. Drei Angaben nebeneinander, solange
-     * jede ihre 7rem bekommt — sonst zwei, sonst eine. Eine feste sm:grid-cols-3
-     * waere hier falsch: im Bento kann die Kachel schmal stehen, waehrend das
-     * Fenster breit ist.
+     * Breite der KACHEL, nicht am Fenster. In der schmalen Spalte reicht der
+     * Platz fuer genau eine Spalte, die beiden Angaben stehen dort also
+     * untereinander; in der liegenden Form stehen sie nebeneinander. Eine feste
+     * Spaltenzahl waere hier falsch — es ist dieselbe Kachel.
      */
     <dl className="score-facts border-score-line/30 border-t pt-4">
       {facts.map((fact, index) => (
@@ -213,9 +245,9 @@ function FactRow({ facts }: { facts: readonly Fact[] }) {
             {fact.label}
           </dt>
           {/* Kein truncate: in der schmalen Score-Spalte passt "Regeneration &
-           * Hormonbalance" nicht in eine Zeile, und ausgerechnet der Limiter
+           * Hormonbalance" gerade in eine Zeile, und ausgerechnet der Limiter
            * darf nicht abgeschnitten werden. Er bricht lieber um. */}
-          <dd className="text-on-score mt-1 text-xs font-medium text-balance">
+          <dd className="text-on-score mt-1 text-xs font-semibold text-balance">
             {fact.value}
           </dd>
         </motion.div>
@@ -303,15 +335,14 @@ function ScoreTrend({ history, label }: ScoreTrendProps) {
 function EmptyScore({ className }: { className?: string }) {
   return (
     <section
-      className={cn("surface-score rounded-panel p-6", className)}
+      className={cn("surface-score rounded-panel p-5 @sm:p-6", className)}
       aria-label="Optimus Score"
     >
       <p className="text-on-score-muted text-2xs font-semibold tracking-wide uppercase">
         Optimus Score
       </p>
       <p className="text-on-score-muted max-w-measure mt-1 text-xs">
-        Dein Gesamtwert über alle Kategorien, verglichen mit deinem letzten
-        Test.
+        {SCORE_EXPLAINER}
       </p>
       <p className="text-on-score mt-4 text-xl font-semibold">
         Noch kein Score
@@ -344,19 +375,20 @@ export function ScoreHero({ score, index = 0, className }: ScoreHeroProps) {
 
   const delta = toDelta(score.history);
 
+  /*
+   * ZWEI Angaben in der Fusszeile, und die frueheren drei sind es mit Absicht
+   * nicht mehr: "seit letztem Test: von 67 auf 71 Punkte" sagte dasselbe wie die
+   * Pille darueber, nur ausfuehrlicher. In einer stehenden Spalte steht die
+   * Wiederholung direkt unter dem Original.
+   *
+   * ENTSCHEIDUNG: "naechster Test" nennt nur die Tage und kein Datum. Der
+   * Vertrag kennt bis heute nur `nextTestInDays`; ein Datum daraus zu rechnen
+   * hiesse, einen Bezugstag zu erfinden — vom letzten Test aus gerechnet stimmt
+   * es nur, wenn der heute war, und von "heute" aus gerechnet unterscheiden sich
+   * Server und Browser ueber Mitternacht. Sobald der Vertrag einen Termin
+   * traegt, steht er hier davor.
+   */
   const facts: Fact[] = [
-    {
-      /*
-       * ENTSCHEIDUNG: Die Fusszeile nennt die beiden WERTE, die Pille oben
-       * nennt ihre Differenz. Beide rechnen auf demselben Verlauf, sagen aber
-       * Verschiedenes — stuende hier noch einmal "+4 seit 26.05.", waere es
-       * dieselbe Aussage zweimal auf derselben Kachel.
-       */
-      label: "seit letztem Test",
-      value: delta
-        ? `von ${numberFormat.format(delta.from)} auf ${numberFormat.format(delta.to)} Punkte`
-        : "erster Test",
-    },
     { label: "schwächster Bereich", value: score.limiter },
     { label: "nächster Test", value: `in ${score.nextTestInDays} Tagen` },
   ];
@@ -375,22 +407,19 @@ export function ScoreHero({ score, index = 0, className }: ScoreHeroProps) {
       aria-labelledby="score-hero-titel"
       className={cn(
         /*
-         * Die Kachel ist ihr eigener Container: ihre Breitenstufen sind
-         * intrinsisch (flex-wrap fuer die Kurve, score-facts fuer die
-         * Fusszeile) und brauchen heute keine Query — die Registrierung sorgt
-         * dafuer, dass eine kuenftige Stufe an der KACHEL misst und nicht am
-         * Fenster.
+         * Die Kachel ist ihr eigener Container, und daran haengen BEIDE Formen:
+         * @lg (32rem) ist die Stufe, ab der Zahl, Pille und Kurve nebeneinander
+         * Platz haben. Darunter stapelt sie.
          */
         "@container",
         /* Kein Rahmen — die Flaeche traegt die Kachel. Siehe surface-score. */
         "surface-score rounded-panel relative overflow-hidden p-5 @sm:p-6",
         /*
          * DREI Bloecke: Kopf, Mitte, Fusszeile. Die Kachel bekommt ihre Hoehe
-         * von der Zeile des Bentos (align-items: stretch), und der Zuwachs
+         * von der Zeile des Rasters (align-items: stretch), und der Zuwachs
          * geht an die MITTE — nicht an die Abstaende dazwischen. Ein
          * justify-between ueber zwei Bloecke schob frueher genau diesen
          * Zuwachs als Loch in die Kachelmitte; jetzt steht dort Inhalt.
-         * gap-5 bleibt der Abstand und wird nie mehr als das.
          */
         "flex flex-col gap-5",
         className,
@@ -404,28 +433,23 @@ export function ScoreHero({ score, index = 0, className }: ScoreHeroProps) {
           Optimus Score
         </h2>
         <p className="text-on-score-muted max-w-measure mt-1 text-xs">
-          Dein Gesamtwert über alle Kategorien, verglichen mit deinem letzten
-          Test.
+          {SCORE_EXPLAINER}
         </p>
       </div>
 
       {/*
-       * DIE MITTE TRAEGT DIE STRECKUNG. Links der Wert mit seiner
-       * Veraenderung, gleich daneben der Weg dorthin — und beides senkrecht
-       * zentriert in dem Platz, den die Zeile der Kachel zuteilt. Waechst die
-       * Nachbarkachel, waechst dieser Block mit und die Gruppe rueckt in seine
-       * Mitte, statt am Kopf kleben zu bleiben.
+       * DIE MITTE TRAEGT DIE STRECKUNG. Zahl, Veraenderung und der Weg dorthin
+       * — in der Spalte untereinander, in der liegenden Form nebeneinander, und
+       * in beiden Faellen senkrecht zentriert in dem Platz, den die Zeile der
+       * Kachel zuteilt. Waechst die Nachbarkachel, waechst dieser Block mit und
+       * die Gruppe rueckt in seine Mitte, statt am Kopf kleben zu bleiben.
        *
-       * KEIN justify-between: die Kurve gehoert zur Zahl, nicht zum Rand. An
-       * die Kachelkante geheftet wandert sie mit jeder Breitenaenderung davon
-       * und laesst waagerecht dasselbe Loch stehen, das senkrecht gerade
-       * geschlossen wurde. Sie sitzt deshalb mit festem Abstand hinter der
-       * Pille; bleibt in einer schmalen Kachel zu wenig Platz, rutscht sie als
-       * Ganzes in die naechste Zeile — content-center haelt beide Zeilen dann
-       * als Gruppe zusammen, statt sie auseinanderzuziehen.
+       * KEIN justify-between: die Kurve gehoert zur Zahl, nicht zum Rand. An die
+       * Kachelkante geheftet wandert sie mit jeder Breitenaenderung davon und
+       * laesst dasselbe Loch stehen, das gerade geschlossen wurde.
        */}
-      <div className="flex flex-1 flex-wrap content-center items-center gap-x-6 gap-y-4">
-        <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-2">
+      <div className="flex flex-1 flex-col items-start justify-center gap-4 @lg:flex-row @lg:flex-wrap @lg:content-center @lg:items-center @lg:gap-x-6 @lg:gap-y-4">
+        <div className="flex min-w-0 flex-col items-start gap-2 @lg:flex-row @lg:flex-wrap @lg:items-baseline @lg:gap-x-3">
           <p className="text-on-score text-score font-semibold tracking-tight tabular-nums">
             <span aria-hidden="true">
               <NumberFlow

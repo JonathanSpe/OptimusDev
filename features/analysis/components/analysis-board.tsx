@@ -8,8 +8,7 @@ import type {
   ScoreSummary,
   Supplement,
 } from "../sample-data";
-import { BundleFocus } from "./bundle-focus";
-import { CategoryDialPanel } from "./category-dial";
+import { CategoryFocus, CategoryFocusTable } from "./category-focus";
 import { ProgressionPanel } from "./progression-panel";
 import { ScoreHero } from "./score-hero";
 import { SupplementPanel } from "./supplement-row";
@@ -26,8 +25,10 @@ import { SupplementPanel } from "./supplement-row";
  *
  *   Das RASTER hoert auf das Fenster. Zwoelf Spalten, EIN Abstand, und genau
  *   zwei Stufen (bento / bento-wide, siehe app/globals.css). Breiten stehen als
- *   Spalten und nie als Pixel — eine Kachel weiss dadurch nicht, wie breit sie
- *   ist, sondern nur, welchen Anteil sie hat.
+ *   Spalten und nicht als Pixel — eine Kachel weiss dadurch nicht, wie breit
+ *   sie ist, sondern nur, welchen Anteil sie hat. EINE Ausnahme, und die ist
+ *   begruendet: die Score-Kachel in Zeile 1 hat eine feste Spur, weil ihr
+ *   Inhalt bei diesem Mass fertig ist (score-row).
  *
  *   Die KACHEL hoert auf sich selbst. Jede ist ein Container und richtet sich
  *   nach ihrer eigenen Breite ein. Das ist der Grund, warum drei Stufen
@@ -48,9 +49,9 @@ import { SupplementPanel } from "./supplement-row";
  */
 
 /*
- * Die Auftrittsreihe ist die LESEREIHE: Score, Ringe, Landkarte, Entwicklung,
+ * Die Auftrittsreihe ist die LESEREIHE: Score, Bereiche, Entwicklung,
  * Praeparate. Die Zahl ist ein Platz in EINER Reihe, die Verzoegerung dazu
- * kommt aus lib/motion (40 ms je Platz). Fuenf Plaetze sind 160 ms — die Seite
+ * kommt aus lib/motion (40 ms je Platz). Vier Plaetze sind 120 ms — die Seite
  * steht damit innerhalb des Stagger-Budgets von 240 ms vollstaendig da.
  *
  * Jede Kachel bringt ihren eigenen Auftritt mit und behaelt ihn; sie bekommt
@@ -61,9 +62,8 @@ import { SupplementPanel } from "./supplement-row";
 const ENTRANCE = {
   score: 0,
   categories: 1,
-  bundles: 2,
-  progression: 3,
-  supplements: 4,
+  progression: 2,
+  supplements: 3,
 } as const;
 
 export interface AnalysisBoardProps {
@@ -89,33 +89,42 @@ export function AnalysisBoard({
 }: AnalysisBoardProps) {
   return (
     <div className={cn("grid grid-cols-12 gap-4", className)}>
-      {/* Zeile 1 — der Stand: wo du stehst und woraus er sich zusammensetzt.
+      {/*
+       * Zeile 1 — der Stand: wo du stehst und woraus er sich zusammensetzt.
+       *
+       * Sie ist die einzige Zeile mit einer eigenen Spaltenteilung, und zwar
+       * keiner aus Zwoelfteln: die Score-Kachel ist eine SPUR fester Breite,
+       * das Bereichsfeld bekommt den Rest (score-row in app/globals.css). Ein
+       * Anteil des Rasters liess die dunkelste Flaeche des Produkts mit jedem
+       * Fenster mitwachsen, ohne dass mehr hineinkam. Unter der Fensterstufe
+       * bleibt die Zeile einspaltig — die Kachel steht dann als flache Kachel
+       * ueber dem Feld und nimmt diese Form an ihrer eigenen Breite an.
+       *
        * ("Befund" ist seit der Sprachrunde das sichtbare Wort fuer ein Bundle
-       * und wird hier deshalb nicht mehr allgemein verwendet.) */}
-      <ScoreHero
-        score={score}
-        index={ENTRANCE.score}
-        className="bento:col-span-5 col-span-12"
-      />
-      <CategoryDialPanel
-        categories={categories}
-        index={ENTRANCE.categories}
-        className="bento:col-span-7 col-span-12"
-      />
+       * und wird hier deshalb nicht mehr allgemein verwendet.)
+       */}
+      <div className="bento:score-row col-span-12 grid gap-4">
+        <ScoreHero score={score} index={ENTRANCE.score} />
+        <CategoryFocus
+          categories={categories}
+          bundles={bundles}
+          index={ENTRANCE.categories}
+        />
+      </div>
 
       {/*
-       * Zeile 2 — die Landkarte, immer ueber die volle Breite. Sie ist die
-       * einzige Kachel, die den Platz wirklich braucht: zehn Punkte mit drei
-       * dauerhaften Beschriftungen liegen sonst uebereinander. Die Tabelle
-       * unter der Kachel bringt der Baustein selbst mit.
+       * Die Tabellenfassung derselben Befunde — unter der Zeile und nicht in
+       * ihr. In der Kachel waere sie ein Umschalter und machte aus dem Feld eine
+       * Ansichtsoption; hier ist sie der vollstaendige, lineare Weg zu denselben
+       * Werten.
        */}
-      <BundleFocus
+      <CategoryFocusTable
+        categories={categories}
         bundles={bundles}
-        index={ENTRANCE.bundles}
         className="col-span-12"
       />
 
-      {/* Zeile 3 — die Bewegung und was sie bewirkt hat. */}
+      {/* Zeile 2 — die Bewegung und was sie bewirkt hat. */}
       <ProgressionPanel
         score={score}
         categories={categorySeries}

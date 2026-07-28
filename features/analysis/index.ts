@@ -20,12 +20,37 @@ export {
   type BundleTableProps,
 } from "./components/bundle-focus";
 export { BundleMap, type BundleMapProps } from "./components/bundle-map";
+/*
+ * Ringe und Befunde sind seit dem Umbau von Zeile 1 EIN Baustein: CategoryFocus.
+ * Er ersetzt auf dem Snapshot die frueheren zwei Kacheln (CategoryDialPanel und
+ * PriorityList) — sie beantworteten dieselbe Frage und liessen die Verbindung
+ * dem Leser. Die Tabelle ist einzeln exportiert, weil sie einzeln getestet wird;
+ * das Bento stellt sie selbst UNTER die Zeile.
+ */
+export {
+  CategoryFocus,
+  CategoryFocusTable,
+  type CategoryFocusProps,
+  type CategoryFocusTableProps,
+} from "./components/category-focus";
 export {
   CategoryDial,
   CategoryDialPanel,
   type CategoryDialPanelProps,
   type CategoryDialProps,
 } from "./components/category-dial";
+/*
+ * Das Instrument selbst — Ring und Datenlage-Punkte. Beide Kacheln beziehen es
+ * von hier, damit ein Ring nicht an zwei Orten anders laufen kann.
+ */
+export {
+  CategoryRing,
+  ConfidenceDots,
+  toRingLabel,
+  type CategoryRingProps,
+  type ConfidenceDotsProps,
+  type RingSize,
+} from "./components/category-ring";
 export {
   PriorityList,
   type PriorityListProps,
@@ -60,12 +85,14 @@ export {
   CONFIDENCE_SOLID,
   MIN_MEASUREMENTS_FOR_VERDICT,
   isAdjustedActionHint,
+  toCategoryBundles,
   toCategoryMovements,
   toCategoryNoise,
   toChangeOrder,
   toChangeReading,
   toFocusBundles,
   toFocusEntries,
+  toFocusRanks,
   toMarkerReading,
   toObservedChange,
   toPriorityBundle,
