@@ -18,6 +18,12 @@ export const metadata: Metadata = {
  * das Board. Die Daten sind noch ein Mock aus features/dashboard/sample-data.ts
  * (⚠️ Grenzwerte sind Platzhalter) und wandern spaeter hinter eine
  * Repository-Abfrage.
+ *
+ * ⚠️ Unter der Ueberschrift stand ein Vorspann ("Deine Werte aus dem letzten
+ * Bluttest — ohne Bewertung. Alle Zahlen sind Platzhalter."). Er ist entfernt;
+ * die Kacheln sagen dasselbe, ohne es anzukuendigen. Damit steht der Hinweis
+ * auf die Platzhalter-Grenzwerte nur noch im Code — sobald hier echte
+ * Messwerte ankommen, gehoert er sichtbar zurueck auf die Seite.
  */
 export default function DashboardPage() {
   return (
@@ -25,10 +31,6 @@ export default function DashboardPage() {
       <h1 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
         Guten Morgen 👋
       </h1>
-      <p className="text-muted-foreground mt-2">
-        Deine Werte aus dem letzten Bluttest — ohne Bewertung. Alle Zahlen sind
-        Platzhalter.
-      </p>
     </BiomarkerBoard>
   );
 }

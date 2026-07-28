@@ -605,10 +605,13 @@ function buildContrastCases(): ContrastCase[] {
       background: light(`color.status.${status}Subtle`),
     });
     /*
-     * Auf der Analyse-Oberflaeche steht jeder Befund auf einer DECKENDEN
-     * Karte. Die Flaeche ist heute dieselbe wie background.default — geprueft
-     * wird sie trotzdem einzeln, damit ein spaeter getoentes surface.card hier
-     * auffliegt und nicht erst auf dem Schirm.
+     * Auf einer DECKENDEN Karte stehen sie zweimal: als Befund auf der
+     * Analyse-Oberflaeche und seit der farbigen Marker-Kachel auch als
+     * Verlaufslinie und Pille auf dem Dashboard. Die Flaeche ist heute
+     * dieselbe wie background.default — geprueft wird sie trotzdem einzeln,
+     * damit ein spaeter getoentes surface.card hier auffliegt und nicht erst
+     * auf dem Schirm. Der Schwellwert ist der fuer TEXT (4.5:1) und damit
+     * strenger als die 3:1, die eine Linie als Grafik braeuchte.
      */
     cases.push({
       label: `status.${status} auf surface.card`,

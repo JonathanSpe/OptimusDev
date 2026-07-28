@@ -25,6 +25,17 @@ import {
 import type { Biomarker, Measurement } from "@/contracts";
 import { cn } from "@/lib/utils";
 
+import {
+  DELTA_THRESHOLD,
+  toChangeReading,
+  toCurrentValue,
+  toMarkerStanding,
+  toOptimalRange,
+  type ChangeReading,
+  type MarkerStanding,
+  type ValueRange,
+} from "../rules";
+
 /*
  * Die Form der Daten kommt aus contracts/biomarker.ts. Die Kachel bringt keine
  * eigene Fassung davon mit: der aktuelle Wert ist der LETZTE Eintrag des
@@ -41,9 +52,13 @@ export type BiomarkerPanelView = "value" | "trend";
  * ENTSCHEIDUNG: Die Toenung faerbt AUSSCHLIESSLICH den Kreis hinter dem Icon
  * und ist reine Dekoration — sie gibt dem Raster Rhythmus. Sie ist bewusst kein
  * zugaengliches Signal: die Toene tragen keine Information, die nicht schon in
- * der Abschnittsueberschrift und im Markernamen steht, und sie bewerten nichts
- * (deshalb auch kein Gruen, kein Bernstein, kein Rot). Wer hier je eine Aussage
- * hineinlegt, verletzt die Regel "auf dem Dashboard wird nicht interpretiert".
+ * der Abschnittsueberschrift und im Markernamen steht.
+ *
+ * ⚠️ KEIN GRUEN, KEIN BERNSTEIN, KEIN ROT — und dieses Verbot ist strenger
+ * geworden, seit die Kachel Farbe zum Bewerten benutzt: Violett, Sand, Teal und
+ * Blau sind die Palette dieser Chips, weil sie mit success/warning/critical
+ * nicht verwechselt werden koennen. Ein Dekor-Ton in Statusfarbe bewertet mit,
+ * ohne es zu wissen.
  *
  * NICHT VERWECHSELN mit den Bewertungs-Kategorien K1–K4 der Analyse. k1…k5 sind
  * hier nur Steckplaetze der Anzeige-Gruppen; welche Gruppe welchen Platz
@@ -99,9 +114,42 @@ const percentFormat = new Intl.NumberFormat("de-DE", {
   maximumFractionDigits: 0,
 });
 
-const chartConfig = {
-  value: { label: "Messwert", color: "var(--chart-1)" },
-} satisfies ChartConfig;
+/*
+ * ============================================================================
+ * DIE FARBE DES VERLAUFS — sie sagt, WO der Wert steht, nicht wohin er ging.
+ * ============================================================================
+ * Die Kachel traegt zwei Aussagen, und jede hat ihren eigenen Kanal: die Pille
+ * deutet die BEWEGUNG (naeher ans Ziel oder weiter weg), die Kurve zeigt die
+ * LAGE (im Ziel, grenzwertig, ausserhalb der Referenz). Beide in dieselbe Farbe
+ * zu legen, hiesse eine der beiden aufzugeben — ein Wert kann sich verbessern
+ * und trotzdem weit ausserhalb liegen, und genau dieser Fall ist der
+ * interessanteste.
+ *
+ * OHNE FARBE BLEIBT DIE AUSSAGE STEHEN (WCAG 1.4.1): dieselbe Lage zeigt die
+ * Schiene unter der Kurve als POSITION — der Marker sitzt im Band oder daneben.
+ * Die Farbe verdoppelt diese Auskunft, sie ersetzt sie nicht. Vorgelesen wird
+ * sie ueber das aria-label der Kachel.
+ *
+ * Die Toene kommen aus den Status-Tokens (success/warning/critical) und nicht
+ * aus der Marken- oder Kategorie-Palette. Die Kategorie-Chips bleiben deshalb
+ * bewusst in Violett, Sand, Teal und Blau: sie duerfen der Statusfarbe nie ins
+ * Gehege kommen, sonst bewertet ein Dekor-Ton mit.
+ */
+const STANDING_COLOR: Readonly<Record<MarkerStanding, string>> = {
+  imZiel: "var(--success)",
+  grenzwertig: "var(--warning)",
+  auffaellig: "var(--critical)",
+  /* Ohne Messwert gibt es nichts zu deuten — dann bleibt die Kurve neutral. */
+  unbekannt: "var(--chart-1)",
+};
+
+/** Dieselbe Lage als Wort — fuer das aria-label und den Tooltip der Schiene. */
+const STANDING_LABEL: Readonly<Record<MarkerStanding, string | null>> = {
+  imZiel: "im Zielbereich",
+  grenzwertig: "grenzwertig",
+  auffaellig: "ausserhalb des Referenzbereichs",
+  unbekannt: null,
+};
 
 /*
  * Die Schiene zeigt eine ANZEIGE-Skala, die breiter ist als der
@@ -132,16 +180,14 @@ const REFERENCE_REACH = 0.6;
  */
 const BAND_AREA_OPACITY = 0.45;
 
-/* Ab dieser Veraenderung zeigt die Pille einen Pfeil statt eines Strichs — so
- * widerspricht das Symbol nie dem gerundeten Prozentwert daneben. */
-const DELTA_THRESHOLD = 0.005;
-
 type DeltaDirection = "up" | "down" | "flat";
 
 interface BiomarkerDelta {
   /** Relative Veraenderung zur vorherigen Messung, z. B. 0.12 fuer +12 %. */
   ratio: number;
   direction: DeltaDirection;
+  /** Ob diese Bewegung dem Zielbereich naeher kam. Kommt aus rules.ts. */
+  reading: ChangeReading;
 }
 
 interface ChartPoint {
@@ -200,36 +246,11 @@ function toLabelPosition(percent: number): number {
 /**
  * Liegen die beiden Grenzen dichter zusammen als das, stehen ihre Zahlen
  * uebereinander. Dann wird daraus EINE Beschriftung ("0,5–2,5") in der Mitte
- * des Bands. Geschaetzt in Prozent der Schienenbreite: eine schmale Kachel ist
- * rund 220px breit, eine Ziffer belegt bei 11px Schrift etwa 6px.
+ * des Bands. Geschaetzt in Prozent der Schienenbreite: die schmalste Kachel ist
+ * size.cardMin breit, abzueglich ihrer Innenabstaende bleiben rund 224px fuer
+ * die Schiene, und eine Ziffer belegt bei 11px Schrift etwa 6px.
  */
-const LABEL_MERGE_PERCENT = (7 * 6 * 100) / 220;
-
-interface ValueRange {
-  low: number;
-  high: number;
-}
-
-/**
- * Der Optimalbereich ist optional und braucht BEIDE Grenzen. Liegt nur eine vor
- * oder stehen sie verdreht, zeichnet die Kachel ausschliesslich das
- * Referenzband — lieber eine Zone weniger als eine erfundene.
- */
-/**
- * Der aktuelle Wert ist der LETZTE Eintrag des Verlaufs — es gibt kein eigenes
- * Wertfeld, das davon abweichen koennte. Ein leerer Verlauf heisst "noch nicht
- * gemessen" und ergibt deshalb null, nicht 0.
- */
-function toCurrentValue(marker: Biomarker): number | null {
-  return marker.history.at(-1)?.value ?? null;
-}
-
-function toOptimalRange(marker: Biomarker): ValueRange | null {
-  const { optimalLow, optimalHigh } = marker;
-  if (optimalLow === undefined || optimalHigh === undefined) return null;
-  if (optimalHigh <= optimalLow) return null;
-  return { low: optimalLow, high: optimalHigh };
-}
+const LABEL_MERGE_PERCENT = (7 * 6 * 100) / 224;
 
 /**
  * Haengt die Einheit an eine Zahl — oder eben nicht: die abgeleiteten
@@ -265,7 +286,8 @@ function toZoneLabel(marker: Biomarker, optimal: ValueRange | null): string {
   return `Optimalbereich ${numberFormat.format(optimal.low)} bis ${numberFormat.format(optimal.high)}, ${reference}`;
 }
 
-function toDelta(history: readonly Measurement[]): BiomarkerDelta | null {
+function toDelta(marker: Biomarker): BiomarkerDelta | null {
+  const history: readonly Measurement[] = marker.history;
   const current = history.at(-1);
   const previous = history.at(-2);
   if (!current || !previous || previous.value === 0) return null;
@@ -278,7 +300,7 @@ function toDelta(history: readonly Measurement[]): BiomarkerDelta | null {
         ? "down"
         : "flat";
 
-  return { ratio, direction };
+  return { ratio, direction, reading: toChangeReading(marker) };
 }
 
 /**
@@ -338,18 +360,61 @@ const DELTA_ICONS: Record<DeltaDirection, LucideIcon> = {
 };
 
 /*
- * WICHTIG: Die Veraenderung ist auf dem Dashboard bewusst NEUTRAL gefaerbt,
- * niemals gruen oder rot. Eine Veraenderung ist ein Fakt, kein Urteil — ob ein
- * Anstieg gut oder schlecht ist, haengt vom Marker ab und wird ausschliesslich
- * in der Analyse-Ansicht bewertet.
+ * ============================================================================
+ * DIE VERAENDERUNG — Richtung UND Deutung, in einer Pille.
+ * ============================================================================
+ * ⚠️ HIER STAND EINMAL DAS GEGENTEIL: "Die Veraenderung ist auf dem Dashboard
+ * bewusst NEUTRAL gefaerbt, niemals gruen oder rot." Diese Regel ist bewusst
+ * aufgehoben — siehe features/dashboard/rules.ts und AGENTS.md.
+ *
+ * ZWEI ANGABEN, ZWEI KANAELE, und sie duerfen nicht durcheinandergeraten:
+ *
+ *   RICHTUNG DER ZAHL — der Pfeil und das Vorzeichen. "+12 %" heisst gestiegen,
+ *   sonst nichts.
+ *   DEUTUNG DER BEWEGUNG — die Farbe UND das Wort dahinter. Ob ein Anstieg gut
+ *   ist, haengt am Marker: derselbe Pfeil nach oben ist bei Ferritin guenstig
+ *   und bei TSH ungueenstig. Deshalb steht die Deutung NEBEN dem Pfeil und
+ *   nicht in ihm.
+ *
+ * DAS WORT IST PFLICHT, nicht Beiwerk (WCAG 1.4.1): zwei Pillen mit demselben
+ * Pfeil und derselben Zahl, die sich nur im Farbton unterscheiden, sind fuer
+ * jeden ununterscheidbar, der Rot und Gruen nicht trennt. Neutral traegt kein
+ * Wort — dort gibt es nichts zu deuten, und "neutral" hinzuschreiben waere eine
+ * Aussage ueber Rauschen.
  */
+const CHANGE_LOOK: Readonly<
+  Record<ChangeReading, { label: string | null; className: string }>
+> = {
+  guenstig: {
+    label: "günstig",
+    className: "bg-success-subtle text-success",
+  },
+  unguenstig: {
+    label: "ungünstig",
+    className: "bg-critical-subtle text-critical",
+  },
+  neutral: {
+    label: null,
+    className: "bg-foreground/5 text-muted-foreground",
+  },
+};
+
 function DeltaPill({ delta }: { delta: BiomarkerDelta }) {
   const Icon = DELTA_ICONS[delta.direction];
+  const look = CHANGE_LOOK[delta.reading];
 
   return (
-    <span className="bg-foreground/5 text-muted-foreground inline-flex shrink-0 items-center gap-1 rounded-full py-0.5 pr-2 pl-1.5 text-xs font-medium tabular-nums">
+    <span
+      className={cn(
+        "text-2xs inline-flex shrink-0 items-center gap-0.5 rounded-full py-0.5 pr-1.5 pl-1 font-medium whitespace-nowrap tabular-nums",
+        look.className,
+      )}
+    >
       <Icon aria-hidden="true" className="size-3" />
       {percentFormat.format(delta.ratio)}
+      {look.label === null ? null : (
+        <span className="ml-0.5 font-semibold">{look.label}</span>
+      )}
       <span className="sr-only">gegenüber der vorherigen Messung</span>
     </span>
   );
@@ -362,6 +427,8 @@ interface BiomarkerChartProps {
   referenceLow: number;
   referenceHigh: number;
   optimal: ValueRange | null;
+  /** Lage des aktuellen Werts — sie faerbt Linie, Flaeche und letzten Punkt. */
+  standing: MarkerStanding;
   /** Grosse Ansicht: mit Datumsachse, Bereichsbaendern und Tooltip. */
   expanded: boolean;
 }
@@ -373,8 +440,19 @@ function BiomarkerChart({
   referenceLow,
   referenceHigh,
   optimal,
+  standing,
   expanded,
 }: BiomarkerChartProps) {
+  /*
+   * Die Farbe reist als chart-Config, nicht als Attribut an jedem Element:
+   * ChartContainer legt sie als --color-value an, und Linie, Flaeche und Punkt
+   * greifen dieselbe Variable ab. Ein zweiter Weg dorthin waere ein zweiter Ort,
+   * an dem eine Kurve ihre Farbe bekommt.
+   */
+  const chartConfig = {
+    value: { label: "Messwert", color: STANDING_COLOR[standing] },
+  } satisfies ChartConfig;
+
   const lastIndex = data.length - 1;
   // Nur die aufgeklappte Ansicht zeigt die Baender — die Sparkline nicht.
   const rawDomain = toChartDomain(
@@ -393,7 +471,7 @@ function BiomarkerChart({
     <ChartContainer
       config={chartConfig}
       className="aspect-auto h-full w-full"
-      initialDimension={{ width: 280, height: expanded ? 220 : 60 }}
+      initialDimension={{ width: 240, height: expanded ? 168 : 48 }}
     >
       <AreaChart
         data={data}
@@ -408,8 +486,8 @@ function BiomarkerChart({
           expanded
             ? // Rechts bleibt Platz, damit die letzte Datumsbeschriftung nicht
               // an der Kachelkante abgeschnitten wird.
-              { top: 8, right: 22, bottom: 0, left: 0 }
-            : { top: 6, right: 5, bottom: 4, left: 5 }
+              { top: 6, right: 18, bottom: 0, left: 0 }
+            : { top: 5, right: 4, bottom: 3, left: 4 }
         }
       >
         <defs>
@@ -433,8 +511,8 @@ function BiomarkerChart({
           ticks={[domainMin, domainMax]}
           tickLine={false}
           axisLine={false}
-          width={36}
-          tickMargin={4}
+          width={30}
+          tickMargin={3}
           tickFormatter={(bound: number) => numberFormat.format(bound)}
         />
         <XAxis
@@ -442,9 +520,10 @@ function BiomarkerChart({
           hide={!expanded}
           tickLine={false}
           axisLine={false}
-          tickMargin={8}
-          // Jede Messung bekommt ihr Datum; erst bei vielen Punkten ausduennen.
-          interval={data.length > 6 ? "preserveStartEnd" : 0}
+          tickMargin={6}
+          /* Jede Messung bekommt ihr Datum; erst bei vielen Punkten ausduennen.
+           * Auf der schmaleren Karte faengt das eine Messung frueher an. */
+          interval={data.length > 5 ? "preserveStartEnd" : 0}
           minTickGap={8}
           // Auf der Achse reicht Tag und Monat, das Jahr steht im Tooltip.
           tickFormatter={(label: string) => label.slice(0, 6)}
@@ -484,7 +563,7 @@ function BiomarkerChart({
            */
           type="monotone"
           stroke="var(--color-value)"
-          strokeWidth={2}
+          strokeWidth={1.75}
           fill={`url(#${gradientId})`}
           isAnimationActive={false}
           // Jede Messung ist ein Punkt; die juengste ist der Bezug und traegt Marke.
@@ -495,23 +574,23 @@ function BiomarkerChart({
                 key={`messpunkt-${dot.index}`}
                 cx={dot.cx}
                 cy={dot.cy}
-                r={isLatest ? 3.5 : 2}
+                r={isLatest ? 3 : 1.75}
                 fill={
                   isLatest ? "var(--color-value)" : "var(--muted-foreground)"
                 }
                 fillOpacity={isLatest ? 1 : 0.55}
                 stroke={isLatest ? "var(--background)" : "none"}
-                strokeWidth={isLatest ? 2 : 0}
+                strokeWidth={isLatest ? 1.75 : 0}
               />
             );
           }}
           activeDot={
             expanded
               ? {
-                  r: 3.5,
+                  r: 3,
                   fill: "var(--color-value)",
                   stroke: "var(--background)",
-                  strokeWidth: 2,
+                  strokeWidth: 1.75,
                 }
               : false
           }
@@ -538,6 +617,8 @@ function BiomarkerChart({
 interface ReferenceTrackProps {
   marker: Biomarker;
   optimal: ValueRange | null;
+  /** Lage des Werts als WORT — die lesbare Fassung der Kurvenfarbe. */
+  standingLabel: string | null;
   /** Gedimmter Zustand "nicht gemessen" — dort wird jede Stufe kraeftiger. */
   dimmed: boolean;
   onOpenDetails?: (markerId: string) => void;
@@ -545,13 +626,23 @@ interface ReferenceTrackProps {
 
 /**
  * Drei verschachtelte Zonen in EINEM neutralen Ton, unterschieden durch Dichte
- * und Hoehe: nackte Schiene (6px) · Referenzband (6px) · Optimalsockel (10px,
- * ragt oben und unten heraus). Keine Zone ist farbcodiert — kein Gruen, kein
- * Bernstein, kein Rot. Das einzige farbige Element ist der Wertmarker.
+ * und Hoehe: nackte Schiene (4px) · Referenzband (4px) · Optimalsockel (8px,
+ * ragt oben und unten heraus).
+ *
+ * DIE ZONEN BLEIBEN NEUTRAL, auch jetzt, wo die Kurve darueber Farbe traegt —
+ * und das ist kein Rest von frueher, sondern die Bedingung dafuer: die Schiene
+ * ist die farbfreie Fassung derselben Aussage. Wer sie einfaerbte, naehme der
+ * Kachel genau den Kanal, der ohne Farbe funktioniert (WCAG 1.4.1). Das einzige
+ * farbige Element bleibt der Wertmarker.
+ *
+ * Die Schiene ist mit der Kachel geschrumpft, ihre BESCHRIFTUNGEN nicht: die
+ * Zahlen darunter sind schon auf der kleinsten Stufe, und eine Bereichsgrenze,
+ * die man nicht mehr liest, kann man auch weglassen.
  */
 function ReferenceTrack({
   marker,
   optimal,
+  standingLabel,
   dimmed,
   onOpenDetails,
 }: ReferenceTrackProps) {
@@ -614,10 +705,10 @@ function ReferenceTrack({
               aria-label={`${toZoneLabel(marker, optimal)}. Details öffnen`}
               className="focus-visible:outline-ring relative z-10 block w-full rounded-md focus-visible:outline-2 focus-visible:outline-offset-2"
             >
-              <span aria-hidden="true" className="relative block h-2.5 w-full">
-                <span className="bg-track-base absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full" />
+              <span aria-hidden="true" className="relative block h-2 w-full">
+                <span className="bg-track-base absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full" />
                 <span
-                  className="bg-track-reference absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full"
+                  className="bg-track-reference absolute top-1/2 h-1 -translate-y-1/2 rounded-full"
                   style={{
                     left: `${track.bandStart}%`,
                     width: `${track.bandEnd - track.bandStart}%`,
@@ -634,7 +725,7 @@ function ReferenceTrack({
                 ) : null}
                 {value !== null ? (
                   <span
-                    className="bg-brand ring-background absolute top-1/2 h-4 w-0.75 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2"
+                    className="bg-brand ring-background absolute top-1/2 h-3.5 w-0.75 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2"
                     style={{ left: `${track.position(value)}%` }}
                   />
                 ) : null}
@@ -661,8 +752,13 @@ function ReferenceTrack({
             </button>
           }
         />
+        {/* Die Lage zuerst, dann die Zahlen dahinter: wer die Schiene ansteuert,
+         * will wissen, was die Farbe der Kurve behauptet — und bekommt sie hier
+         * als Wort. */}
         <TooltipContent side="top" className="text-2xs tabular-nums">
-          {toZoneSummary(marker, optimal)}
+          {standingLabel === null
+            ? toZoneSummary(marker, optimal)
+            : `${standingLabel} · ${toZoneSummary(marker, optimal)}`}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -695,7 +791,9 @@ export function BiomarkerPanel({
    * Kachel haengt trotzdem allein an der Ansicht — sonst stehen in einer Zeile
    * unterschiedlich hohe Kacheln. */
   const isExpanded = hasTrend && isTrendView;
-  const delta = hasTrend ? toDelta(marker.history) : null;
+  const delta = hasTrend ? toDelta(marker) : null;
+  const standing = toMarkerStanding(marker);
+  const standingLabel = STANDING_LABEL[standing];
 
   const chartData: ChartPoint[] = marker.history.map((reading) => ({
     label: formatFullDate(reading.date),
@@ -723,14 +821,21 @@ export function BiomarkerPanel({
       className={cn(
         // DECKENDE Karte auf der gefrosteten Inhaltsflaeche: ein Messwert wird
         // auf ruhigem Grund gelesen, nicht durch Glas hindurch.
-        "surface-card group relative flex flex-col rounded-2xl p-5 transition",
+        "surface-card group relative flex flex-col rounded-2xl p-4 transition",
         /*
          * Die Hoehe haengt an der ANSICHT, nicht am Inhalt: alle Kacheln einer
          * Zeile schalten gemeinsam um und bleiben dadurch gleich hoch. Das Mass
          * ist ein Mindestmass — im Raster streckt eine hoehere Kachel ihre
          * Zeile, und der Zugewinn geht in die Verlaufsgruppe.
+         *
+         * KOMPAKTER ALS FRUEHER (256/380px). Die Kachel ist ein Eintrag in
+         * einer Uebersicht von zwanzig Markern und kein Schaustueck: bei der
+         * alten Groesse standen drei Stueck pro Reihe, und wer den zwoelften
+         * Wert sehen wollte, scrollte. Kleiner geworden ist dabei alles im
+         * gleichen Verhaeltnis — Kachel, Kopf, Zahl und Kurve. Nur die
+         * Schiene und ihre Beschriftungen behalten ihre Lesbarkeit.
          */
-        isTrendView ? "min-h-95" : "min-h-64",
+        isTrendView ? "min-h-74" : "min-h-52",
         "hover:shadow-lift motion-safe:hover:-translate-y-px motion-reduce:transition-none",
         className,
       )}
@@ -748,11 +853,17 @@ export function BiomarkerPanel({
       <button
         type="button"
         onClick={() => onOpenDetails?.(marker.id)}
-        aria-label={
-          isDerived && derivedSources !== ""
-            ? `Details zu ${marker.name} öffnen — berechnet aus ${derivedSources}`
-            : `Details zu ${marker.name} öffnen`
-        }
+        /*
+         * Die LAGE steht im Label, weil sie sonst nur als Farbe existierte:
+         * die Kurve ist aria-hidden, und ein Farbton wird nicht vorgelesen.
+         */
+        aria-label={[
+          `Details zu ${marker.name} öffnen`,
+          ...(isDerived && derivedSources !== ""
+            ? [`berechnet aus ${derivedSources}`]
+            : []),
+          ...(standingLabel === null ? [] : [standingLabel]),
+        ].join(" — ")}
         className="focus-visible:outline-ring absolute inset-0 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2"
       />
 
@@ -765,13 +876,13 @@ export function BiomarkerPanel({
        */}
       <div
         className={cn(
-          "flex min-h-0 flex-1 flex-col gap-4",
+          "flex min-h-0 flex-1 flex-col gap-3",
           !hasValue && "opacity-65",
         )}
       >
         <div>
           {/* Kopf: Chip und Name. */}
-          <div className="flex h-8 items-center gap-2.5">
+          <div className="flex h-7 items-center gap-2">
             {/*
              * Runder, zart getoenter Chip: er gibt der Kachel Identitaet und dem
              * Raster Rhythmus. Die Toenung bewertet NICHTS — siehe
@@ -780,7 +891,7 @@ export function BiomarkerPanel({
             <span
               aria-hidden="true"
               className={cn(
-                "flex size-8 shrink-0 items-center justify-center rounded-full [&_svg]:size-4",
+                "flex size-7 shrink-0 items-center justify-center rounded-full [&_svg]:size-3.5",
                 category
                   ? CATEGORY_CHIP[category]
                   : "bg-foreground/5 text-muted-foreground",
@@ -804,8 +915,8 @@ export function BiomarkerPanel({
           </div>
 
           {/* Der Messwert mit seiner Veraenderung. Steht in beiden Ansichten. */}
-          <div className="mt-3 flex h-10 items-baseline justify-between gap-3">
-            <p className="flex min-w-0 items-baseline gap-1.5">
+          <div className="mt-2 flex h-8 items-baseline justify-between gap-2">
+            <p className="flex min-w-0 items-baseline gap-1">
               {hasValue ? (
                 <>
                   <span className="text-foreground text-metric leading-none font-semibold tracking-tight tabular-nums">
@@ -814,7 +925,7 @@ export function BiomarkerPanel({
                   {/* Dimensionslose Indizes tragen keine Einheit — dann steht
                    * hier auch kein leerer Platz. */}
                   {marker.unit === "" ? null : (
-                    <span className={cn("truncate text-base", quietText)}>
+                    <span className={cn("truncate text-sm", quietText)}>
                       {marker.unit}
                     </span>
                   )}
@@ -828,7 +939,7 @@ export function BiomarkerPanel({
                   >
                     —
                   </span>
-                  <span className={cn("truncate text-base", quietText)}>
+                  <span className={cn("truncate text-sm", quietText)}>
                     Nicht gemessen
                   </span>
                 </>
@@ -855,9 +966,9 @@ export function BiomarkerPanel({
          * nimmt die freie Hoehe auf (flex-1), die Schiene sitzt darunter — so
          * liegen die Schienen aller Kacheln einer Zeile auf einer Linie.
          */}
-        <div className="mt-auto flex min-h-0 flex-1 flex-col gap-2.5">
+        <div className="mt-auto flex min-h-0 flex-1 flex-col gap-2">
           {hasTrend ? (
-            <div className={cn("min-h-15 flex-1", isExpanded && "min-h-30")}>
+            <div className={cn("min-h-12 flex-1", isExpanded && "min-h-24")}>
               <div
                 aria-hidden="true"
                 className={cn(
@@ -874,6 +985,7 @@ export function BiomarkerPanel({
                   referenceLow={marker.referenceLow}
                   referenceHigh={marker.referenceHigh}
                   optimal={optimal}
+                  standing={standing}
                   expanded={isExpanded}
                 />
               </div>
@@ -893,7 +1005,7 @@ export function BiomarkerPanel({
             /* Kein Verlauf: ein leichter gestrichelter Umriss haelt den Platz
              * der Kurve, ohne sich wie eine aufzufuehren. Er FUELLT die Hoehe —
              * sonst bliebe genau hier die lose Flaeche. */
-            <div className="border-border flex min-h-15 flex-1 items-center justify-center rounded-lg border border-dashed px-3 text-center">
+            <div className="border-border flex min-h-12 flex-1 items-center justify-center rounded-lg border border-dashed px-3 text-center">
               <p className={cn("text-xs", quietText)}>
                 {hasValue
                   ? "Noch kein Verlauf – ab dem zweiten Test"
@@ -910,6 +1022,7 @@ export function BiomarkerPanel({
           <ReferenceTrack
             marker={marker}
             optimal={optimal}
+            standingLabel={standingLabel}
             dimmed={!hasValue}
             onOpenDetails={onOpenDetails}
           />

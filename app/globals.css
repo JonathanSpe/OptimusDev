@@ -215,10 +215,10 @@
   --color-critical-subtle: var(--critical-subtle);
 
   /*
-   * Messwert-Stufe der Token-Typoskala (2.5rem). Tailwinds Standardskala kennt
+   * Messwert-Stufe der Token-Typoskala (2rem). Tailwinds Standardskala kennt
    * diese Stufe nicht; eigener Name, damit text-xl/2xl unveraendert bleiben.
    */
-  --text-metric: var(--font-size-3xl);
+  --text-metric: var(--font-size-2xl);
 
   /*
    * Der Optimus Score (96px). Eigene Stufe, ausschliesslich fuer diese eine
