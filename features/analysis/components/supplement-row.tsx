@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Image, { type StaticImageData } from "next/image";
-import { Fragment, useId, useState } from "react";
+import { useId, useState } from "react";
 
 import { PanelExplainer } from "@/components/common/panel-explainer";
 import { useMotionPreset } from "@/lib/motion";
@@ -563,6 +563,76 @@ function toStatusCounts(
   return counts;
 }
 
+interface StatusTallyProps {
+  counts: ReadonlyMap<SupplementStatus, number>;
+  total: number;
+}
+
+/**
+ * DIE ZAEHLUNG ALS BALKEN — vorher ein Satz, jetzt ein Bild.
+ *
+ * "1 wirkt · 1 wirkt schwach · 1 ohne Reaktion · 1 zu früh · 1 nicht
+ * beurteilbar" war eine Aufzaehlung in drei Farben ueber zwei Zeilen, und sie
+ * stand als lautestes Element der Seite ueber einer Liste, die dasselbe noch
+ * einmal Zeile fuer Zeile sagt. Als Balken beantwortet dieselbe Zaehlung die
+ * Frage, die man an eine Zusammenfassung stellt — "wie steht es insgesamt" —
+ * ohne sie zu buchstabieren: die BREITE ist der Anteil.
+ *
+ * Sie wird dadurch nicht farbiger, sondern leiser: die Toene sitzen jetzt in
+ * einer 24px hohen Leiste statt in fettem Fliesstext, und Rot ist damit Akzent
+ * und keine Schrift.
+ *
+ * JEDES SEGMENT TRAEGT ZEICHEN UND ZAHL. Farbe allein waere hier besonders
+ * heikel, weil ein Balken keine Beschriftung mitbringt — ✓ 1 sagt dasselbe wie
+ * die Pille in der Zeile darunter, und in Graustufen bleibt die Leiste damit
+ * lesbar. Die Luecken zwischen den Segmenten sind aus demselben Grund da: zwei
+ * gleich helle Toene nebeneinander waeren sonst ein Feld.
+ *
+ * Genannt wird nur, was vorkommt (siehe toStatusCounts) — ein Segment der
+ * Breite 0 waere eine Fuge ohne Bedeutung.
+ */
+function StatusTally({ counts, total }: StatusTallyProps) {
+  const shown = SUMMARY_ORDER.filter((status) => counts.has(status));
+
+  return (
+    <div
+      /*
+       * EIN Bild mit EINER Beschreibung. Fuenf einzeln vorgelesene Segmente
+       * waeren fuenf Zahlen ohne Bezug; der Satz nennt sie in derselben
+       * Reihenfolge, in der die Leiste sie zeigt.
+       */
+      role="img"
+      aria-label={`${total} Präparate: ${shown
+        .map((status) => STATUS_LOOK[status].count(counts.get(status) ?? 0))
+        .join(", ")}.`}
+      className="mt-3 flex h-6 w-full gap-0.5 overflow-hidden rounded-full"
+    >
+      {shown.map((status) => {
+        const look = STATUS_LOOK[status];
+        const Symbol = look.icon;
+        const count = counts.get(status) ?? 0;
+
+        return (
+          <span
+            key={status}
+            /* Der Anteil ist eine gerechnete Groesse und keine gestaltete —
+             * deshalb steht er als flex-grow und nicht als Klasse. */
+            style={{ flexGrow: count }}
+            className={cn(
+              "text-2xs flex min-w-0 items-center justify-center gap-1 font-medium tabular-nums",
+              look.pill,
+              look.tone,
+            )}
+          >
+            <Symbol aria-hidden="true" className="size-3 shrink-0" />
+            {count}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 export function SupplementPanel({
   supplements,
   index = 0,
@@ -576,7 +646,6 @@ export function SupplementPanel({
   }
 
   const counts = toStatusCounts(supplements);
-  const summary = SUMMARY_ORDER.filter((status) => counts.has(status));
 
   return (
     <motion.section
@@ -592,23 +661,10 @@ export function SupplementPanel({
     >
       <SupplementHeading id={titleId} />
 
-      {/* Eine Zeile, die die Liste zusammenfasst, bevor man sie liest. Sie ist
+      {/* Eine Leiste, die die Liste zusammenfasst, bevor man sie liest. Sie ist
        * ein BEFUND aus den Daten (gezaehlte Staende), keine zweite Erklaerung
        * der Kachel. */}
-      <p className="mt-3 text-sm">
-        {summary.map((status, position) => (
-          <Fragment key={status}>
-            {position > 0 ? (
-              <span aria-hidden="true" className="text-faint mx-1.5">
-                ·
-              </span>
-            ) : null}
-            <span className={cn("font-medium", STATUS_LOOK[status].tone)}>
-              {STATUS_LOOK[status].count(counts.get(status) ?? 0)}
-            </span>
-          </Fragment>
-        ))}
-      </p>
+      <StatusTally counts={counts} total={supplements.length} />
 
       {/*
        * Eine echte Tabelle, kein Raster aus divs: die vier Spalten teilen sich

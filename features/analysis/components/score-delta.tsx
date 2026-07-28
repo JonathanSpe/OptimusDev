@@ -20,6 +20,11 @@ import { cn } from "@/lib/utils";
  *
  * DIE FARBE STEHT NIE ALLEIN: Pfeil, Vorzeichen und Wort sagen dasselbe. Das
  * Wort nur fuer Screenreader — sichtbar traegt es schon der Pfeil.
+ *
+ * Und weil sie nie allein steht, kann sie auch WEGGELASSEN werden, wo sie mit
+ * einer anderen Farbe kollidiert (siehe `neutral`). Die Zuordnung bleibt
+ * trotzdem an dieser einen Stelle: verschieden ist dann nicht die Regel,
+ * sondern eine ausdrueckliche Ausnahme mit Begruendung.
  */
 
 export type ScoreMove = "gestiegen" | "gefallen" | "unveraendert";
@@ -66,12 +71,32 @@ export interface ScoreDeltaProps {
    * verschwiegen wird nichts.
    */
   quiet?: boolean;
+  /**
+   * true = ohne Richtungsfarbe, aber mit Pfeil und Vorzeichen.
+   *
+   * Fuer Zeilen, in denen bereits eine ANDERE Farbe eine ANDERE Aussage macht.
+   * Im Kopf eines Bereichs steht seit dem Urteil beides nebeneinander: das
+   * gruene Haekchen sagt "der Score ist gut", der gruene Pfeil sagt "er ist
+   * gestiegen" — zwei Bedeutungen fuer einen Ton, eine Zeile auseinander. Der
+   * Leser haette bei einem gestiegenen, aber kritischen Bereich Gruen und Rot
+   * uebereinander und muesste beide erst sortieren.
+   *
+   * Verloren geht dabei nichts: Richtung traegt der Pfeil, Betrag das
+   * Vorzeichen, und die Beschriftung nennt beides ohnehin in Worten. Die Farbe
+   * war hier die dritte Kopie derselben Angabe.
+   *
+   * NICHT dasselbe wie `quiet`: das ist ein BEFUND ueber die Messung ("liegt im
+   * Rauschband") und sagt es auch vorgelesen. Dies hier ist eine Ruecksicht auf
+   * die Nachbarschaft und aendert an der Aussage nichts.
+   */
+  neutral?: boolean;
   className?: string;
 }
 
 export function ScoreDelta({
   delta,
   quiet = false,
+  neutral = false,
   className,
 }: ScoreDeltaProps) {
   const move = toScoreMove(delta);
@@ -82,7 +107,7 @@ export function ScoreDelta({
     <span
       className={cn(
         "inline-flex items-center gap-0.5 tabular-nums",
-        quiet ? "text-muted-foreground" : look.tone,
+        quiet || neutral ? "text-muted-foreground" : look.tone,
         className,
       )}
     >

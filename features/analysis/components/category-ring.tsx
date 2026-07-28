@@ -16,6 +16,7 @@ import {
   SCORE_MIN,
   type CategoryScore,
 } from "../sample-data";
+import { toVerdictWord } from "./score-verdict";
 
 /*
  * ============================================================================
@@ -28,15 +29,20 @@ import {
  * in verschiedenen Federn einrasten. Der Ring ist das Instrument, die Kachel
  * nur der Ort.
  *
- * Ein Ring hat GENAU EINEN Bezugspunkt: den letzten Test. Es gibt keinen
- * Zielwert je Kategorie, weil es keinen gibt — eine Schwelle, ab der ein Score
- * gut waere, muss klinisch gesetzt werden, und bis dahin waere jede Linie eine
- * Behauptung. Der Ring beantwortet deshalb nicht "gut oder schlecht", sondern
- * "wohin hat es sich bewegt".
+ * Ein Ring hat GENAU EINEN Bezugspunkt: den letzten Test. Der Ring beantwortet
+ * nicht "gut oder schlecht", sondern "wohin hat es sich bewegt".
  *
- * Daraus folgt die Farblosigkeit: der Bogen ist Graphit, immer, bei 61 wie bei
- * 84. Seine LAENGE ist die Aussage. Faerbte ihn ein Wert ein, waere die
- * Schwelle wieder da — nur unausgesprochen.
+ * ⚠️ EINE SCHWELLE GIBT ES INZWISCHEN (toScoreVerdict in rules.ts) — der BOGEN
+ * traegt sie trotzdem nicht. Zwei Gruende, und beide gelten unabhaengig
+ * voneinander: ein eingefaerbter Ring waere die groesste farbige Flaeche der
+ * Seite, und Rot ist Akzent und nie Flaeche; und der Bogen hat schon eine
+ * Aussage, naemlich seine LAENGE. Zwei Aussagen in einem Zeichen liest niemand
+ * getrennt — bei 74 waere unklar, ob der kurze Bogen oder das Bernstein die
+ * Nachricht ist.
+ *
+ * Deshalb bleibt der Bogen Graphit, immer, bei 61 wie bei 84, und das Urteil
+ * steht als Zeichen mit Wort NEBEN ihm (VerdictChip). Es ist damit lesbar, ohne
+ * gedeutet werden zu muessen.
  *
  * Score und Datenlage sind ZWEI KANAELE. Der Bogen traegt den Score, die Punkte
  * die Belastbarkeit der Aussage; sie werden nie ineinander gerechnet.
@@ -288,6 +294,10 @@ export function toRingLabel(category: CategoryScore): string {
   return [
     category.name,
     `Score ${category.score} von ${SCORE_MAX}`,
+    /* Dasselbe Wort, das die Pille daneben zeigt — und bei duenner Datenlage
+     * dasselbe Nicht-Urteil. Zwei Formulierungen desselben Befunds waeren zwei
+     * Befunde. */
+    toVerdictWord(category.score, category.confidence),
     category.previousScore === undefined
       ? "kein Vorwert"
       : `letzter Test ${category.previousScore}`,
@@ -303,24 +313,36 @@ export interface ConfidenceDotsProps {
 }
 
 /**
- * Die Datenlage als fuenf Punkte, MIT dem Wort davor. Ohne Beschriftung sind
- * fuenf Punkte unter einem Ring nur ein Muster — man haelt sie fuer eine zweite
- * Bewertung des Scores. Der zweite Kanal muss sich benennen, sonst ist er
- * keiner. Gefuellte Punkte sind dichter UND groesser, damit die Stufe auch ohne
- * Farbe ablesbar bleibt; jeder Punkt sitzt in einer gleich grossen Zelle, sonst
- * verschoebe der Groessenunterschied den Abstand. Die Stufe in WORTEN steht in
- * der Beschriftung der Gruppe.
+ * Die Datenlage als fuenf Punkte, mit ihrem Namen davor und ihrer STUFE
+ * dahinter. Ohne Beschriftung sind fuenf Punkte unter einem Ring nur ein Muster
+ * — man haelt sie fuer eine zweite Bewertung des Scores.
+ *
+ * DIE STUFE STAND BISHER NUR IN DER BESCHRIFTUNG FUER SCREENREADER. Das war
+ * eine Notation, die nur wir lesen konnten: wer vier von fuenf gefuellten
+ * Punkten sieht, weiss nicht, ob vier viel ist — dieselbe Skala, vor der der
+ * Kommentar in rules.ts warnt ("3 von 5 ist eine Skala, die nur wir kennen"),
+ * nur in Punkten statt in Ziffern. Das Wort beantwortet es (gering / mittel /
+ * gut), die Punkte zeigen, wie weit es bis zur naechsten Stufe ist. Beide
+ * kommen aus derselben Zahl.
+ *
+ * Gefuellte Punkte sind dichter UND groesser, damit die Stufe auch ohne Farbe
+ * ablesbar bleibt; jeder Punkt sitzt in einer gleich grossen Zelle, sonst
+ * verschoebe der Groessenunterschied den Abstand.
+ *
+ * ⚠️ KEINE STATUSFARBE, auch nicht bei "gut". Die Datenlage sagt, wie belastbar
+ * ein Urteil ist, und ist selbst keines — gruene Punkte neben einem bernsteinen
+ * Urteil waeren zwei Urteile in einem Kopf.
  */
 export function ConfidenceDots({ confidence, className }: ConfidenceDotsProps) {
   return (
     <div
       aria-hidden="true"
-      className={cn("flex items-center gap-2", className)}
+      className={cn("flex items-center gap-1.5", className)}
     >
       <span className="text-muted-foreground text-2xs leading-4">
         Datenlage
       </span>
-      <span className="flex items-center gap-1.5">
+      <span className="flex items-center gap-1">
         {Array.from({ length: CONFIDENCE_MAX }, (_, step) => (
           <span key={step} className="grid size-1.5 place-items-center">
             <span
@@ -332,6 +354,9 @@ export function ConfidenceDots({ confidence, className }: ConfidenceDotsProps) {
             />
           </span>
         ))}
+      </span>
+      <span className="text-foreground text-2xs leading-4 font-medium">
+        {toEvidenceLevel(confidence)}
       </span>
     </div>
   );

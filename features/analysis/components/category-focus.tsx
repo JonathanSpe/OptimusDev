@@ -16,6 +16,7 @@ import {
 } from "../sample-data";
 import { CategoryRing, ConfidenceDots, toRingLabel } from "./category-ring";
 import { ScoreDelta } from "./score-delta";
+import { VerdictChip, VerdictScore, toVerdictWord } from "./score-verdict";
 
 /*
  * ============================================================================
@@ -64,7 +65,7 @@ import { ScoreDelta } from "./score-delta";
  * beschreibt. Wer das Feld einmal gelesen hat, braucht sie nie wieder.
  */
 const FIELD_EXPLAINER =
-  "Der Ring zeigt den Score des Bereichs, der Strich darauf den Stand beim letzten Test — ein voller Ring ist besser. Die Punkte daneben sagen, wie belastbar die Datenlage ist. Rot numeriert sind die drei Ansatzpunkte: dort lohnt sich Arbeit zuerst.";
+  "Der Ring zeigt den Score des Bereichs, der Strich darauf den Stand beim letzten Test — ein voller Ring ist besser. Die Farbe daneben ist das Urteil zu diesem Score: ✓ grün heißt gut, — bernstein grenzwertig, ✕ rot kritisch. Die Punkte sagen, wie belastbar die Datenlage ist; ist sie gering, bleibt die Zeile grau und bekommt kein Urteil — dafür ist zu wenig gemessen. Die dunkel numerierten Zeilen sind die drei Ansatzpunkte: dort lohnt sich Arbeit zuerst. Die Nummer ist eine Reihenfolge, kein Urteil — das trägt die Farbe. Die Grenzen zwischen gut, grenzwertig und kritisch sind vorläufig und noch nicht medizinisch freigegeben.";
 
 export interface CategoryFocusProps {
   categories: readonly CategoryScore[];
@@ -129,6 +130,11 @@ function toFindingLabel(bundle: Bundle, rank: number | undefined): string {
     rank === undefined ? bundle.name : `Ansatzpunkt ${rank}: ${bundle.name}`,
     categoryNameById(bundle.categoryId),
     `Score ${bundle.score} von ${SCORE_MAX}`,
+    /* Das Urteil steht VOR der Datenlage, weil es die Antwort ist und die
+     * Datenlage nur sagt, wie belastbar sie ausfaellt. Bei duenner Datenlage
+     * liefert toVerdictWord "nicht beurteilbar" — dieselbe Aussage, die die
+     * graue Zeile zeigt, sodass Gesehenes und Vorgelesenes nie auseinanderfallen. */
+    toVerdictWord(bundle.score, bundle.confidence),
     `Datenlage ${toEvidenceLevel(bundle.confidence)}`,
   ].join(", ");
 }
@@ -180,23 +186,32 @@ function FindingRow({ bundle, rank, index, onOpen }: FindingRowProps) {
          * gross wie ihr Inhalt, ruecke der Name genau in der betonten Zeile nach
          * rechts, und die Spalte haette zwei Textkanten.
          *
-         * Scheibe und Ziffer haben dieselben Masse wie die Rangscheibe der
-         * Landkarte (size-5, text-2xs): es ist dieselbe Nummer aus derselben
-         * Auswahl, und Weiss auf der Marke haelt in beiden Modi AA.
-         *
          * DIE SCHEIBE MARKIERT ALLEIN — die weiche Warnflaeche hinter der Zeile
          * ist weg. Drei getoente Zeilen in einem Feld aus zehn waren eine
          * Flaeche, und eine Flaeche in Warnfarbe liest sich als Urteil ueber den
          * Wert. Gemeint ist eine Rangfolge ("hier zuerst"), und die traegt die
          * Nummer: sie ist ein Zeichen, kein Farbton, und deshalb auch ohne Farbe
          * lesbar.
+         *
+         * ⚠️ DIE SCHEIBE IST NICHT MEHR MARKENROT, und das ist der Preis fuer
+         * das Urteil am Zeilenende. Rang und Urteil sitzen jetzt in DERSELBEN
+         * Zeile: links "hier zuerst", rechts "so steht es". Markenkarmin neben
+         * dem Rot von "kritisch" waeren zwei Rottoene mit zwei Bedeutungen,
+         * einen Fingerbreit auseinander — der Leser haette gelernt, dass Rot
+         * "schlecht" heisst, und die Nummer waere eine vierte Stufe unter
+         * gut/grenzwertig/kritisch. Die Scheibe ist deshalb GRAPHIT: Rot hat auf
+         * dieser Seite genau eine Bedeutung, und die gehoert dem Urteil.
+         *
+         * Unterschieden bleiben die beiden trotzdem dreifach — durch Ort (links
+         * gegen rechts), Form (gefuellte Scheibe gegen Zeichen) und Ton. Die
+         * Masse bleiben die der Rangscheibe anderswo (size-5, text-2xs).
          */}
         <span
           aria-hidden="true"
           className="grid size-5 shrink-0 place-items-center"
         >
           {isFocus ? (
-            <span className="bg-brand text-on-brand text-2xs grid size-5 place-items-center rounded-full font-semibold tabular-nums">
+            <span className="bg-foreground text-background text-2xs grid size-5 place-items-center rounded-full font-semibold tabular-nums">
               {rank}
             </span>
           ) : (
@@ -212,22 +227,26 @@ function FindingRow({ bundle, rank, index, onOpen }: FindingRowProps) {
         <span
           aria-hidden="true"
           className={cn(
-            "text-foreground min-w-0 flex-1 text-xs leading-4",
+            "text-foreground min-w-0 flex-1 text-sm leading-5",
             isFocus ? "font-semibold" : "font-normal",
           )}
         >
           {bundle.name}
         </span>
 
-        <span
-          aria-hidden="true"
+        {/*
+         * Zeichen und Ziffer im Ton des Urteils — die EINE gefaerbte Stelle
+         * dieser Zeile. Die Ziffer allein war die Frage ("ist 58 viel?"), das
+         * Zeichen davor ist die Antwort.
+         */}
+        <VerdictScore
+          score={bundle.score}
+          confidence={bundle.confidence}
           className={cn(
-            "text-foreground shrink-0 text-xs leading-4 tabular-nums",
+            "text-sm leading-5",
             isFocus ? "font-semibold" : "font-medium",
           )}
-        >
-          {bundle.score}
-        </span>
+        />
       </button>
     </motion.li>
   );
@@ -260,11 +279,16 @@ function AreaColumn({
   return (
     <div className="flex flex-col">
       {/*
-       * Der Kopf des Quadranten: Ring links, drei Zeilen rechts — Name,
-       * Bewegung, Datenlage. Die drei Zeilen sind zusammen genau so hoch wie der
-       * Ring (3 x leading-4 plus zwei Abstaende = 56px), und daran haengt die
-       * Vergleichbarkeit der vier Quadranten: alle vier Befundlisten fangen auf
-       * derselben Linie an, ohne dass eine Hoehe reserviert werden muesste.
+       * Der Kopf des Quadranten: Ring links, vier Zeilen rechts — Name, Urteil,
+       * Bewegung, Datenlage. Alle vier Koepfe sind gleich hoch, weil alle vier
+       * dieselben vier Zeilen tragen; daran haengt die Vergleichbarkeit der
+       * Quadranten: alle Befundlisten fangen auf derselben Linie an, ohne dass
+       * eine Hoehe reserviert werden muesste.
+       *
+       * DER RING STEHT AUF DER GROSSEN GEOMETRIE (regular, 78px). Er ist der
+       * Hauptdarsteller dieser Kachel und stand vorher in der Groesse, die fuer
+       * einen Spaltenkopf gedacht ist — die Kachel ist so hoch wie die
+       * Score-Kachel neben ihr, und die Hoehe war ohnehin da.
        *
        * DER KURZE NAME steht hier, nicht der lange. In einem Quadranten ist der
        * Name eine Beschriftung ueber einer Zahl, und "Regeneration &
@@ -279,21 +303,31 @@ function AreaColumn({
       <div
         role="group"
         aria-label={toRingLabel(category)}
-        className="flex gap-2.5"
+        className="flex gap-3"
       >
         <CategoryRing
           score={category.score}
           previousScore={category.previousScore}
           index={index}
-          size="compact"
+          size="regular"
         />
         <div className="min-w-0 flex-1">
           <p
             aria-hidden="true"
-            className="text-foreground text-xs leading-4 font-semibold"
+            className="text-foreground text-sm leading-5 font-semibold"
           >
             {category.shortName}
           </p>
+          {/*
+           * Das Urteil zum Ring — die einzige Stelle im Feld, an der eine
+           * gefuellte Pille auftreten darf, und auch dort nur, wenn der Bereich
+           * etwas will. "gut" steht ohne Flaeche daneben (siehe VerdictChip).
+           */}
+          <VerdictChip
+            score={category.score}
+            confidence={category.confidence}
+            className="mt-1"
+          />
           {/*
            * Die Bewegung ist die Angabe, die der Ring NICHT machen kann: der
            * Strich zeigt, WO der letzte Test lag, aber nicht, um wie viel es
@@ -306,7 +340,7 @@ function AreaColumn({
             {delta === null ? (
               <span className="text-muted-foreground">erster Test</span>
             ) : (
-              <ScoreDelta delta={delta} />
+              <ScoreDelta delta={delta} neutral />
             )}
           </p>
           <ConfidenceDots confidence={category.confidence} className="mt-1" />
@@ -444,8 +478,9 @@ export function CategoryFocusTable({
       </summary>
       <table className="mt-3 w-full text-left">
         <caption className="text-muted-foreground text-2xs sr-only">
-          Alle Befunde nach Bereich, mit Score, Datenlage und Rang unter den
-          Ansatzpunkten — dieselben Werte wie im Feld darüber.
+          Alle Befunde nach Bereich, mit Score von {SCORE_MAX}, Urteil,
+          Datenlage und Rang unter den Ansatzpunkten — dieselben Werte wie im
+          Feld darüber.
         </caption>
         <thead>
           <tr className="border-border border-b">
@@ -455,11 +490,30 @@ export function CategoryFocusTable({
             >
               Befund
             </th>
+            {/* "von 100" steht nicht mehr in jeder Zelle: zehnmal dieselbe Skala
+             * zu wiederholen kostet die Breite, die die neue Urteilsspalte
+             * braucht, ohne dass die Tabelle mehr sagt. Genannt wird sie
+             * weiterhin — in der Kopfzeile jedes Bereichs und in der
+             * Beschreibung der Tabelle. */}
             <th
               scope="col"
               className="text-muted-foreground text-2xs pb-2 text-right font-medium"
             >
               Score
+            </th>
+            {/*
+             * DAS URTEIL ALS EIGENE SPALTE. Im Feld darueber traegt es das
+             * Zeichen neben der Zahl; hier steht es ausgeschrieben, weil die
+             * Tabelle die vollstaendige Fassung ist — sie muss sich vorlesen und
+             * in Graustufen drucken lassen, ohne dass ein Zeichen gedeutet
+             * werden muss. Das WORT bleibt neutral gesetzt: gefaerbt ist in
+             * jeder Zeile genau eine Stelle, und das ist die Zahl daneben.
+             */}
+            <th
+              scope="col"
+              className="text-muted-foreground text-2xs pb-2 text-right font-medium"
+            >
+              Urteil
             </th>
             <th
               scope="col"
@@ -483,13 +537,14 @@ export function CategoryFocusTable({
             <tr>
               <th
                 scope="colgroup"
-                colSpan={4}
+                colSpan={5}
                 className="text-foreground pt-3 pb-1 text-xs font-semibold"
               >
                 {category.name}
                 <span className="text-muted-foreground text-2xs ml-2 font-normal">
-                  Score {category.score} von {SCORE_MAX} · Datenlage{" "}
-                  {toEvidenceLevel(category.confidence)}
+                  Score {category.score} von {SCORE_MAX} ·{" "}
+                  {toVerdictWord(category.score, category.confidence)} ·
+                  Datenlage {toEvidenceLevel(category.confidence)}
                 </span>
               </th>
             </tr>
@@ -501,8 +556,19 @@ export function CategoryFocusTable({
                 >
                   {bundle.name}
                 </th>
-                <td className="text-foreground py-2 text-right text-xs tabular-nums">
-                  {bundle.score} von {SCORE_MAX}
+                {/* Dieselbe Marke wie im Feld darueber — eine Tabelle, die die
+                 * Zahl nackt zeigte, waere die zweite Vokabel fuer dasselbe
+                 * Urteil. Fuer Screenreader traegt die Spalte daneben das Wort;
+                 * diese Zelle ist deshalb ein Bild. */}
+                <td className="py-2 text-right text-xs">
+                  <VerdictScore
+                    score={bundle.score}
+                    confidence={bundle.confidence}
+                    className="justify-end text-xs leading-4"
+                  />
+                </td>
+                <td className="text-foreground py-2 text-right text-xs">
+                  {toVerdictWord(bundle.score, bundle.confidence)}
                 </td>
                 {/* Auch hier das Wort und nicht die Stufe: die Tabelle ist die
                  * vollstaendige Fassung derselben Aussage, nicht eine zweite

@@ -37,6 +37,41 @@ import { SupplementPanel } from "./supplement-row";
  *   Leiste), waehrend dieselbe Kachel auf einem 1000er Schirm ueber die volle
  *   Breite laeuft. Ein Fenster-Breakpoint kann das nicht wissen.
  *
+ * ============================================================================
+ * DIE FARBPOLITIK DER SEITE — eine Sprache, an vier Stellen, sonst grau.
+ * ============================================================================
+ * Sie steht hier, weil sie keiner einzelnen Kachel gehoert: eine Regel ueber
+ * Zurueckhaltung laesst sich nur dort pruefen, wo man alle Kacheln zusammen
+ * sieht.
+ *
+ *   EINE STAFFEL. gut / grenzwertig / kritisch, Schwelle in rules.ts
+ *   (toScoreVerdict), Aussehen in score-verdict.tsx. Ringkoepfe, Befundzeilen,
+ *   Score-Kachel und Befundtabelle lesen von dort. Eine zweite Schwelle oder
+ *   ein zweites Haekchen irgendwo waeren zwei Rangfolgen nebeneinander — der
+ *   Fehler, vor dem der Kopf von rules.ts warnt.
+ *
+ *   DIESELBEN TOENE WIE DIE PRAEPARATE. success / warning / critical, unver-
+ *   aendert aus der bestehenden Palette. Die Praeparate-Zeilen lesen sich
+ *   deshalb wie vorher — und wer sie gelesen hat, kann das Bereichsfeld ohne
+ *   Legende lesen.
+ *
+ *   GRAU IST DER NORMALFALL. Gefaerbt ist hoechstens eine Stelle je Zeile, und
+ *   eine gefuellte Pille tritt nur im Kopf eines Bereichs auf, nur bei
+ *   grenzwertig und kritisch. Ueberall sonst: Zeichen und Ziffer, sonst nichts.
+ *
+ *   ZWEI FLAECHEN BLEIBEN GANZ AUSSEN VOR. Die Entwicklung faerbt keine Linie
+ *   nach Status ("wohin geht es" ist nicht "wo stehst du"), und die dunkle
+ *   Score-Kachel traegt ihr Urteil als Satz — auf ihrem Grund haelt von den drei
+ *   Toenen nur success ein AA-Verhaeltnis, und die Palette sollte nicht wachsen.
+ *
+ *   ROT HAT EINE BEDEUTUNG. Die Rangscheiben der Ansatzpunkte sind deshalb
+ *   Graphit statt Markenkarmin: Rang und Urteil sitzen in derselben Zeile, und
+ *   zwei Rottoene nebeneinander waeren zwei Bedeutungen fuer eine Farbe.
+ *
+ * ⚠️ Die Schwellen sind PLATZHALTER und klinisch nicht freigegeben. Bis das
+ * geklaert ist, faerbt diese Seite Entwurfswerte ein; die ⓘ-Texte der beiden
+ * betroffenen Kacheln sagen es dem Leser.
+ *
  * Die Zeilen ziehen sich auf EINE Hoehe (align-items: stretch). Zwei Kacheln
  * nebeneinander, die unten verschieden weit reichen, geben der Zeile eine
  * ausgefranste Kante — und die liest sich als Versehen, nicht als Absicht. Eine

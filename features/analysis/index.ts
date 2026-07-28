@@ -81,6 +81,20 @@ export {
   type ScoreMove,
 } from "./components/score-delta";
 export { ScoreHero, type ScoreHeroProps } from "./components/score-hero";
+/*
+ * Das Urteil zu einem Score in EINER Sprache — Zeichen, Wort, Ton und Satz.
+ * Ringe, Befundzeilen, Tabelle und Score-Kachel lesen von hier; eine zweite
+ * Zuordnung waere eine zweite Vokabel fuer dieselbe Schwelle.
+ * ⚠️ Die Schwelle selbst ist ein Platzhalter, siehe rules.
+ */
+export {
+  VerdictChip,
+  VerdictScore,
+  toScoreNote,
+  toVerdictWord,
+  type VerdictChipProps,
+  type VerdictScoreProps,
+} from "./components/score-verdict";
 export {
   SupplementPanel,
   SupplementRow,
@@ -96,8 +110,11 @@ export {
   CHANGE_FLAT,
   CONFIDENCE_SOLID,
   MIN_MEASUREMENTS_FOR_VERDICT,
+  SCORE_BAND_CRITICAL,
+  SCORE_BAND_GOOD,
   TOP_CHANGE_COUNT,
   isAdjustedActionHint,
+  isVerdictShown,
   toCategoryBundles,
   toCategoryMovements,
   toCategoryNoise,
@@ -109,6 +126,7 @@ export {
   toMarkerReading,
   toObservedChange,
   toPriorityBundle,
+  toScoreVerdict,
   toSupplementStatus,
   toTopChanges,
   type CategoryMovement,
@@ -119,6 +137,7 @@ export {
   type MarkerReading,
   type MarkerVerdict,
   type ObservedChange,
+  type ScoreVerdict,
   type SupplementStatus,
 } from "./rules";
 /*

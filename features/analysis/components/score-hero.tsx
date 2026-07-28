@@ -12,6 +12,7 @@ import { useMotionPreset } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 import { SCORE_MAX, type ScorePoint, type ScoreSummary } from "../sample-data";
+import { toScoreNote } from "./score-verdict";
 
 /*
  * DER OPTIMUS SCORE — die Kopfzeile der Analyse und die einzige dunkle Flaeche
@@ -19,14 +20,16 @@ import { SCORE_MAX, type ScorePoint, type ScoreSummary } from "../sample-data";
  * aus Werten eine Aussage wird (auf dem Dashboard waere dieselbe Kachel ein
  * Regelbruch).
  *
- * Die Kachel zeigt vier Dinge und sonst nichts: wo du stehst, wohin es seit dem
- * letzten Test ging, wie der Weg dahin aussah und was den Wert gerade deckelt.
- * Alles Weitere ist Sache der Abschnitte darunter.
+ * Die Kachel zeigt fuenf Dinge und sonst nichts: wo du stehst, was das heisst,
+ * wohin es seit dem letzten Test ging, wie der Weg dahin aussah und was den
+ * Wert gerade deckelt. Alles Weitere ist Sache der Abschnitte darunter.
  *
- * Einen SOLLWERT kennt sie nicht. Eine Zahl, ab der ein Score gut waere, ist
- * eine klinische Aussage — sie wird gesetzt, nicht geschaetzt. Bis eine
- * freigegeben ist, misst sich der Score an seinem eigenen letzten Stand; das
- * ist derselbe Bezug, den auch die Kategorie-Ringe haben.
+ * ⚠️ EINEN SOLLWERT KENNT SIE INZWISCHEN. Hier stand, eine Zahl, ab der ein
+ * Score gut waere, sei klinisch zu setzen und nicht zu schaetzen — deshalb
+ * messe sich der Score allein an seinem eigenen letzten Stand. Geschaetzt ist
+ * sie jetzt trotzdem: die Grenzen stehen als Platzhalter in rules.ts
+ * (SCORE_BAND_GOOD / SCORE_BAND_CRITICAL) und muessen vor dem Release
+ * freigegeben sein. Die Kachel liest sie ueber toScoreNote und nirgends sonst.
  *
  * ZWEI FORMEN, EINE KACHEL — und die Kachel entscheidet selbst, welche:
  *
@@ -68,7 +71,7 @@ import { SCORE_MAX, type ScorePoint, type ScoreSummary } from "../sample-data";
  * eine ohne Anzahl.
  */
 const SCORE_EXPLAINER =
-  "Dein Gesamtwert aus 15 Blutmarkern, von 0 bis 100. Er wiegt den schwächsten Bereich stärker — deshalb liegt er unter dem Mittel deiner vier Bereiche.";
+  "Dein Gesamtwert aus 15 Blutmarkern, von 0 bis 100. Er wiegt den schwächsten Bereich stärker — deshalb liegt er unter dem Mittel deiner vier Bereiche. Die Einordnung darunter nennt die Grenzen, an denen der Wert gemessen wird; sie sind vorläufig und noch nicht medizinisch freigegeben.";
 
 export interface ScoreHeroProps {
   score: ScoreSummary;
@@ -467,24 +470,42 @@ export function ScoreHero({ score, index = 0, className }: ScoreHeroProps) {
        * laesst dasselbe Loch stehen, das gerade geschlossen wurde.
        */}
       <div className="flex flex-1 flex-col items-start justify-center gap-4 @lg:flex-row @lg:flex-wrap @lg:content-center @lg:items-center @lg:gap-x-6 @lg:gap-y-4">
-        <div className="flex min-w-0 flex-col items-start gap-2 @lg:flex-row @lg:flex-wrap @lg:items-baseline @lg:gap-x-3">
-          <p className="text-on-score text-score font-semibold tracking-tight tabular-nums">
-            <span aria-hidden="true">
-              <NumberFlow
-                value={countedValue}
-                locales="de-DE"
-                willChange
-                transformTiming={motionPreset.number}
-                spinTiming={motionPreset.number}
-                /* Der Wert soll steigen, auch wenn er von 0 kommt. */
-                trend={1}
-              />
-            </span>
-            <span className="sr-only">
-              {current.value} von {SCORE_MAX} Punkten
-            </span>
+        <div className="flex min-w-0 flex-col items-start gap-1.5">
+          <div className="flex flex-col items-start gap-2 @lg:flex-row @lg:flex-wrap @lg:items-baseline @lg:gap-x-3">
+            <p className="text-on-score text-score font-semibold tracking-tight tabular-nums">
+              <span aria-hidden="true">
+                <NumberFlow
+                  value={countedValue}
+                  locales="de-DE"
+                  willChange
+                  transformTiming={motionPreset.number}
+                  spinTiming={motionPreset.number}
+                  /* Der Wert soll steigen, auch wenn er von 0 kommt. */
+                  trend={1}
+                />
+              </span>
+              <span className="sr-only">
+                {current.value} von {SCORE_MAX} Punkten
+              </span>
+            </p>
+            {delta ? <DeltaPill delta={delta} /> : null}
+          </div>
+
+          {/*
+           * DIE EINORDNUNG — ein Satz, und er beantwortet die Frage, die die
+           * Zahl offen laesst. Die 71 stand hier ohne Massstab: sie war nur im
+           * Vergleich zum eigenen Vorwert lesbar, und "plus 4" sagt nichts
+           * darueber, ob 71 ein guter Ort ist.
+           *
+           * Er steht UNTER Zahl und Pille, nicht daneben: die Pille ist die
+           * Bewegung, der Satz ist der Stand. Zwei Aussagen auf einer Linie
+           * laesen sich als eine.
+           *
+           * OHNE STATUSFARBE — der Grund steht bei toScoreNote.
+           */}
+          <p className="text-on-score-muted max-w-measure text-xs leading-4">
+            {toScoreNote(current.value)}
           </p>
-          {delta ? <DeltaPill delta={delta} /> : null}
         </div>
 
         <ScoreTrend history={score.history} label={trendLabel} />

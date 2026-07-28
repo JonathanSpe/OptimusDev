@@ -154,8 +154,21 @@ const LABEL_GAP = 8;
  */
 const STACK_BELOW = LABEL_WIDTH + LABEL_GAP + 200;
 
-/** Mindestabstand zweier Beschriftungen am Linienende, in Pixeln. */
-const END_LABEL_GAP = 18;
+/**
+ * Mindestabstand zweier Beschriftungen am Linienende, in Pixeln — von Mitte zu
+ * Mitte. Eine Beschriftung ist 16px hoch (leading-4), 18px liessen also zwei
+ * Pixel Luft zwischen zwei Zeilen: rechnerisch kollisionsfrei und trotzdem ein
+ * Block. Vier Punkte plus vier Namen plus vier Deltas brauchen eine Fuge, die
+ * man als Fuge erkennt.
+ */
+const END_LABEL_GAP = 24;
+
+/**
+ * Halbe Zeilenhoehe. Die Beschriftungen sitzen auf ihrer Mitte
+ * (-translate-y-1/2), also ist das der Abstand, den die oberste und die
+ * unterste zum Feldrand halten muessen, um nicht angeschnitten zu werden.
+ */
+const END_LABEL_HALF = 8;
 
 /**
  * Eine gezeichnete Reihe: ihre Werte, ihre Beschriftung und ihr Rang im Feld.
@@ -221,6 +234,18 @@ interface EndSlot {
  * Schiebt Beschriftungen auseinander, die uebereinander laegen. Die REIHENFOLGE
  * bleibt die der Messwerte: keine Beschriftung wandert an einer anderen vorbei,
  * sonst stuende sie an der falschen Linie.
+ *
+ * ZWEI DURCHGAENGE, und der zweite ist der Grund, warum die Spur jetzt haelt.
+ * Ein einzelner Durchgang von oben nach unten schiebt jede Kollision nach
+ * UNTEN; liegen alle vier Enden dicht beieinander — und genau dann braucht man
+ * die Funktion — wandert der ganze Stapel aus dem Feld, und das Zurueckschieben
+ * am Stueck presste die oberste Beschriftung wieder gegen ihre Nachbarin.
+ *
+ * Der Rueckwaertsdurchgang schiebt stattdessen von unten nach oben nach: erst
+ * wird jede Beschriftung mindestens END_LABEL_GAP unter ihre Vorgaengerin
+ * gelegt, dann jede mindestens so weit ueber ihre Nachfolgerin. Was danach
+ * bleibt, ist die dichteste Anordnung, die die Reihenfolge und beide Feldraender
+ * respektiert.
  */
 function toEndSlots(
   ends: readonly { id: string; y: number }[],
@@ -230,20 +255,23 @@ function toEndSlots(
     .toSorted((left, right) => left.y - right.y)
     .map((end) => ({ id: end.id, dataY: end.y, labelY: end.y }));
 
-  for (let index = 1; index < slots.length; index += 1) {
-    const current = slots[index];
-    const above = slots[index - 1];
-    if (!current || !above) continue;
-    current.labelY = Math.max(current.labelY, above.labelY + END_LABEL_GAP);
+  /* Hin: niemand liegt hoeher als der Feldrand oder zu dicht unter dem
+   * Vorgaenger. */
+  let floor = END_LABEL_HALF;
+  for (const slot of slots) {
+    slot.labelY = Math.max(slot.labelY, floor);
+    floor = slot.labelY + END_LABEL_GAP;
   }
 
-  /* Laeuft die unterste Beschriftung aus dem Feld, rutscht der ganze Stapel
-   * hoch. */
-  const overflow = (slots.at(-1)?.labelY ?? 0) - height;
-  if (overflow > 0) {
-    for (const slot of slots) {
-      slot.labelY = Math.max(0, slot.labelY - overflow);
-    }
+  /* Zurueck: niemand liegt tiefer als der Feldrand oder zu dicht ueber dem
+   * Nachfolger. Diese Richtung darf die erste ueberstimmen — laeuft der Stapel
+   * unten an, muss er oben nachgeben. */
+  let ceiling = height - END_LABEL_HALF;
+  for (let index = slots.length - 1; index >= 0; index -= 1) {
+    const slot = slots[index];
+    if (!slot) continue;
+    slot.labelY = Math.min(slot.labelY, ceiling);
+    ceiling = slot.labelY - END_LABEL_GAP;
   }
 
   return slots;
@@ -395,8 +423,19 @@ function TrendField({
               isRecessed && "opacity-55",
             )}
           >
-            {/* Der Punkt traegt die Farbe SEINER Linie — er ist die ganze
-             * Verbindung zwischen Beschriftung und Kurve. */}
+            {/*
+             * Der Punkt traegt die Farbe SEINER Linie — er ist die ganze
+             * Verbindung zwischen Beschriftung und Kurve.
+             *
+             * ⚠️ HIER KOMMT KEINE STATUSFARBE HIN, auch nicht, seit das
+             * Bereichsfeld darueber eine traegt. Die Farben dort beantworten
+             * "wo stehst du"; dieses Feld beantwortet "wohin geht es". Ein
+             * bernsteiner Punkt an einer steigenden Linie waere beides
+             * gleichzeitig, und die Linie verloere ihre einzige Aussage. Der
+             * Akzent bleibt der tragenden Linie vorbehalten, die vier
+             * Bereichslinien bleiben Haarlinien — unterschieden durch Staerke
+             * und Beschriftung, nicht durch Ton.
+             */}
             <span
               aria-hidden="true"
               className={cn(
@@ -512,6 +551,12 @@ function TrendField({
                         fill="none"
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        /* initial={false}: die Staerke ist ein ZUSTAND und kein
+                         * Auftritt — sie steht beim ersten Frame da und wird
+                         * erst beim Betonen animiert. Ohne das sucht Motion
+                         * einen Ausgangswert im DOM, findet keinen und meldet
+                         * "undefined is not an animatable value". */
+                        initial={false}
                         animate={{ strokeWidth: isActive ? 1.75 : 1 }}
                         transition={motionPreset.hover}
                         className={cn(

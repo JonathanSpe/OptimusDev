@@ -25,13 +25,17 @@ import type {
  * ⚠️ PLATZHALTER, und die EINZIGE Stelle, an der diese Stufe steht.
  *
  * Ab hier gilt eine Messung als belastbar. Eine Konfidenzgrenze sagt etwas
- * ueber unsere Daten ("ab hier ist belastbar gemessen") — das duerfen wir
- * behaupten. Eine Grenze auf dem SCORE wuerde etwas ueber den Menschen sagen
- * ("ab hier ist es schlecht"), und die ist klinisch zu setzen, nicht zu
- * schaetzen; deshalb gibt es sie hier nicht und nirgends sonst.
+ * ueber unsere DATEN ("ab hier ist belastbar gemessen") — das duerfen wir aus
+ * eigener Kenntnis behaupten.
  *
- * Die Landkarte ZEICHNET diese Stufe nicht mehr. Eine Linie in der Flaeche wird
- * als Urteil gelesen, egal was daneben steht — die Stufe wirkt jetzt
+ * ⚠️ HIER STAND: "Eine Grenze auf dem SCORE wuerde etwas ueber den Menschen
+ * sagen, und die ist klinisch zu setzen, nicht zu schaetzen; deshalb gibt es
+ * sie hier nicht und nirgends sonst." Diese Grenze gibt es jetzt — bewusst und
+ * als Platzhalter, siehe SCORE_BAND weiter unten. Der Einwand ist damit nicht
+ * erledigt, sondern nur aufgeschoben: er steht dort als Freigabepflicht.
+ *
+ * Die Landkarte ZEICHNET die Konfidenzstufe nicht. Eine Linie in der Flaeche
+ * wird als Urteil gelesen, egal was daneben steht — die Stufe wirkt
  * ausschliesslich hier, in der Auswahl der Ansatzpunkte, und wird dort in
  * Worten genannt statt in einem Strich behauptet.
  */
@@ -63,6 +67,75 @@ export function toEvidenceLevel(confidence: number): EvidenceLevel {
   if (confidence >= CONFIDENCE_SOLID) return "gut";
   if (confidence >= CONFIDENCE_SOLID - 1) return "mittel";
   return "gering";
+}
+
+/*
+ * ============================================================================
+ * ⚠️ DIE SCHWELLE AUF DEM SCORE — PLATZHALTER, KLINISCH NICHT FREIGEGEBEN.
+ * ============================================================================
+ * Ab hier sagt die Analyse "gut" oder "kritisch" statt nur eine Zahl. Das ist
+ * eine Aussage ueber einen Menschen und nicht ueber unsere Daten, und sie wird
+ * klinisch GESETZT, nicht geschaetzt. Gesetzt ist sie noch nicht: die beiden
+ * Zahlen unten sind gegriffen, damit die Oberflaeche die Sprache lernen kann,
+ * in der sie spaeter sprechen soll.
+ *
+ * ⚠️ VOR DEM RELEASE FREIGEBEN. Die Baender kommen aus dem Bluttest-Framework
+ * und muessen dort abgenommen sein, bevor sie jemand ausserhalb des Teams
+ * sieht. Bis dahin faerbt diese Datei Entwurfswerte ein: "kritisch" heisst
+ * hier "unterhalb einer geschaetzten Grenze" und nicht "geh zum Arzt".
+ *
+ * SIE STEHT GENAU EINMAL. Vier Flaechen lesen sie — die vier Bereichsringe, die
+ * Befundzeilen, die Score-Kachel und die Befundtabelle. Eine zweite Schwelle
+ * irgendwo waere derselbe Fehler, vor dem der Kopf dieser Datei warnt: zwei
+ * Rangfolgen nebeneinander, und der Leser glaubt keiner von beiden.
+ *
+ * SIE IST BEWUSST NICHT AUS SCORE_TARGET ABGELEITET, obwohl dort dieselbe 75
+ * steht. Das ist der PERSOENLICHE Zielwert — er darf sich je Nutzer
+ * unterscheiden und verschoebe sonst die Grenze, ab der ein Wert "gut" heisst.
+ * Ein Ziel ist etwas anderes als ein Befund.
+ */
+
+/** ⚠️ PLATZHALTER — ab diesem Score gilt ein Wert als gut. */
+export const SCORE_BAND_GOOD = 75;
+
+/** ⚠️ PLATZHALTER — unter diesem Score gilt ein Wert als kritisch. */
+export const SCORE_BAND_CRITICAL = 60;
+
+export type ScoreVerdict =
+  /** Im gesetzten Zielband. */
+  | "gut"
+  /** Dazwischen — kein Befund, aber auch keine Entwarnung. */
+  | "grenzwertig"
+  /** Unter dem unteren Band. */
+  | "kritisch";
+
+/**
+ * Der Score als Urteil. Dieselbe Funktion fuer den Gesamtscore, die vier
+ * Bereiche und die Befunde: alle drei stehen auf derselben Skala 0–100, und
+ * eine eigene Staffel je Ebene hiesse, dass 71 an zwei Stellen der Seite
+ * Verschiedenes bedeutet.
+ *
+ * ⚠️ SIE URTEILT OHNE DATENLAGE — mit Absicht. Ob ein Urteil ueberhaupt gezeigt
+ * werden DARF, entscheidet die Konfidenz (siehe toEvidenceLevel), und das ist
+ * eine Frage der Anzeige, nicht der Schwelle. Beides hier zu vermengen, gaebe
+ * eine Funktion, die bei duenner Datenlage einen vierten Zustand zurueckgibt —
+ * und dann muesste jede Flaeche ihn wieder auseinandersortieren.
+ */
+export function toScoreVerdict(score: number): ScoreVerdict {
+  if (score >= SCORE_BAND_GOOD) return "gut";
+  if (score < SCORE_BAND_CRITICAL) return "kritisch";
+  return "grenzwertig";
+}
+
+/**
+ * Ob ein Urteil gezeigt werden darf. Bei duenner Datenlage NICHT: ein Wert, der
+ * auf einer einzelnen unsicheren Messung steht, wuerde als Befund gelesen,
+ * sobald er eine Farbe traegt. Dieselbe Regel, die schon Marker mit zu wenigen
+ * Messungen von jedem Urteil ausschliesst (MarkerVerdict "duenneDaten") — hier
+ * fuer Buendel und Bereiche, die ihre Konfidenz als Stufe mitbringen.
+ */
+export function isVerdictShown(confidence: number): boolean {
+  return toEvidenceLevel(confidence) !== "gering";
 }
 
 /*
