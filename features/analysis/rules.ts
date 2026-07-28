@@ -332,6 +332,29 @@ export function toChangeOrder(
 }
 
 /*
+ * Wie viele Marker die Entwicklung namentlich nennt.
+ *
+ * Drei, und die Zahl ist eine AUSSAGE ueber die Kachel und nicht ueber den
+ * Platz: die Entwicklung zeigt, wohin es ging, und benennt die Bewegungen, die
+ * das getragen haben. Dreizehn Zeilen daneben waeren wieder die Aufschluesselung,
+ * die diese Kachel ersetzt hat — vollstaendig, aber ohne Aussage. Der
+ * vollstaendige Weg zu allen Werten steht in der Tabelle unter der Kachel.
+ *
+ * Aufgefuellt wird nie: gibt es weniger vergleichbare Marker, stehen weniger da.
+ */
+export const TOP_CHANGE_COUNT = 3;
+
+/**
+ * Die Marker, deren Bewegung die Entwicklung namentlich nennt — die groessten
+ * zuerst, hoechstens TOP_CHANGE_COUNT.
+ */
+export function toTopChanges(
+  changes: readonly MarkerChange[],
+): readonly MarkerChange[] {
+  return toChangeOrder(changes).slice(0, TOP_CHANGE_COUNT);
+}
+
+/*
  * ============================================================================
  * DAS RAUSCHBAND — welche Kategorie sich wirklich bewegt hat.
  * ============================================================================
@@ -341,10 +364,18 @@ export function toChangeOrder(
  * vielleicht einen gibt — und der Leser kann nicht unterscheiden, welcher
  * davon etwas bedeutet.
  *
- * Deshalb entscheidet EINE Regel, was ueberhaupt gezeigt wird: der Betrag der
+ * Deshalb entscheidet EINE Regel, wie stark gezeigt wird: der Betrag der
  * Veraenderung seit dem vorherigen Test gegen ein Rauschband. Was darunter
- * bleibt, bekommt keine Linie und keinen Chip — es wird in einem Satz genannt
- * und damit nicht verschwiegen, aber auch nicht zum Trend erklaert.
+ * bleibt, wird BLASS gezeichnet und behaelt ein graues Delta — es ist damit
+ * weder verschwiegen noch zum Trend erklaert.
+ *
+ * ENTSCHEIDUNG: Vorher bekam eine Kategorie im Band GAR KEINE Linie, sondern
+ * einen Satz unter der Kachel. Das war strenger und in einem Punkt falsch: das
+ * Feld heisst "Entwicklung" und zeigte dann drei von vier Bereichen, ohne dass
+ * dem Leser auffiel, dass einer fehlt — er sah drei Linien und hielt sie fuer
+ * alle. Blass gezeichnet ist die vierte da, aber nicht mitgezaehlt. Was blass
+ * BEDEUTET, sagt die Erklaerung am Kachelkopf; die Farbe ist also nicht das
+ * einzige Signal, und die Tabelle nennt das Band ohnehin in Worten.
  *
  * ⚠️ PLATZHALTER, klinisch nicht freigegeben.
  */
@@ -379,6 +410,9 @@ export function toCategoryNoise(categoryId: string): number {
 export interface CategoryMovement {
   id: string;
   name: string;
+  /** Derselbe Bereich in einem Wort — die Fassung fuer die Beschriftung am
+   * Linienende. Siehe CategoryScore.shortName. */
+  shortName: string;
   /** Stand beim vorherigen Test; null, wenn es keinen gibt. */
   previous: number | null;
   /** Datum dieses Vergleichs (ISO); null ohne Vorwert. */
@@ -395,9 +429,10 @@ export interface CategoryMovement {
 
 /**
  * Alle Kategorien mit ihrer Bewegung, die groesste zuerst — und die EINE
- * Auswahl, an der Linien, Chips und Fusszeile haengen. Sie steht hier und nicht
- * in der Komponente: eine Kategorie, die eine Haarlinie bekommt, aber keinen
- * Chip, waere derselbe Widerspruch wie zwei Rangfolgen nebeneinander.
+ * Auswahl, an der Linie, Beschriftung und Tabelle haengen. Sie steht hier und
+ * nicht in der Komponente: eine Kategorie, deren Linie blass gezeichnet waere,
+ * deren Delta daneben aber gruen stuende, waere derselbe Widerspruch wie zwei
+ * Rangfolgen nebeneinander.
  *
  * Bei Gleichstand entscheidet der Name, damit die Reihenfolge zwischen zwei
  * Renderings dieselbe bleibt.
@@ -415,6 +450,7 @@ export function toCategoryMovements(
       return {
         id: category.id,
         name: category.name,
+        shortName: category.shortName,
         previous: previous?.value ?? null,
         previousDate: previous?.date ?? null,
         current: current.value,

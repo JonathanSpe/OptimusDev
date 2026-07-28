@@ -13,6 +13,7 @@ import { AnimatePresence, motion } from "motion/react";
 import Image, { type StaticImageData } from "next/image";
 import { Fragment, useId, useState } from "react";
 
+import { PanelExplainer } from "@/components/common/panel-explainer";
 import { useMotionPreset } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import capsuleBlue from "@/public/supplements/capsule-blue.webp";
@@ -489,17 +490,43 @@ export interface SupplementPanelProps {
 }
 
 /*
- * DIE EINE ERKLAERZEILE DER KACHEL — einmal im Code, damit der Leerzustand
- * nicht anders erklaert als die gefuellte Kachel.
+ * DIE ERKLAERUNG DER KACHEL — hinter dem ⓘ am Kopf, einmal im Code.
  *
  * ENTSCHEIDUNG: Sie ersetzt die frueheren zwei Erklaerungen (die Fusszeile
  * ueber den Unterschied zwischen "keine Reaktion" und "zu früh" und die
  * Notationszeile an der Zeitleiste). Der Unterschied selbst bleibt sichtbar —
  * er steht in den beiden Statuswoertern und im aufgeklappten Wirkfenster, also
  * dort, wo er auftritt, statt als Absatz unter der Liste.
+ *
+ * Die Zeile, die die STAENDE ZAEHLT, bleibt dagegen sichtbar auf der Kachel:
+ * sie ist ein Befund aus den Daten und keine Selbstbeschreibung. Hinter das ⓘ
+ * gehoert nur, was die Kachel ueber sich selbst sagt.
  */
 const SUPPLEMENT_EXPLAINER =
-  "Für jedes Präparat siehst du, ob sich sein Zielmarker seit Einnahmebeginn bewegt hat.";
+  "Für jedes Präparat siehst du, ob sich sein Zielmarker seit Einnahmebeginn bewegt hat. Vor dem erwarteten Wirkfenster steht „zu früh“ und nie „keine Reaktion“ — eine fehlende Wirkung vor dem Fenster ist keine.";
+
+/**
+ * Der Kopf der Kachel: Titel links, ⓘ rechts. Als eigenes Bauteil, damit der
+ * Leerzustand denselben Kopf traegt wie die gefuellte Kachel.
+ */
+function SupplementHeading({ id }: { id?: string }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <h2
+        id={id}
+        className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase"
+      >
+        Wirkt, was du nimmst?
+      </h2>
+      <PanelExplainer
+        label="Wie die Wirkung beurteilt wird"
+        className="-mt-1 -mr-1"
+      >
+        {SUPPLEMENT_EXPLAINER}
+      </PanelExplainer>
+    </div>
+  );
+}
 
 /** Leerzustand: ohne Einnahme gibt es nichts zu beurteilen. */
 function EmptySupplements({ className }: { className?: string }) {
@@ -508,12 +535,7 @@ function EmptySupplements({ className }: { className?: string }) {
       aria-label="Präparate"
       className={cn("surface-card rounded-2xl p-6", className)}
     >
-      <p className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase">
-        Wirkt, was du nimmst?
-      </p>
-      <p className="text-muted-foreground max-w-measure mt-1 text-xs">
-        {SUPPLEMENT_EXPLAINER}
-      </p>
+      <SupplementHeading />
       <p className="text-foreground mt-4 text-sm font-medium">
         Noch keine Präparate
       </p>
@@ -568,16 +590,7 @@ export function SupplementPanel({
        * zwoelf Spalten — auf einem breiten Schirm ist sie also SCHMAL. */
       className={cn("surface-card @container rounded-2xl p-6", className)}
     >
-      <h2
-        id={titleId}
-        className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase"
-      >
-        Wirkt, was du nimmst?
-      </h2>
-
-      <p className="text-muted-foreground max-w-measure mt-1 text-xs">
-        {SUPPLEMENT_EXPLAINER}
-      </p>
+      <SupplementHeading id={titleId} />
 
       {/* Eine Zeile, die die Liste zusammenfasst, bevor man sie liest. Sie ist
        * ein BEFUND aus den Daten (gezaehlte Staende), keine zweite Erklaerung

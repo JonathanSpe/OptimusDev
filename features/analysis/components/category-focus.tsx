@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { useId } from "react";
 
+import { PanelExplainer } from "@/components/common/panel-explainer";
 import { useMotionPreset } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -14,10 +15,11 @@ import {
   type CategoryScore,
 } from "../sample-data";
 import { CategoryRing, ConfidenceDots, toRingLabel } from "./category-ring";
+import { ScoreDelta } from "./score-delta";
 
 /*
  * ============================================================================
- * DEINE VIER BEREICHE — EINE Kachel, vier Spalten, und in jeder eine Antwort.
+ * DEINE VIER BEREICHE — EINE Kachel, vier Quadranten, in jedem eine Antwort.
  * ============================================================================
  * Hier stand vorher zweierlei: ein Raster mit vier Ringen und daneben eine
  * Liste mit drei Ansatzpunkten. Beide beantworteten dieselbe Frage — wo stehe
@@ -25,6 +27,13 @@ import { CategoryRing, ConfidenceDots, toRingLabel } from "./category-ring";
  * las "Regeneration 61", suchte in der Liste nach dem Grund und musste sich
  * dabei merken, welche Kategorie das war. Steht der Befund UNTER seinem Ring,
  * gibt es nichts mehr zu suchen.
+ *
+ * VIER QUADRANTEN, NICHT VIER SPALTEN. Die Kachel steht neben der Score-Spalte
+ * und ist damit breiter als hoch, aber nicht vier Befundlisten breit: in vier
+ * Spalten stand jede Liste in 160px, und "B-Vitamine & Homocystein" brauchte
+ * dort zwei Zeilen fuer einen Namen. Im 2x2 ist eine Spalte doppelt so breit,
+ * jeder Befund steht einzeilig, und die Kachel wird dabei nicht hoeher als die
+ * Score-Kachel neben ihr — die Hoehe war ohnehin da, sie stand nur leer.
  *
  * ⚠️ UI-WORT UND FACHBEGRIFF SIND ENTKOPPELT. Im Code, im Vertrag und in den
  * Daten heisst die Einheit weiter `Bundle` — sichtbar heisst sie "Befund"
@@ -47,27 +56,15 @@ import { CategoryRing, ConfidenceDots, toRingLabel } from "./category-ring";
  */
 
 /*
- * DIE EINE ERKLAERZEILE DER KACHEL — einmal im Code, damit der Leerzustand
- * nicht anders erklaert als die gefuellte Kachel.
- */
-const FIELD_LEDE =
-  "Voller Ring = besser · Strich = letzter Test. Markiert ist, wo Arbeit sich zuerst lohnt.";
-
-/*
- * ⚠️ PLATZHALTER: fachliche Formulierung bestätigen.
+ * DIE ERKLAERUNG DER KACHEL — hinter dem ⓘ am Kopf, einmal im Code.
  *
- * Ein Halbsatz je Bereich, in Alltagssprache. Er steht hier und nicht an den
- * Kategoriedaten, weil er TEXT ist und kein Messwert: sobald die Kategorien aus
- * dem Vertrag kommen, zieht er als Feld mit um. Bis dahin ist ein fehlender
- * Eintrag kein Fehler — die Spalte steht dann ohne Halbsatz, statt einen
- * erfundenen zu zeigen.
+ * Sie fasst zusammen, was vorher als Vorspann UND als Fusszeile dastand: der
+ * Ring, der Strich, die Punkte, die Nummer. Das sind vier Notationen, und eine
+ * Notation muss irgendwo in Worten stehen — aber nicht ueber dem Inhalt, den sie
+ * beschreibt. Wer das Feld einmal gelesen hat, braucht sie nie wieder.
  */
-const CATEGORY_BLURB: Readonly<Record<string, string>> = {
-  k1: "Wie dein Körper Energie gewinnt",
-  k2: "Erholung und Hormonhaushalt",
-  k3: "Blutfette und Gefässgesundheit",
-  k4: "Abwehr und Nährstoffspeicher",
-};
+const FIELD_EXPLAINER =
+  "Der Ring zeigt den Score des Bereichs, der Strich darauf den Stand beim letzten Test — ein voller Ring ist besser. Die Punkte daneben sagen, wie belastbar die Datenlage ist. Rot numeriert sind die drei Ansatzpunkte: dort lohnt sich Arbeit zuerst.";
 
 export interface CategoryFocusProps {
   categories: readonly CategoryScore[];
@@ -82,6 +79,32 @@ export interface CategoryFocusProps {
   className?: string;
 }
 
+/**
+ * Der Kopf der Kachel: Titel links, ⓘ rechts. Er steht als eigenes Bauteil da,
+ * damit der Leerzustand denselben Kopf traegt wie die gefuellte Kachel — sonst
+ * verschwindet die Erklaerung genau dann, wenn sie am meisten gebraucht wird.
+ */
+function FieldHeading({ id }: { id?: string }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      {/* "vier" steht im Titel, weil das Modell vier Bewertungs-Kategorien hat
+       * (K1–K4). Kommt je eine fuenfte hinzu, aendert sich hier ein Wort. */}
+      <h2
+        id={id}
+        className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase"
+      >
+        Deine vier Bereiche
+      </h2>
+      <PanelExplainer
+        label="Was die vier Bereiche zeigen"
+        className="-mt-1 -mr-1"
+      >
+        {FIELD_EXPLAINER}
+      </PanelExplainer>
+    </div>
+  );
+}
+
 /** Leerzustand: Bereiche und Befunde entstehen erst mit der ersten Auswertung. */
 function EmptyCategoryFocus({ className }: { className?: string }) {
   return (
@@ -89,12 +112,7 @@ function EmptyCategoryFocus({ className }: { className?: string }) {
       aria-label="Deine vier Bereiche"
       className={cn("surface-card rounded-2xl p-6", className)}
     >
-      <p className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase">
-        Deine vier Bereiche
-      </p>
-      <p className="text-muted-foreground max-w-measure mt-1 text-xs">
-        {FIELD_LEDE}
-      </p>
+      <FieldHeading />
       <p className="text-foreground mt-4 text-sm font-medium">
         Noch keine Bereiche
       </p>
@@ -152,13 +170,7 @@ function FindingRow({ bundle, rank, index, onOpen }: FindingRowProps) {
            */
           "hover:ring-border focus-visible:ring-border motion-reduce:transition-none",
           "motion-safe:hover:-translate-y-px motion-safe:focus-visible:-translate-y-px",
-          /*
-           * Die weiche Warnflaeche markiert die Auswahl, NICHT ein Urteil ueber
-           * den Wert — deshalb traegt die Zeile zusaetzlich eine Nummer, und
-           * die Fusszeile sagt, was die Markierung bedeutet. Farbe ist hier nie
-           * das einzige Signal.
-           */
-          isFocus ? "bg-critical-subtle" : "hover:bg-muted",
+          "hover:bg-muted",
         )}
       >
         {/*
@@ -171,6 +183,13 @@ function FindingRow({ bundle, rank, index, onOpen }: FindingRowProps) {
          * Scheibe und Ziffer haben dieselben Masse wie die Rangscheibe der
          * Landkarte (size-5, text-2xs): es ist dieselbe Nummer aus derselben
          * Auswahl, und Weiss auf der Marke haelt in beiden Modi AA.
+         *
+         * DIE SCHEIBE MARKIERT ALLEIN — die weiche Warnflaeche hinter der Zeile
+         * ist weg. Drei getoente Zeilen in einem Feld aus zehn waren eine
+         * Flaeche, und eine Flaeche in Warnfarbe liest sich als Urteil ueber den
+         * Wert. Gemeint ist eine Rangfolge ("hier zuerst"), und die traegt die
+         * Nummer: sie ist ein Zeichen, kein Farbton, und deshalb auch ohne Farbe
+         * lesbar.
          */}
         <span
           aria-hidden="true"
@@ -231,19 +250,36 @@ function AreaColumn({
   onOpenFinding,
 }: AreaColumnProps) {
   const findings = toCategoryBundles(bundles, category.id);
-  const blurb = CATEGORY_BLURB[category.id];
+  /* Der Ring hat GENAU EINEN Bezug: den letzten Test. Ohne Vorwert gibt es
+   * keine Bewegung — dann steht dort nichts statt einer erfundenen Null. */
+  const delta =
+    category.previousScore === undefined
+      ? null
+      : category.score - category.previousScore;
 
   return (
     <div className="flex flex-col">
       {/*
-       * Der Kopf der Spalte: Ring links, Text rechts. Die Beschriftung der
-       * Gruppe ist dieselbe wie an der Zelle der Kategorien-Kachel — ein Ring,
-       * eine Aussage, egal wo er steht.
+       * Der Kopf des Quadranten: Ring links, drei Zeilen rechts — Name,
+       * Bewegung, Datenlage. Die drei Zeilen sind zusammen genau so hoch wie der
+       * Ring (3 x leading-4 plus zwei Abstaende = 56px), und daran haengt die
+       * Vergleichbarkeit der vier Quadranten: alle vier Befundlisten fangen auf
+       * derselben Linie an, ohne dass eine Hoehe reserviert werden muesste.
+       *
+       * DER KURZE NAME steht hier, nicht der lange. In einem Quadranten ist der
+       * Name eine Beschriftung ueber einer Zahl, und "Regeneration &
+       * Hormonbalance" bricht dort um — der Umbruch verschiebt die Datenlage
+       * eine Zeile nach unten und damit den Anfang der Liste. Der VOLLE Name
+       * steht in der Beschriftung der Gruppe, in der Tabelle darunter und
+       * ueberall, wo der Bereich Subjekt ist.
+       *
+       * Die Beschriftung der Gruppe ist dieselbe wie an der Zelle der
+       * Kategorien-Kachel — ein Ring, eine Aussage, egal wo er steht.
        */}
       <div
         role="group"
         aria-label={toRingLabel(category)}
-        className="flex gap-2"
+        className="flex gap-2.5"
       >
         <CategoryRing
           score={category.score}
@@ -252,36 +288,27 @@ function AreaColumn({
           size="compact"
         />
         <div className="min-w-0 flex-1">
+          <p
+            aria-hidden="true"
+            className="text-foreground text-xs leading-4 font-semibold"
+          >
+            {category.shortName}
+          </p>
           {/*
-           * NAME UND HALBSATZ TEILEN EINE RESERVIERTE HOEHE — derselbe Grund wie
-           * an der Zelle der Kategorien-Kachel, nur eine Ebene hoeher: je nach
-           * Spaltenbreite steht "Regeneration & Hormonbalance" zweizeilig und
-           * "Herz-Kreislauf & Langzeit" einzeilig, und dann faengt eine Spalte
-           * ihre Befunde eine Zeilenhoehe hoeher an als ihre Nachbarin. Das liest
-           * sich als Versehen und nimmt vier Bereichen genau das, wofuer sie
-           * nebeneinander stehen: die Vergleichbarkeit.
-           *
-           * Reserviert wird der BLOCK und nicht jede Zeile fuer sich: sonst
-           * stuende bei einzeiligem Namen eine leere Zeile zwischen Name und
-           * Halbsatz, und das liest sich als Absatz, wo keiner gemeint ist. So
-           * bleibt der uebrige Platz unter dem Halbsatz, wo er nicht auffaellt.
-           *
-           * min-h-17 ist der schlimmste Fall, auf den Punkt: zwei Namenszeilen
-           * (2 x leading-4) plus gap-1 plus zwei Halbsatzzeilen. Deshalb liegen
-           * alle vier Datenlage-Zeilen und alle vier Befundlisten auf EINER
-           * Linie — auch die Spalte, die den Fall ausloest.
+           * Die Bewegung ist die Angabe, die der Ring NICHT machen kann: der
+           * Strich zeigt, WO der letzte Test lag, aber nicht, um wie viel es
+           * seither weiterging. Sie steht deshalb hier in Zahl und Pfeil — und
+           * an der Stelle, an der vorher ein Halbsatz stand, der die Kategorie
+           * erklaerte. Ein Bereich, der seinen Namen nicht selbst erklaert,
+           * braucht mehr als vier Woerter; der Score braucht seine Bewegung.
            */}
-          <div className="flex min-h-17 flex-col gap-1">
-            <p className="text-foreground text-xs leading-4 font-semibold text-balance">
-              {category.name}
-            </p>
-            {/* Der Halbsatz steht auch dann als Kasten da, wenn er fehlt: eine
-             * Kategorie ohne Eintrag in CATEGORY_BLURB soll die Linie nicht
-             * verschieben, sondern nur nichts sagen. */}
-            <p className="text-muted-foreground text-2xs leading-4">
-              {blurb ?? ""}
-            </p>
-          </div>
+          <p className="text-2xs mt-1 leading-4 font-medium">
+            {delta === null ? (
+              <span className="text-muted-foreground">erster Test</span>
+            ) : (
+              <ScoreDelta delta={delta} />
+            )}
+          </p>
           <ConfidenceDots confidence={category.confidence} className="mt-1" />
         </div>
       </div>
@@ -350,19 +377,9 @@ export function CategoryFocus({
         className,
       )}
     >
-      {/* "vier" steht im Titel, weil das Modell vier Bewertungs-Kategorien hat
-       * (K1–K4). Kommt je eine fuenfte hinzu, aendert sich hier ein Wort. */}
-      <h2
-        id={titleId}
-        className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase"
-      >
-        Deine vier Bereiche
-      </h2>
-      <p className="text-muted-foreground max-w-measure mt-1 text-xs">
-        {FIELD_LEDE}
-      </p>
+      <FieldHeading id={titleId} />
 
-      <div className="area-grid mt-6 flex-1">
+      <div className="area-grid mt-5 flex-1">
         {categories.map((category, position) => (
           <AreaColumn
             key={category.id}
@@ -377,29 +394,22 @@ export function CategoryFocus({
       </div>
 
       {/*
-       * Die Legende steht UNTEN, nicht oben: sie erklaert, was man sieht,
-       * nachdem man es gesehen hat. Sie nennt beide Kodierungen der Kachel und
-       * sonst nichts.
+       * KEINE LEGENDE MEHR UNTER DEM FELD. Was der Ring, der Strich, die Punkte
+       * und die Nummer bedeuten, steht hinter dem ⓘ am Kopf — eine Notation
+       * muss in Worten stehen, aber nicht als Absatz unter jeder Kachel.
        *
-       * ⚠️ PLATZHALTER: Formulierung aus dem Prototyp. "Punkte hinter dem
-       * Befund" meint die Datenlage-Punkte im KOPF der Spalte, nicht die
-       * Befundzeilen darunter — der Satz gehoert in die naechste Textrunde.
+       * WAS BLEIBT, IST DER BEFUND: dass heute kein Ansatzpunkt markiert ist,
+       * kommt aus den DATEN und nicht aus der Gestaltung. Ohne diesen Satz
+       * suchte der Leser eine Markierung, die es nicht gibt, und hielte das
+       * Fehlen fuer einen Fehler. Sobald einer markiert ist, spricht die
+       * Markierung fuer sich und der Satz verschwindet.
        */}
-      <p className="text-muted-foreground border-border text-2xs mt-6 border-t pt-4">
-        Punkte hinter dem Befund = Datenlage.{" "}
-        {ranks.size === 0 ? (
-          <>
-            Heute ist bei keinem Befund die Datenlage gut genug für einen
-            Ansatzpunkt — deshalb ist keiner markiert.
-          </>
-        ) : (
-          <>
-            <span className="text-critical font-semibold">Rot markiert</span>{" "}
-            sind die Ansatzpunkte.
-          </>
-        )}{" "}
-        Details beim Antippen.
-      </p>
+      {ranks.size === 0 ? (
+        <p className="text-muted-foreground max-w-measure text-2xs mt-5">
+          Heute ist bei keinem Befund die Datenlage gut genug für einen
+          Ansatzpunkt — deshalb ist keiner numeriert.
+        </p>
+      ) : null}
     </motion.section>
   );
 }

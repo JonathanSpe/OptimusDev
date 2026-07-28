@@ -56,8 +56,9 @@ import { SupplementPanel } from "./supplement-row";
  *
  * Jede Kachel bringt ihren eigenen Auftritt mit und behaelt ihn; sie bekommt
  * hier nur ihren Platz. Was INNERHALB einer Kachel gestaffelt ist (Ringe,
- * Chips, Zeilen), bleibt eine Reihe fuer sich — sonst liefe der Deckel bei
- * sechs Elementen gegen die letzte Kachel und flachte ihre Liste ein.
+ * Befundzeilen, Linienbeschriftungen), bleibt eine Reihe fuer sich — sonst
+ * liefe der Deckel bei sechs Elementen gegen die letzte Kachel und flachte ihre
+ * Liste ein.
  */
 const ENTRANCE = {
   score: 0,
@@ -124,18 +125,28 @@ export function AnalysisBoard({
         className="col-span-12"
       />
 
-      {/* Zeile 2 — die Bewegung und was sie bewirkt hat. */}
+      {/*
+       * Zeile 2 — die Bewegung und was sie bewirkt hat. ZWEI GLEICHE HAELFTEN,
+       * und das ist eine Aussage: 7 zu 5 machte aus der Entwicklung die
+       * Hauptkachel und aus den Praeparaten ihre Randspalte. Beide beantworten
+       * aber eine eigene Frage — wohin ging es, und wirkt, was du nimmst? —, und
+       * keine der beiden ist die Fussnote der anderen.
+       *
+       * Beide brauchen die Breite auch: die Entwicklung stellt neben ihr Feld
+       * eine Beschriftungsspur, die Praeparate-Zeile traegt ab 32rem
+       * Kachelbreite ihre vierte Spalte. Bei 5 von 12 fiel die weg.
+       */}
       <ProgressionPanel
         score={score}
         categories={categorySeries}
         changes={markerChanges}
         index={ENTRANCE.progression}
-        className="bento-wide:col-span-7 col-span-12"
+        className="bento-wide:col-span-6 col-span-12"
       />
       <SupplementPanel
         supplements={supplements}
         index={ENTRANCE.supplements}
-        className="bento-wide:col-span-5 col-span-12"
+        className="bento-wide:col-span-6 col-span-12"
       />
     </div>
   );

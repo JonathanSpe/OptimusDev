@@ -56,8 +56,8 @@ export default function LabPage() {
        * dem Bereichsfeld liegt. */}
       <ScoreHero score={sampleScore} />
 
-      {/* Das Bereichsfeld braucht die volle Inhaltsbreite: vier Spalten mit
-       * Ring, Halbsatz, Datenlage und den Befundzeilen darunter. Es ersetzt die
+      {/* Das Bereichsfeld als 2x2: je Quadrant Ring, Kurzname, Bewegung,
+       * Datenlage und darunter die Befunde des Bereichs. Es ersetzt die
        * Kategorien-Kachel UND die Ansatzpunkte-Liste — beide beantworteten
        * dieselbe Frage. */}
       <CategoryFocus categories={sampleCategories} bundles={sampleBundles} />
@@ -71,10 +71,11 @@ export default function LabPage() {
        * nebeneinander und nehmen zusammen die volle Inhaltsbreite. */}
       <BundleFocus bundles={sampleBundles} />
 
-      {/* Die Entwicklung braucht die volle Bento-Breite: die Linie muss Strecke
-       * haben, sonst ist ihre Steigung eine Behauptung, und die drei Chips
-       * stehen darunter in einer Reihe. Sie ersetzt Verlauf UND
-       * Aufschluesselung — beide beantworteten dieselbe Frage. */}
+      {/* Die Entwicklung in der HALBEN Bento-Breite — so steht sie in Zeile 2.
+       * Neben dem Feld liegt die Beschriftungsspur; wird die Kachel schmaler als
+       * Spur plus 200px Feld, rutschen die Beschriftungen unter das Feld. Sie
+       * ersetzt Verlauf UND Aufschluesselung — beide beantworteten dieselbe
+       * Frage. */}
       <div className="max-w-map-column">
         <ProgressionPanel
           score={sampleScore}
@@ -83,8 +84,8 @@ export default function LabPage() {
         />
       </div>
 
-      {/* Die Praeparate-Liste braucht die volle Bento-Breite: Name, Marker,
-       * Zeitleiste, Delta und Status stehen in einer Zeile. */}
+      {/* Die Praeparate-Liste in derselben halben Breite: ab 32rem Kachelbreite
+       * traegt ihre Zeile vier Spalten (Kapsel, Name, Beobachtet, Status). */}
       <div className="max-w-map-column">
         <SupplementPanel supplements={sampleSupplements} />
       </div>

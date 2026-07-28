@@ -636,67 +636,76 @@
 }
 
 /*
- * DAS BEREICHSFELD — vier Spalten, getrennt von Haarlinien.
+ * DAS BEREICHSFELD — vier Quadranten, getrennt von Haarlinien.
  *
- * Anders als dial-grid wird hier VERTEILT (1fr statt max-content): eine Spalte
- * traegt nicht mehr nur ein Instrument, sondern darunter die Befunde ihrer
+ * Anders als dial-grid wird hier VERTEILT (1fr statt max-content): ein Quadrant
+ * traegt nicht mehr nur ein Instrument, sondern darunter die Befunde seiner
  * Kategorie. Die Haarlinie ist die Trennung, und eine Trennlinie muss den
- * ganzen Platz abstecken, den sie trennt — sonst steht sie neben der Spalte
- * statt zwischen zwei Spalten.
+ * ganzen Platz abstecken, den sie trennt — sonst steht sie neben dem Quadranten
+ * statt zwischen zwei Quadranten.
  *
- * Drei Stufen, alle an der KARTENBREITE (die Karte ist ein @container):
+ * ZWEI STUFEN, beide an der KARTENBREITE (die Karte ist ein @container), keine
+ * am Fenster:
  *
- *   < 22rem   eine Spalte je Reihe
- *   >= 22rem  2x2
- *   >= 44rem  eine Reihe zu vier (704px: vier Spalten a 162px plus die
- *             Trennungen — das Mass, ab dem 'Glukosestoffwechsel' und sein
- *             Score in eine Zeile passen)
+ *   < 30rem   einer je Reihe, getrennt von waagerechten Linien
+ *   >= 30rem  2x2 (480px: zwei Quadranten a 220px plus die Trennung — das Mass,
+ *             ab dem 'B-Vitamine & Homocystein' und sein Score in eine Zeile
+ *             passen)
  *
- * Die Haarlinie sitzt nur INNEN. Sie liegt als border-left an jeder Spalte, die
- * nicht die erste ihrer Reihe ist — deshalb die nth-child-Regeln und nicht
- * divide-x: bei 2x2 waere die dritte Spalte die erste der zweiten Reihe und
- * bekaeme von divide-x trotzdem einen Strich, mitten in die Karte hinein.
- * Zurueckgesetzt werden muss nichts: die Auswahl der 2er-Stufe ist in der der
- * 4er-Stufe enthalten.
+ * ⚠️ Die 30rem sind an einem echten Fall gemessen und nicht gerundet: auf einem
+ * 1440er Schirm MIT ausgeklappter Kontext-Leiste bleiben dieser Kachel 496px
+ * Inhaltsbreite. Bei 32rem fiel sie dort auf eine Spalte zurueck und wurde
+ * doppelt so hoch wie die Score-Kachel neben ihr — die haeufigste Fensterbreite
+ * haette damit die Notform gesehen.
+ *
+ * Eine dritte Stufe zu vier Spalten gibt es NICHT mehr. Vier Spalten teilten
+ * dieselbe Breite auf 160px je Befundliste auf, und dort brauchte der laengste
+ * Befundname zwei Zeilen. Das 2x2 ist nicht der Notfall der schmalen Karte,
+ * sondern die Form: die Kachel steht neben der Score-Spalte und hat deren Hoehe
+ * ohnehin zu fuellen.
+ *
+ * DIE LINIEN LAUFEN DURCH, und dafuer ist column-gap: 0. Der Abstand zwischen
+ * den Spalten kommt aus dem Innenabstand der Zellen (rechts an der linken,
+ * links an der rechten), nicht aus einem Spalt — mit einem Spalt haette die
+ * waagerechte Linie der zweiten Reihe in der Mitte eine Luecke, und zwei
+ * Strichstuecke lesen sich als zwei Unterstreichungen statt als eine Trennung.
+ *
+ * Die Haarlinie sitzt nur INNEN: als border-left an jeder Zelle einer zweiten
+ * Spalte, als border-top an jeder Zelle einer zweiten Reihe. Deshalb
+ * nth-child-Regeln und nicht divide-x — bei 2x2 waere die dritte Zelle die
+ * erste ihrer Reihe und bekaeme von divide-x trotzdem einen senkrechten Strich,
+ * mitten in die Karte hinein.
  */
 @utility area-grid {
   display: grid;
-  gap: var(--space-6) var(--space-3);
   grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--space-5);
+  column-gap: 0;
 
-  @container (min-width: 22rem) {
+  /* Einspaltig liegt jede Zelle ausser der ersten UNTER einer anderen. */
+  > *:not(:first-child) {
+    border-top: 1px solid var(--color-border-default);
+    padding-top: var(--space-5);
+  }
+
+  @container (min-width: 30rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 
-    > *:not(:nth-child(2n + 1)) {
+    /* Zurueck: in zwei Spalten steht die zweite Zelle NEBEN der ersten. */
+    > *:nth-child(2) {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    > *:nth-child(2n) {
       border-left: 1px solid var(--color-border-default);
-      padding-left: var(--space-3);
+      padding-left: var(--space-5);
+    }
+
+    > *:nth-child(2n + 1) {
+      padding-right: var(--space-5);
     }
   }
-
-  @container (min-width: 44rem) {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-
-    > *:not(:nth-child(4n + 1)) {
-      border-left: 1px solid var(--color-border-default);
-      padding-left: var(--space-3);
-    }
-  }
-}
-
-/*
- * Die Chip-Reihe der Entwicklung. INTRINSISCH wie panel-grid und score-facts:
- * die Spaltenzahl ergibt sich aus der Breite der KACHEL, nicht aus
- * Fenster-Breakpoints. Aus drei Chips werden dann zwei und schliesslich einer.
- * auto-fit statt auto-fill, damit zwei Chips die Reihe ausfuellen und rechts
- * keine leere Spalte stehen bleibt — die Zahl der Chips ist hier ein Befund.
- */
-@utility chip-grid {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(min(var(--size-chip-min), 100%), 1fr)
-  );
 }
 
 /*

@@ -68,6 +68,18 @@ export {
   type ProgressionPanelProps,
   type ProgressionTableProps,
 } from "./components/progression-panel";
+/*
+ * Die Bewegung eines Scores — Pfeil, Zahl, Wort. Ring, Linienende und Tabelle
+ * lesen dieselbe Zuordnung, sonst ist derselbe Bereich oben gruen und unten
+ * grau.
+ */
+export {
+  ScoreDelta,
+  toDeltaText,
+  toScoreMove,
+  type ScoreDeltaProps,
+  type ScoreMove,
+} from "./components/score-delta";
 export { ScoreHero, type ScoreHeroProps } from "./components/score-hero";
 export {
   SupplementPanel,
@@ -84,6 +96,7 @@ export {
   CHANGE_FLAT,
   CONFIDENCE_SOLID,
   MIN_MEASUREMENTS_FOR_VERDICT,
+  TOP_CHANGE_COUNT,
   isAdjustedActionHint,
   toCategoryBundles,
   toCategoryMovements,
@@ -97,6 +110,7 @@ export {
   toObservedChange,
   toPriorityBundle,
   toSupplementStatus,
+  toTopChanges,
   type CategoryMovement,
   type ChangeDirection,
   type ChangeReading,
@@ -116,6 +130,7 @@ export {
   SCORE_MAX,
   SCORE_MIN,
   SCORE_TARGET,
+  categoryIdByMarker,
   categoryNameById,
   sampleBundles,
   sampleCategories,

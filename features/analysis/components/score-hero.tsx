@@ -7,6 +7,7 @@ import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 
+import { PanelExplainer } from "@/components/common/panel-explainer";
 import { useMotionPreset } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -51,19 +52,23 @@ import { SCORE_MAX, type ScorePoint, type ScoreSummary } from "../sample-data";
  */
 
 /*
- * DIE EINE ERKLAERZEILE — einmal im Code, damit der Leerzustand nicht anders
- * erklaert als die gefuellte Kachel.
+ * DIE ERKLAERUNG — hinter dem ⓘ am Kopf, einmal im Code.
  *
  * Sie sagt, WORAUS die Zahl entsteht und WELCHE Skala sie hat. "Verglichen mit
  * deinem letzten Test" stand hier vorher und war eine Verdopplung: den Vergleich
  * macht die Pille darunter sichtbar, und zwar mit Zahl und Datum.
+ *
+ * Als Zeile unter dem Vorspann kostete sie in der schmalen Spalte zwei Zeilen —
+ * genau ueber der Zahl, die die Kachel eigentlich zeigt. Sie erklaerte damit
+ * eine 71, die noch niemand gesehen hatte.
  *
  * ⚠️ PLATZHALTER: die 15 Marker sind gesetzt und nicht gerechnet. Sobald die
  * Score-Formel steht, kommt die Zahl aus ihrer Markermenge — eine Kachel, die
  * eine andere Anzahl behauptet als die Auswertung verwendet, ist schlimmer als
  * eine ohne Anzahl.
  */
-const SCORE_EXPLAINER = "Dein Gesamtwert aus 15 Blutmarkern, von 0 bis 100.";
+const SCORE_EXPLAINER =
+  "Dein Gesamtwert aus 15 Blutmarkern, von 0 bis 100. Er wiegt den schwächsten Bereich stärker — deshalb liegt er unter dem Mittel deiner vier Bereiche.";
 
 export interface ScoreHeroProps {
   score: ScoreSummary;
@@ -244,9 +249,10 @@ function FactRow({ facts }: { facts: readonly Fact[] }) {
           <dt className="text-on-score-muted text-2xs font-semibold tracking-wide uppercase">
             {fact.label}
           </dt>
-          {/* Kein truncate: in der schmalen Score-Spalte passt "Regeneration &
-           * Hormonbalance" gerade in eine Zeile, und ausgerechnet der Limiter
-           * darf nicht abgeschnitten werden. Er bricht lieber um. */}
+          {/* Kein truncate: ausgerechnet der schwaechste Bereich darf nicht
+           * abgeschnitten werden. Er steht hier mit seinem KURZEN Namen und
+           * passt damit auch in der schmalen Spalte in eine Zeile — braucht er
+           * doch zwei, bricht er um. */}
           <dd className="text-on-score mt-1 text-xs font-semibold text-balance">
             {fact.value}
           </dd>
@@ -331,6 +337,33 @@ function ScoreTrend({ history, label }: ScoreTrendProps) {
   );
 }
 
+/**
+ * Der Kopf der Kachel: Vorspann links, ⓘ rechts. Als eigenes Bauteil, damit der
+ * Leerzustand denselben Kopf traegt wie die gefuellte Kachel — sonst
+ * verschwindet die Erklaerung genau dann, wenn sie am meisten gebraucht wird.
+ */
+function ScoreHeading({ id }: { id?: string }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <h2
+        id={id}
+        className="text-on-score-muted text-2xs font-semibold tracking-wide uppercase"
+      >
+        Optimus Score
+      </h2>
+      {/* surface="score": auf der dunklen Flaeche kommen Farbe und Fokusring aus
+       * der on-score-Familie, alles andere waere dort unsichtbar. */}
+      <PanelExplainer
+        label="Was der Optimus Score zeigt"
+        surface="score"
+        className="-mt-1 -mr-1"
+      >
+        {SCORE_EXPLAINER}
+      </PanelExplainer>
+    </div>
+  );
+}
+
 /** Leerzustand: angelegt, aber noch kein Test ausgewertet. */
 function EmptyScore({ className }: { className?: string }) {
   return (
@@ -338,12 +371,7 @@ function EmptyScore({ className }: { className?: string }) {
       className={cn("surface-score rounded-panel p-5 @sm:p-6", className)}
       aria-label="Optimus Score"
     >
-      <p className="text-on-score-muted text-2xs font-semibold tracking-wide uppercase">
-        Optimus Score
-      </p>
-      <p className="text-on-score-muted max-w-measure mt-1 text-xs">
-        {SCORE_EXPLAINER}
-      </p>
+      <ScoreHeading />
       <p className="text-on-score mt-4 text-xl font-semibold">
         Noch kein Score
       </p>
@@ -425,17 +453,7 @@ export function ScoreHero({ score, index = 0, className }: ScoreHeroProps) {
         className,
       )}
     >
-      <div>
-        <h2
-          id="score-hero-titel"
-          className="text-on-score-muted text-2xs font-semibold tracking-wide uppercase"
-        >
-          Optimus Score
-        </h2>
-        <p className="text-on-score-muted max-w-measure mt-1 text-xs">
-          {SCORE_EXPLAINER}
-        </p>
-      </div>
+      <ScoreHeading id="score-hero-titel" />
 
       {/*
        * DIE MITTE TRAEGT DIE STRECKUNG. Zahl, Veraenderung und der Weg dorthin

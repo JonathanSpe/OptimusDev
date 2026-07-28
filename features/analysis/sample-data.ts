@@ -97,6 +97,22 @@ export const SCORE_MAX = 100;
 export interface CategoryScore {
   id: string;
   name: string;
+  /**
+   * Derselbe Bereich in EINEM Wort — "Energie" statt "Energie & Stoffwechsel".
+   *
+   * Er ist kein Kuerzel und keine Abkuerzung des langen Namens, sondern die
+   * Fassung fuer Orte, an denen der Name eine BESCHRIFTUNG ist und kein Titel:
+   * am Ende einer Verlaufslinie, ueber einem 56px-Ring, in der Fusszeile der
+   * Score-Kachel. Dort steht neben dem Namen immer schon eine Zahl, und der
+   * Zusatz hinter dem Und-Zeichen fuegt ihr nichts hinzu — er kostet nur die
+   * Zeile, in der er umbricht.
+   *
+   * ⚠️ Er wird ABGELEITET geschrieben und nicht gerechnet: "vor dem &
+   * abschneiden" ist eine Regel, die beim ersten Bereich ohne & falsch ist.
+   * Der lange Name bleibt der fachliche und steht ueberall, wo der Bereich
+   * SUBJEKT ist — in Ueberschriften, Tabellen und jeder Vorlesefassung.
+   */
+  shortName: string;
   /** Punkte auf derselben Skala 0–100 wie der Gesamtscore. */
   score: number;
   /**
@@ -126,6 +142,8 @@ export interface CategoryScore {
 export interface CategorySeries {
   id: string;
   name: string;
+  /** Siehe CategoryScore.shortName — dieselbe Angabe, dieselbe Quelle. */
+  shortName: string;
   confidence: number;
   /**
    * MINDESTENS ein Stand. Der Typ sagt damit, was fachlich gilt: ohne Messung
@@ -143,6 +161,7 @@ export interface CategorySeries {
 const limiterCategory: CategorySeries = {
   id: "k2",
   name: "Regeneration & Hormonbalance",
+  shortName: "Regeneration",
   confidence: 2,
   history: [
     { date: "2026-01-27", value: 55 },
@@ -171,6 +190,7 @@ export const sampleCategorySeries: readonly CategorySeries[] = [
   {
     id: "k1",
     name: "Energie & Stoffwechsel",
+    shortName: "Energie",
     confidence: 4,
     history: [
       { date: "2026-01-27", value: 64 },
@@ -183,6 +203,7 @@ export const sampleCategorySeries: readonly CategorySeries[] = [
   {
     id: "k3",
     name: "Herz-Kreislauf & Langzeit",
+    shortName: "Herz-Kreislauf",
     confidence: 5,
     history: [
       { date: "2026-01-27", value: 74 },
@@ -194,6 +215,7 @@ export const sampleCategorySeries: readonly CategorySeries[] = [
   {
     id: "k4",
     name: "Immunsystem & Mikronährstoffe",
+    shortName: "Immunsystem",
     confidence: 3,
     history: [
       { date: "2026-01-27", value: 68 },
@@ -214,6 +236,7 @@ export function toCategoryScore(series: CategorySeries): CategoryScore {
   return {
     id: series.id,
     name: series.name,
+    shortName: series.shortName,
     score: current.value,
     previousScore: series.history.at(-2)?.value,
     confidence: series.confidence,
@@ -481,7 +504,13 @@ export const sampleScore: ScoreSummary = {
     { date: "2026-05-26", value: 67 },
     { date: "2026-07-21", value: 71 },
   ],
-  limiter: limiterCategory.name,
+  /*
+   * Der KURZE Name. In der Fusszeile der Score-Kachel steht der Bereich als
+   * Beschriftung unter "schwächster Bereich" — dort ist er eine Angabe und kein
+   * Titel, und "Regeneration & Hormonbalance" braucht dafuer in der schmalen
+   * Spalte zwei Zeilen. Der lange Name steht weiter an der Kategorie selbst.
+   */
+  limiter: limiterCategory.shortName,
   nextTestInDays: 34,
 };
 
@@ -789,6 +818,21 @@ const CATEGORY_MARKERS: Readonly<Record<string, readonly string[]>> = {
   ],
   k4: ["vitamin-d-25-oh", "albumin", "kreatinin"],
 };
+
+/**
+ * Die Kategorie EINES Markers — die Umkehrung von CATEGORY_MARKERS.
+ *
+ * `null` heisst "keiner Kategorie zugeordnet" und ist ein gueltiger Fall: die
+ * Zuordnung ist ein Platzhalter und deckt heute nicht jeden Marker ab. Wer die
+ * Kategorie nur zur Beschriftung braucht, laesst sie dann weg — ein geratener
+ * Bereich neben einem Markernamen ist schlimmer als keiner.
+ */
+export function categoryIdByMarker(markerId: string): string | null {
+  for (const [categoryId, markers] of Object.entries(CATEGORY_MARKERS)) {
+    if (markers.includes(markerId)) return categoryId;
+  }
+  return null;
+}
 
 /**
  * Die Marker hinter der Bewegung EINER Kategorie. Marker ohne zweite Messung
