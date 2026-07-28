@@ -90,10 +90,7 @@ function FieldHeading({ id }: { id?: string }) {
     <div className="flex items-start justify-between gap-3">
       {/* "vier" steht im Titel, weil das Modell vier Bewertungs-Kategorien hat
        * (K1–K4). Kommt je eine fuenfte hinzu, aendert sich hier ein Wort. */}
-      <h2
-        id={id}
-        className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase"
-      >
+      <h2 id={id} className="text-foreground panel-title">
         Deine vier Bereiche
       </h2>
       <PanelExplainer
@@ -303,7 +300,13 @@ function AreaColumn({
       <div
         role="group"
         aria-label={toRingLabel(category)}
-        className="flex gap-3"
+        /*
+         * items-center: Ring und Textblock teilen sich eine Mittellinie. Oben
+         * ausgerichtet hing der Ring mit seiner Unterkante sechs Pixel ueber
+         * dem letzten Textstueck — ein Versatz, der zu klein ist, um als
+         * Absicht zu gelten, und zu gross, um unbemerkt zu bleiben.
+         */
+        className="flex items-center gap-3"
       >
         <CategoryRing
           score={category.score}
@@ -311,7 +314,14 @@ function AreaColumn({
           index={index}
           size="regular"
         />
-        <div className="min-w-0 flex-1">
+        {/*
+         * EIN Abstand fuer den ganzen Stapel statt vier einzelner mt-1. Die
+         * Pille bringt eigenen Innenabstand mit; mit gesetzten Aussenabstaenden
+         * je Zeile addierte sich das zu einer Treppe, in der drei gleich
+         * gemeinte Abstaende verschieden gross aussahen. items-start, damit die
+         * Pille so breit ist wie ihr Inhalt und nicht wie die Spalte.
+         */}
+        <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
           <p
             aria-hidden="true"
             className="text-foreground text-sm leading-5 font-semibold"
@@ -320,13 +330,14 @@ function AreaColumn({
           </p>
           {/*
            * Das Urteil zum Ring — die einzige Stelle im Feld, an der eine
-           * gefuellte Pille auftreten darf, und auch dort nur, wenn der Bereich
-           * etwas will. "gut" steht ohne Flaeche daneben (siehe VerdictChip).
+           * gefuellte Pille auftritt. Sie tritt in ALLEN vier Koepfen auf, auch
+           * bei "gut": vier Koepfe, von denen einer eine Pille traegt und drei
+           * nur Text, sind vier verschiedene Formen und keine Reihe (siehe
+           * VerdictChip).
            */}
           <VerdictChip
             score={category.score}
             confidence={category.confidence}
-            className="mt-1"
           />
           {/*
            * Die Bewegung ist die Angabe, die der Ring NICHT machen kann: der
@@ -336,25 +347,36 @@ function AreaColumn({
            * erklaerte. Ein Bereich, der seinen Namen nicht selbst erklaert,
            * braucht mehr als vier Woerter; der Score braucht seine Bewegung.
            */}
-          <p className="text-2xs mt-1 leading-4 font-medium">
+          <p className="text-2xs leading-4 font-medium">
             {delta === null ? (
               <span className="text-muted-foreground">erster Test</span>
             ) : (
               <ScoreDelta delta={delta} neutral />
             )}
           </p>
-          <ConfidenceDots confidence={category.confidence} className="mt-1" />
+          <ConfidenceDots confidence={category.confidence} />
         </div>
       </div>
 
       {findings.length === 0 ? (
-        <p className="text-muted-foreground mt-4 text-xs">
+        <p className="text-muted-foreground mt-3 text-xs">
           Noch keine Befunde in diesem Bereich.
         </p>
       ) : (
         <ul
           aria-label={`Befunde in ${category.name}`}
-          className="mt-4 space-y-0.5"
+          /*
+           * -mx-1.5 hebt den Innenabstand der Zeilen wieder auf: der Punkt
+           * einer Befundzeile steht damit auf DERSELBEN Kante wie der Ring
+           * darueber, statt sechs Pixel eingerueckt. Der Kopf und die Liste
+           * darunter sind dann ein Block und nicht zwei. Die Flaeche, die beim
+           * Ueberfahren aufleuchtet, ragt dafuer in den Spaltenabstand hinein —
+           * dort ist sie gemeint: sie ist die Trefferflaeche der Zeile.
+           *
+           * mt-3 statt mt-4: die erste Zeile bringt ihren eigenen Innenabstand
+           * mit, der optische Abstand zum Kopf ist also groesser als die Zahl.
+           */
+          className="-mx-1.5 mt-3 space-y-0.5"
         >
           {findings.map((bundle, position) => (
             <FindingRow

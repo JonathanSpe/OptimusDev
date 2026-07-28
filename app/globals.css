@@ -681,16 +681,51 @@
  * erste ihrer Reihe und bekaeme von divide-x trotzdem einen senkrechten Strich,
  * mitten in die Karte hinein.
  */
+/*
+ * DER TITEL EINER KACHEL — eine Stufe, alle Kacheln, damit sie nicht driften.
+ *
+ * Er stand als dieselbe Klassenkette in jeder Kachel des Snapshots, und genau
+ * daran ist er zu klein geblieben: eine Stufe, die man an vier Stellen aendern
+ * muss, aendert man an drei. Die Farbe steht NICHT hier — auf der dunklen
+ * Score-Kachel kommt sie aus der on-score-Familie, auf den hellen Karten aus
+ * der normalen. Ein Titel, der seine Farbe mitbraechte, waere auf der dunklen
+ * Flaeche unsichtbar.
+ *
+ * VERSALIEN BRAUCHEN LUFT: tracking-wide ist hier keine Verzierung, sondern
+ * das, was die Wortform wiederherstellt, die Grossbuchstaben nehmen. Und sie
+ * brauchen GROESSE — als 11px-Versalie war der Titel kleiner als jede Zahl
+ * unter ihm und wurde beim Ueberfliegen der Seite schlicht uebersehen.
+ *
+ * ⚠️ Die Kacheln ausserhalb des Snapshots (bundle-focus, category-dial,
+ * priority-list) tragen die Kette weiterhin inline. Sie stehen derzeit auf
+ * keiner Seite; wer sie das naechste Mal anfasst, nimmt sie hier mit.
+ */
+@utility panel-title {
+  @apply text-sm font-semibold tracking-wide uppercase;
+}
+
+/*
+ * ⚠️ HIER STAND VIERMAL var(--space-5), UND DIESE STUFE GIBT ES NICHT. Die
+ * Abstandsskala der Token laeuft 0-1-2-3-4-6-8-12; die 5 ist bewusst nicht
+ * darin. CSS meldet eine unbekannte Variable nicht, es laesst die Deklaration
+ * einfach fallen — das Feld hatte also weder Spaltenabstand noch Zeilenabstand
+ * noch Innenabstand an der Trennlinie, und die Scores der linken Spalte
+ * stiessen an die Rangscheiben der rechten. Es sah nach einem Fehler im Raster
+ * aus und war ein Tippfehler in einem Namen.
+ *
+ * Wer hier eine Stufe braucht, die es nicht gibt, nimmt die naechste ECHTE —
+ * oder legt sie in tokens.json an. Eine erfundene ist unsichtbar kaputt.
+ */
 @utility area-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  row-gap: var(--space-5);
+  row-gap: var(--space-4);
   column-gap: 0;
 
   /* Einspaltig liegt jede Zelle ausser der ersten UNTER einer anderen. */
   > *:not(:first-child) {
     border-top: 1px solid var(--color-border-default);
-    padding-top: var(--space-5);
+    padding-top: var(--space-4);
   }
 
   @container (min-width: 30rem) {
@@ -704,11 +739,11 @@
 
     > *:nth-child(2n) {
       border-left: 1px solid var(--color-border-default);
-      padding-left: var(--space-5);
+      padding-left: var(--space-4);
     }
 
     > *:nth-child(2n + 1) {
-      padding-right: var(--space-5);
+      padding-right: var(--space-4);
     }
   }
 }

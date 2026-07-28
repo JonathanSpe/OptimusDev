@@ -934,10 +934,7 @@ export interface ProgressionPanelProps {
 function ProgressionHeading({ id }: { id?: string }) {
   return (
     <div className="flex items-start justify-between gap-3">
-      <h2
-        id={id}
-        className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase"
-      >
+      <h2 id={id} className="text-foreground panel-title">
         Entwicklung
       </h2>
       <PanelExplainer label="Was die Entwicklung zeigt" className="-mt-1 -mr-1">

@@ -32,16 +32,29 @@ import { SCORE_MAX } from "../sample-data";
  * ohnehin. In Graustufen gedruckt bleibt die Seite lesbar — die Zeichen
  * unterscheiden sich in der FORM, nicht nur im Ton.
  *
- * ZWEI LAUTSTAERKEN, und die Zuordnung ist die eigentliche Regel:
+ * ZWEI FORMEN, und die Zuordnung ist die eigentliche Regel — sie haengt am ORT,
+ * nicht am Urteil:
  *
- *   LEISE (Zeichen + gefaerbte Ziffer, keine Flaeche) — jede Befundzeile, und
- *   "gut" ueberall. Zehn gefuellte Pillen in einem Feld waeren eine Tapete;
- *   und eine Entwarnung, die so laut auftritt wie ein Befund, macht die
- *   Lautstaerke bedeutungslos. Beruhigung braucht keine Flaeche.
+ *   IN DER ZEILE (Zeichen + gefaerbte Ziffer, keine Flaeche) — jeder Befund.
+ *   Zehn gefuellte Pillen in einem Feld waeren eine Tapete, und die Zeile hat
+ *   ihr Wort ohnehin schon: den Namen des Befunds.
  *
- *   LAUT (gefuellte Pille mit Wort) — nur "grenzwertig" und "kritisch", und nur
- *   im Kopf eines Bereichs. Das sind hoechstens vier Stellen auf der Seite,
- *   und sie sind die einzigen, an denen die Seite jemanden anspricht.
+ *   IM KOPF EINES BEREICHS (gefuellte Pille mit Wort) — vier Stellen auf der
+ *   Seite, eine je Bereich, und JEDE bekommt eine, "gut" eingeschlossen.
+ *
+ * ⚠️ HIER STAND EINMAL: die Pille sei den Stufen vorbehalten, die Aufmerksam-
+ * keit wollen, "gut" trete ohne Flaeche auf, Beruhigung brauche keine. Auf dem
+ * Schirm war das ein Fehler. Vier Koepfe nebeneinander, von denen einer eine
+ * Pille traegt und drei nur Text, lesen sich nicht als "einer will etwas von
+ * dir" — sie lesen sich als vier verschiedene Bauteile: die Woerter beginnen
+ * an verschiedenen Kanten, und der Blick sucht die Reihe, statt sie zu
+ * ueberfliegen. Eine Reihe vergleicht man nur, wenn ihre Glieder dieselbe Form
+ * haben; WELCHES Urteil dasteht, sagen Zeichen, Wort und Ton, und die sagen es
+ * deutlich genug.
+ *
+ * Die Zurueckhaltung sitzt damit an einer anderen Stelle, aber sie sitzt: es
+ * gibt genau vier Pillen auf der Seite, und die zehn Zeilen darunter haben
+ * keine.
  *
  * ⚠️ DUENNE DATENLAGE TRAEGT NIE EINE FARBE — dieselbe Regel, die schon Marker
  * mit zu wenigen Messungen von jedem Urteil ausschliesst. Ein unsicher
@@ -56,8 +69,8 @@ interface VerdictLook {
   word: string;
   /** Textfarbe von Zeichen, Ziffer und Wort. */
   tone: string;
-  /** Zarte Flaeche — nur die lauten Stufen haben eine. */
-  pill: string | null;
+  /** Zarte Flaeche der Pille. Jede Stufe hat eine — siehe oben, warum. */
+  pill: string;
   icon: LucideIcon;
 }
 
@@ -65,8 +78,7 @@ const VERDICT_LOOK: Readonly<Record<ScoreVerdict, VerdictLook>> = {
   gut: {
     word: "gut",
     tone: "text-success",
-    /* Kein Feld: "gut" ist die Entwarnung, und die tritt leise auf. */
-    pill: null,
+    pill: "bg-success-subtle",
     icon: Check,
   },
   grenzwertig: {
@@ -83,11 +95,16 @@ const VERDICT_LOOK: Readonly<Record<ScoreVerdict, VerdictLook>> = {
   },
 };
 
-/** Die Lage ohne Urteil: dieselbe Form, aber grau und ohne Behauptung. */
+/**
+ * Die Lage ohne Urteil: dieselbe Form, aber grau und ohne Behauptung. Dieselbe
+ * Zuordnung, die auch die Praeparate-Zeilen fuer "nicht beurteilbar" fahren —
+ * neutrale Flaeche, Fragezeichen, Wort. Grau ist hier keine vierte Stufe,
+ * sondern das Fehlen aller drei.
+ */
 const UNJUDGED: VerdictLook = {
   word: "nicht beurteilbar",
   tone: "text-muted-foreground",
-  pill: null,
+  pill: "bg-muted",
   icon: CircleHelp,
 };
 
@@ -186,11 +203,11 @@ export interface VerdictChipProps {
 }
 
 /**
- * DIE LAUTE FORM — aber nur, wo sie laut sein darf. "grenzwertig" und
- * "kritisch" bekommen die gefuellte Pille, "gut" und das Nicht-Urteil stehen
- * ohne Flaeche da. Der Unterschied ist Absicht: die Kachel soll auf einen Blick
- * zeigen, WIE VIELE Bereiche etwas von einem wollen, und das kann sie nur,
- * wenn nicht alle vier eine Pille tragen.
+ * DIE FORM FUER DEN KOPF EINES BEREICHS: Pille, Zeichen, Wort — bei jeder Stufe
+ * dieselbe. Vier Koepfe stehen nebeneinander und sollen sich VERGLEICHEN
+ * lassen; dafuer muessen sie dieselbe Form haben (siehe oben). Unterschieden
+ * werden sie durch Zeichen, Wort und Ton, nicht durch An- oder Abwesenheit
+ * eines Feldes.
  */
 export function VerdictChip({
   score,
@@ -204,10 +221,8 @@ export function VerdictChip({
     <span
       aria-hidden="true"
       className={cn(
-        "text-2xs inline-flex items-center gap-1 rounded-full leading-4 font-medium",
-        /* Die Pille braucht Innenabstand, die leise Form nicht — sonst stuende
-         * das Wort um zwei Pixel eingerueckt neben dem Namen darueber. */
-        look.pill === null ? "" : cn("px-1.5 py-0.5", look.pill),
+        "text-2xs inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 leading-4 font-medium",
+        look.pill,
         look.tone,
         className,
       )}

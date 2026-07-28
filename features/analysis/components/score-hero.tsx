@@ -350,7 +350,9 @@ function ScoreHeading({ id }: { id?: string }) {
     <div className="flex items-start justify-between gap-3">
       <h2
         id={id}
-        className="text-on-score-muted text-2xs font-semibold tracking-wide uppercase"
+        /* text-on-score statt -muted: auf der dunklen Flaeche ist der gedaempfte
+         * Ton bei dieser Groesse zu leise, um den Titel zu tragen. */
+        className="text-on-score panel-title"
       >
         Optimus Score
       </h2>

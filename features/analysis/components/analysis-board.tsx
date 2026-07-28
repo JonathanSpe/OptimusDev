@@ -56,8 +56,11 @@ import { SupplementPanel } from "./supplement-row";
  *   Legende lesen.
  *
  *   GRAU IST DER NORMALFALL. Gefaerbt ist hoechstens eine Stelle je Zeile, und
- *   eine gefuellte Pille tritt nur im Kopf eines Bereichs auf, nur bei
- *   grenzwertig und kritisch. Ueberall sonst: Zeichen und Ziffer, sonst nichts.
+ *   eine gefuellte Pille tritt nur im Kopf eines Bereichs auf — dort dafuer bei
+ *   JEDER Stufe, "gut" eingeschlossen, weil vier Koepfe nebeneinander dieselbe
+ *   Form brauchen, um sich vergleichen zu lassen (siehe VerdictChip). Das sind
+ *   vier Pillen auf der Seite; die zehn Befundzeilen darunter tragen Zeichen
+ *   und Ziffer und sonst nichts.
  *
  *   ZWEI FLAECHEN BLEIBEN GANZ AUSSEN VOR. Die Entwicklung faerbt keine Linie
  *   nach Status ("wohin geht es" ist nicht "wo stehst du"), und die dunkle

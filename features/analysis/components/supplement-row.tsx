@@ -512,10 +512,7 @@ const SUPPLEMENT_EXPLAINER =
 function SupplementHeading({ id }: { id?: string }) {
   return (
     <div className="flex items-start justify-between gap-3">
-      <h2
-        id={id}
-        className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase"
-      >
+      <h2 id={id} className="text-foreground panel-title">
         Wirkt, was du nimmst?
       </h2>
       <PanelExplainer
