@@ -12,7 +12,9 @@ export const metadata: Metadata = {
 
 /*
  * Das Dashboard zeigt BIOMARKER und sonst nichts: Wert, Verlauf, Referenzlage.
- * Es bewertet nicht — die Einordnung passiert auf der Analyse-Oberflaeche.
+ * Seit die Kachel Farbe traegt, deutet es diese Lage auch — die Regel dafuer
+ * steht in features/dashboard/rules.ts, und sonst nirgends. Was es weiterhin
+ * nicht tut: Empfehlungen geben. Die stehen auf der Analyse-Oberflaeche.
  *
  * Die Route bleibt duenn und serverseitig; den Zustand des Umschalters haelt
  * das Board. Die Daten sind noch ein Mock aus features/dashboard/sample-data.ts
@@ -29,7 +31,7 @@ export default function DashboardPage() {
   return (
     <BiomarkerBoard groups={sampleMarkerGroups} markers={sampleMarkers}>
       <h1 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-        Guten Morgen 👋
+        Deine Blutwerte
       </h1>
     </BiomarkerBoard>
   );
