@@ -78,6 +78,11 @@
    * k5 Leber & Niere. Sie geben dem Raster Rhythmus und sind KEIN Signal:
    * keine Statusfarbe, kein Urteil, nichts Gesaettigtes.
    *
+   * ⚠️ DERZEIT UNGENUTZT. Die Marker-Kachel hatte einen getoenten Icon-Chip;
+   * er ist entfernt, weil alle Kacheln eines Abschnitts denselben trugen. Die
+   * Stufen bleiben als Palette stehen — wer sie wieder einsetzt, muss sie
+   * gegen die Statusfarben abgrenzen, die die Kachel inzwischen benutzt.
+   *
    * ACHTUNG: k1–k5 sind hier Steckplaetze fuer ANZEIGE-Gruppen und NICHT die
    * Bewertungs-Kategorien K1–K4 der Analyse. Die Kuerzel werden in die
    * Gruppen-Ids umbenannt, sobald die Kachel die Gruppe aus

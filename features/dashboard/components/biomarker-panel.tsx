@@ -1,13 +1,12 @@
 "use client";
 
 import {
-  Activity,
   ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
   type LucideIcon,
 } from "lucide-react";
-import { useId, type ReactNode } from "react";
+import { useId } from "react";
 import { Area, AreaChart, ReferenceArea, XAxis, YAxis } from "recharts";
 
 import {
@@ -46,47 +45,23 @@ import {
 /** "value" = Wert, Sparkline und Referenzbereich; "trend" = grosses Diagramm. */
 export type BiomarkerPanelView = "value" | "trend";
 
-/**
- * Toenung des Icon-Chips. Es gibt fuenf davon — eine je ANZEIGE-Gruppe.
+/*
+ * ⚠️ HIER SASS EIN ICON-CHIP — ein getoenter Kreis mit einem Symbol je
+ * Anzeige-Gruppe, fuenf Toene, ein Symbol pro Abschnitt. Er ist entfernt, und
+ * das ist kein Verlust: das Symbol war fuer alle vier Marker eines Abschnitts
+ * dasselbe und stand damit unter einer Ueberschrift, die schon dasselbe sagte.
+ * Es unterschied also nichts — es fuellte 28px neben jedem Namen.
  *
- * ENTSCHEIDUNG: Die Toenung faerbt AUSSCHLIESSLICH den Kreis hinter dem Icon
- * und ist reine Dekoration — sie gibt dem Raster Rhythmus. Sie ist bewusst kein
- * zugaengliches Signal: die Toene tragen keine Information, die nicht schon in
- * der Abschnittsueberschrift und im Markernamen steht.
+ * Was dadurch besser wird: der Name bekommt die Breite, die vorher der Kreis
+ * hatte, und faengt an derselben Kante an wie Zahl, Kurve und Schiene darunter.
+ * Aus fuenf Toenen plus drei Statusfarben werden drei Statusfarben.
  *
- * ⚠️ KEIN GRUEN, KEIN BERNSTEIN, KEIN ROT — und dieses Verbot ist strenger
- * geworden, seit die Kachel Farbe zum Bewerten benutzt: Violett, Sand, Teal und
- * Blau sind die Palette dieser Chips, weil sie mit success/warning/critical
- * nicht verwechselt werden koennen. Ein Dekor-Ton in Statusfarbe bewertet mit,
- * ohne es zu wissen.
- *
- * NICHT VERWECHSELN mit den Bewertungs-Kategorien K1–K4 der Analyse. k1…k5 sind
- * hier nur Steckplaetze der Anzeige-Gruppen; welche Gruppe welchen Platz
- * bekommt, entscheidet BiomarkerBoard.
+ * Wer je wieder ein Symbol auf diese Kachel setzt, sollte begruenden koennen,
+ * welche Frage es beantwortet, die der Name nicht beantwortet.
  */
-export type BiomarkerCategory = "k1" | "k2" | "k3" | "k4" | "k5";
-
-const CATEGORY_CHIP: Record<BiomarkerCategory, string> = {
-  k1: "bg-cat-k1 text-cat-k1-ink",
-  k2: "bg-cat-k2 text-cat-k2-ink",
-  k3: "bg-cat-k3 text-cat-k3-ink",
-  k4: "bg-cat-k4 text-cat-k4-ink",
-  k5: "bg-cat-k5 text-cat-k5-ink",
-};
 
 export interface BiomarkerPanelProps {
   marker: Biomarker;
-  /*
-   * Lucide-Icon fuer den Chip in der Kopfzeile, z. B. <Droplet />.
-   * ENTSCHEIDUNG: Das Icon ist Darstellung, keine Domaenendaten — es haengt
-   * deshalb an der Komponente, nicht am Biomarker-Contract. Uebergeben wird ein
-   * fertiges Element und keine Komponente: Server-Komponenten duerfen an
-   * Client-Komponenten keine Funktionen reichen. Groesse und Farbe setzt die
-   * Kachel selbst.
-   */
-  icon?: ReactNode;
-  /** Tönung des Icon-Chips. Ohne Angabe bleibt der Chip neutral-grau. */
-  category?: BiomarkerCategory;
   /*
    * Ansicht der Kachel. Sie wird von aussen gesteuert: ein Umschalter im
    * Seitenkopf stellt ALLE Kacheln gemeinsam um, damit die Kacheln einer Zeile
@@ -767,8 +742,6 @@ function ReferenceTrack({
 
 export function BiomarkerPanel({
   marker,
-  icon = <Activity />,
-  category,
   view,
   derivedFromNames,
   onOpenDetails,
@@ -881,37 +854,24 @@ export function BiomarkerPanel({
         )}
       >
         <div>
-          {/* Kopf: Chip und Name. */}
-          <div className="flex h-7 items-center gap-2">
-            {/*
-             * Runder, zart getoenter Chip: er gibt der Kachel Identitaet und dem
-             * Raster Rhythmus. Die Toenung bewertet NICHTS — siehe
-             * BiomarkerCategory.
-             */}
-            <span
-              aria-hidden="true"
-              className={cn(
-                "flex size-7 shrink-0 items-center justify-center rounded-full [&_svg]:size-3.5",
-                category
-                  ? CATEGORY_CHIP[category]
-                  : "bg-foreground/5 text-muted-foreground",
-              )}
-            >
-              {icon}
-            </span>
-            <div className="min-w-0">
-              <h3 className="text-foreground truncate text-sm font-medium">
-                {marker.name}
-              </h3>
-              {isDerived ? (
-                /* Kein Badge, kein Rahmen: die Herkunft ist eine Fussnote zum
-                 * Namen, keine Auszeichnung. Vorgelesen wird sie samt Quellen
-                 * ueber das aria-label der Kachel. */
-                <p className="text-2xs text-muted-foreground leading-3">
-                  berechnet
-                </p>
-              ) : null}
-            </div>
+          {/*
+           * Kopf: nur noch der Name. Die feste Hoehe bleibt, obwohl der Chip
+           * weg ist — sie haelt die Kacheln einer Reihe auf einer Linie,
+           * gleich ob unter dem Namen "berechnet" steht oder nicht. Ohne sie
+           * saessen Zahl und Kurve der Nachbarkachel zwei Zeilen versetzt.
+           */}
+          <div className="flex h-7 min-w-0 flex-col justify-center">
+            <h3 className="text-foreground truncate text-sm font-medium">
+              {marker.name}
+            </h3>
+            {isDerived ? (
+              /* Kein Badge, kein Rahmen: die Herkunft ist eine Fussnote zum
+               * Namen, keine Auszeichnung. Vorgelesen wird sie samt Quellen
+               * ueber das aria-label der Kachel. */
+              <p className="text-2xs text-muted-foreground leading-3">
+                berechnet
+              </p>
+            ) : null}
           </div>
 
           {/* Der Messwert mit seiner Veraenderung. Steht in beiden Ansichten. */}

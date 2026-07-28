@@ -4,7 +4,6 @@ export {
 } from "./components/biomarker-board";
 export {
   BiomarkerPanel,
-  type BiomarkerCategory,
   type BiomarkerPanelProps,
   type BiomarkerPanelView,
 } from "./components/biomarker-panel";

@@ -1,27 +1,15 @@
 "use client";
 
-import {
-  Dna,
-  Droplets,
-  Filter,
-  Flame,
-  HeartPulse,
-  type LucideIcon,
-} from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import {
   SegmentedControl,
   type SegmentedControlOption,
 } from "@/components/ui/segmented-control";
-import type { Biomarker, MarkerGroup, MarkerGroupId } from "@/contracts";
+import type { Biomarker, MarkerGroup } from "@/contracts";
 import { cn } from "@/lib/utils";
 
-import {
-  BiomarkerPanel,
-  type BiomarkerCategory,
-  type BiomarkerPanelView,
-} from "./biomarker-panel";
+import { BiomarkerPanel, type BiomarkerPanelView } from "./biomarker-panel";
 
 /*
  * Alle Biomarker, in Abschnitte nach Anzeige-Gruppe gegliedert, mit EINEM
@@ -38,28 +26,15 @@ const VIEW_OPTIONS: readonly SegmentedControlOption<BiomarkerPanelView>[] = [
 ];
 
 /*
- * Toenung und Symbol haengen an der GRUPPE, nicht am einzelnen Marker.
+ * ⚠️ HIER STANDEN ZWEI TABELLEN: ein Symbol und ein Farbton je Anzeige-Gruppe,
+ * die das Board an jede Kachel weiterreichte. Beide sind entfernt.
  *
- * ENTSCHEIDUNG: zwanzig einzeln gewaehlte Symbole waeren willkuerlich und
- * wuerden eine Bedeutung suggerieren, die es nicht gibt — die Identitaet einer
- * Kachel traegt ihr Name. Beides ist Darstellung und steht deshalb hier, nicht
- * im Contract: die Daten wissen nichts von Icons und nichts von Farbtoenen.
+ * Der Grund steht schon in ihrer eigenen Begruendung von damals — die
+ * Zuordnung haengt an der GRUPPE und nicht am Marker. Alle vier Kacheln eines
+ * Abschnitts trugen also dasselbe Symbol im selben Ton, direkt unter der
+ * Ueberschrift, die die Gruppe benennt. Was ueberall gleich ist, unterscheidet
+ * nichts; die Identitaet einer Kachel traegt ihr Name.
  */
-const GROUP_CHIP: Record<MarkerGroupId, BiomarkerCategory> = {
-  hormone: "k1",
-  herz: "k2",
-  stoffwechsel: "k3",
-  schilddruese: "k4",
-  "leber-niere": "k5",
-};
-
-const GROUP_ICON: Record<MarkerGroupId, LucideIcon> = {
-  hormone: Dna,
-  herz: HeartPulse,
-  stoffwechsel: Flame,
-  schilddruese: Droplets,
-  "leber-niere": Filter,
-};
 
 export interface BiomarkerBoardProps {
   /** Reihenfolge der Abschnitte = Reihenfolge dieser Liste. */
@@ -108,8 +83,6 @@ export function BiomarkerBoard({
         );
         if (groupMarkers.length === 0) return null;
 
-        const Icon = GROUP_ICON[group.id];
-
         return (
           <section
             key={group.id}
@@ -138,8 +111,6 @@ export function BiomarkerBoard({
                 <BiomarkerPanel
                   key={marker.id}
                   marker={marker}
-                  icon={<Icon />}
-                  category={GROUP_CHIP[group.id]}
                   view={view}
                   derivedFromNames={(marker.derivedFrom ?? []).map(
                     (id) => namesById.get(id) ?? id,

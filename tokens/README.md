@@ -125,6 +125,12 @@ Leisten).
 
 ## Gruppen-Farben der Marker-Chips
 
+> ⚠️ **Derzeit ungenutzt.** Die Marker-Kachel trug einen getönten Icon-Chip je
+> Anzeige-Gruppe; er ist entfernt, weil alle Kacheln eines Abschnitts denselben
+> zeigten und damit nichts unterschieden. Die Stufen bleiben als Palette
+> stehen. Wer sie zurückholt, grenzt sie gegen `status.*` ab — die Kachel
+> benutzt Grün, Bernstein und Rot inzwischen für ein Urteil.
+
 `semantic.<mode>.color.category.k1 … k5` sind fünf **gedämpfte, chromaarme**
 Farbpaare (je `surface` für den runden Chip und `icon` für das Symbol darin) —
 **eines je Anzeige-Gruppe**, in deren Reihenfolge:
