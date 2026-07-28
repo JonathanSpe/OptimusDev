@@ -91,39 +91,70 @@ const percentFormat = new Intl.NumberFormat("de-DE", {
 
 /*
  * ============================================================================
- * DIE FARBE DES VERLAUFS — sie sagt, WO der Wert steht, nicht wohin er ging.
+ * DIE LAGE DES WERTS — eine Aussage, drei Auftritte, EINE Tabelle.
  * ============================================================================
  * Die Kachel traegt zwei Aussagen, und jede hat ihren eigenen Kanal: die Pille
- * deutet die BEWEGUNG (naeher ans Ziel oder weiter weg), die Kurve zeigt die
- * LAGE (im Ziel, grenzwertig, ausserhalb der Referenz). Beide in dieselbe Farbe
- * zu legen, hiesse eine der beiden aufzugeben — ein Wert kann sich verbessern
- * und trotzdem weit ausserhalb liegen, und genau dieser Fall ist der
- * interessanteste.
+ * deutet die BEWEGUNG (naeher ans Ziel oder weiter weg), Kurve UND Wertmarker
+ * zeigen die LAGE (im Ziel, grenzwertig, ausserhalb der Referenz). Beide in
+ * dieselbe Farbe zu legen, hiesse eine der beiden aufzugeben — ein Wert kann
+ * sich verbessern und trotzdem weit ausserhalb liegen, und genau dieser Fall
+ * ist der interessanteste.
+ *
+ * KURVE UND MARKER TRAGEN DENSELBEN TON, weil sie dasselbe sagen: die Kurve
+ * zeichnet den Weg zum aktuellen Wert, der Marker seine Lage auf der Schiene.
+ * Der Marker stand frueher im Markenton — das war der letzte Rest aus der Zeit,
+ * in der die Kachel nichts bewertete, und es machte aus einer Aussage zwei
+ * Farben. Genau ein Wert, genau eine Farbe.
+ *
+ * Drei Spalten, weil dieselbe Lage an drei Stellen auftritt und keine davon
+ * ihre eigene Zuordnung erfinden darf: `line` geht als CSS-Variable an
+ * Recharts, `mark` ist eine Utility-Klasse fuer den Strich auf der Schiene
+ * (Farbe im style-Attribut ist verboten), `label` ist das Wort.
  *
  * OHNE FARBE BLEIBT DIE AUSSAGE STEHEN (WCAG 1.4.1): dieselbe Lage zeigt die
- * Schiene unter der Kurve als POSITION — der Marker sitzt im Band oder daneben.
- * Die Farbe verdoppelt diese Auskunft, sie ersetzt sie nicht. Vorgelesen wird
- * sie ueber das aria-label der Kachel.
+ * Schiene als POSITION — der Marker sitzt im Band oder daneben, und die Baender
+ * darunter bleiben neutral, damit man das sieht. Die Farbe verdoppelt diese
+ * Auskunft, sie ersetzt sie nicht. Vorgelesen wird sie ueber das aria-label der
+ * Kachel und den Tooltip der Schiene.
  *
  * Die Toene kommen aus den Status-Tokens (success/warning/critical) und nicht
- * aus der Marken- oder Kategorie-Palette. Die Kategorie-Chips bleiben deshalb
- * bewusst in Violett, Sand, Teal und Blau: sie duerfen der Statusfarbe nie ins
- * Gehege kommen, sonst bewertet ein Dekor-Ton mit.
+ * aus der Marken- oder Kategorie-Palette.
  */
-const STANDING_COLOR: Readonly<Record<MarkerStanding, string>> = {
-  imZiel: "var(--success)",
-  grenzwertig: "var(--warning)",
-  auffaellig: "var(--critical)",
-  /* Ohne Messwert gibt es nichts zu deuten — dann bleibt die Kurve neutral. */
-  unbekannt: "var(--chart-1)",
-};
+interface StandingLook {
+  /** Farbe der Verlaufskurve — als CSS-Variable fuer die chart-Config. */
+  line: string;
+  /** Farbe des Wertmarkers auf der Schiene — als Utility-Klasse. */
+  mark: string;
+  /** Die Lage als Wort, fuer aria-label und Tooltip. */
+  label: string | null;
+}
 
-/** Dieselbe Lage als Wort — fuer das aria-label und den Tooltip der Schiene. */
-const STANDING_LABEL: Readonly<Record<MarkerStanding, string | null>> = {
-  imZiel: "im Zielbereich",
-  grenzwertig: "grenzwertig",
-  auffaellig: "ausserhalb des Referenzbereichs",
-  unbekannt: null,
+const STANDING_LOOK: Readonly<Record<MarkerStanding, StandingLook>> = {
+  imZiel: {
+    line: "var(--success)",
+    mark: "bg-success",
+    label: "im Zielbereich",
+  },
+  grenzwertig: {
+    line: "var(--warning)",
+    mark: "bg-warning",
+    label: "grenzwertig",
+  },
+  auffaellig: {
+    line: "var(--critical)",
+    mark: "bg-critical",
+    label: "ausserhalb des Referenzbereichs",
+  },
+  /*
+   * Ohne Messwert gibt es nichts zu deuten — dann bleibt die Kurve neutral.
+   * Der Marker kommt in diesem Zustand gar nicht erst vor: ohne Wert gibt es
+   * keine Lage, die er zeigen koennte.
+   */
+  unbekannt: {
+    line: "var(--chart-1)",
+    mark: "bg-muted-foreground",
+    label: null,
+  },
 };
 
 /*
@@ -425,7 +456,7 @@ function BiomarkerChart({
    * an dem eine Kurve ihre Farbe bekommt.
    */
   const chartConfig = {
-    value: { label: "Messwert", color: STANDING_COLOR[standing] },
+    value: { label: "Messwert", color: STANDING_LOOK[standing].line },
   } satisfies ChartConfig;
 
   const lastIndex = data.length - 1;
@@ -592,8 +623,8 @@ function BiomarkerChart({
 interface ReferenceTrackProps {
   marker: Biomarker;
   optimal: ValueRange | null;
-  /** Lage des Werts als WORT — die lesbare Fassung der Kurvenfarbe. */
-  standingLabel: string | null;
+  /** Lage des Werts — sie faerbt den Wertmarker wie die Kurve darueber. */
+  standing: MarkerStanding;
   /** Gedimmter Zustand "nicht gemessen" — dort wird jede Stufe kraeftiger. */
   dimmed: boolean;
   onOpenDetails?: (markerId: string) => void;
@@ -604,11 +635,16 @@ interface ReferenceTrackProps {
  * und Hoehe: nackte Schiene (4px) · Referenzband (4px) · Optimalsockel (8px,
  * ragt oben und unten heraus).
  *
- * DIE ZONEN BLEIBEN NEUTRAL, auch jetzt, wo die Kurve darueber Farbe traegt —
- * und das ist kein Rest von frueher, sondern die Bedingung dafuer: die Schiene
- * ist die farbfreie Fassung derselben Aussage. Wer sie einfaerbte, naehme der
- * Kachel genau den Kanal, der ohne Farbe funktioniert (WCAG 1.4.1). Das einzige
- * farbige Element bleibt der Wertmarker.
+ * DIE ZONEN BLEIBEN NEUTRAL, auch jetzt, wo Kurve und Wertmarker Farbe tragen —
+ * und das ist kein Rest von frueher, sondern die Bedingung dafuer: die Baender
+ * sind die farbfreie Fassung derselben Aussage, denn erst an ihnen liest man,
+ * dass der Marker drinsteht oder daneben. Wer sie einfaerbte, naehme der Kachel
+ * genau den Kanal, der ohne Farbe funktioniert (WCAG 1.4.1).
+ *
+ * Das einzige farbige Element ist der Wertmarker, und er traegt den Ton SEINER
+ * Lage — denselben, den die Kurve darueber zeigt (STANDING_LOOK). Der Markenton
+ * stand hier, solange die Kachel nichts bewertete; neben einer roten Kurve war
+ * er nur eine zweite Farbe fuer dieselbe Zahl.
  *
  * Die Schiene ist mit der Kachel geschrumpft, ihre BESCHRIFTUNGEN nicht: die
  * Zahlen darunter sind schon auf der kleinsten Stufe, und eine Bereichsgrenze,
@@ -617,10 +653,11 @@ interface ReferenceTrackProps {
 function ReferenceTrack({
   marker,
   optimal,
-  standingLabel,
+  standing,
   dimmed,
   onOpenDetails,
 }: ReferenceTrackProps) {
+  const look = STANDING_LOOK[standing];
   const value = toCurrentValue(marker);
   const track = toTrackScale(marker.referenceLow, marker.referenceHigh, value);
   const optimalStart = optimal ? track.position(optimal.low) : 0;
@@ -699,8 +736,15 @@ function ReferenceTrack({
                   />
                 ) : null}
                 {value !== null ? (
+                  /* Derselbe Ton wie die Kurve darueber — im style-Attribut
+                   * steht nur die Position, nie die Farbe. Der Ring in der
+                   * Hintergrundfarbe trennt den Strich vom Band, damit er auch
+                   * mitten im Sockel als eigenes Zeichen lesbar bleibt. */
                   <span
-                    className="bg-brand ring-background absolute top-1/2 h-3.5 w-0.75 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2"
+                    className={cn(
+                      "ring-background absolute top-1/2 h-3.5 w-0.75 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2",
+                      look.mark,
+                    )}
                     style={{ left: `${track.position(value)}%` }}
                   />
                 ) : null}
@@ -731,9 +775,9 @@ function ReferenceTrack({
          * will wissen, was die Farbe der Kurve behauptet — und bekommt sie hier
          * als Wort. */}
         <TooltipContent side="top" className="text-2xs tabular-nums">
-          {standingLabel === null
+          {look.label === null
             ? toZoneSummary(marker, optimal)
-            : `${standingLabel} · ${toZoneSummary(marker, optimal)}`}
+            : `${look.label} · ${toZoneSummary(marker, optimal)}`}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -766,7 +810,7 @@ export function BiomarkerPanel({
   const isExpanded = hasTrend && isTrendView;
   const delta = hasTrend ? toDelta(marker) : null;
   const standing = toMarkerStanding(marker);
-  const standingLabel = STANDING_LABEL[standing];
+  const standingLabel = STANDING_LOOK[standing].label;
 
   const chartData: ChartPoint[] = marker.history.map((reading) => ({
     label: formatFullDate(reading.date),
@@ -982,7 +1026,7 @@ export function BiomarkerPanel({
           <ReferenceTrack
             marker={marker}
             optimal={optimal}
-            standingLabel={standingLabel}
+            standing={standing}
             dimmed={!hasValue}
             onOpenDetails={onOpenDetails}
           />
