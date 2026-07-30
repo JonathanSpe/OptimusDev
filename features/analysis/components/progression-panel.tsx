@@ -1,7 +1,7 @@
 "use client";
 
 import { scaleLinear, scalePoint } from "d3-scale";
-import { area, line } from "d3-shape";
+import { line } from "d3-shape";
 import { motion } from "motion/react";
 import { useEffect, useId, useRef, useState, type RefObject } from "react";
 
@@ -18,6 +18,7 @@ import {
 } from "../rules";
 import {
   SCORE_MAX,
+  SCORE_MIN,
   categoryIdByMarker,
   type CategorySeries,
   type MarkerChange,
@@ -63,13 +64,22 @@ import { ScoreDelta, toDeltaText } from "./score-delta";
 /*
  * DIE ERKLAERUNG DER KACHEL — hinter dem ⓘ am Kopf, einmal im Code.
  *
- * Sie muss die eine Notation in Worte fassen, die man sonst nicht erraten kann:
- * dass eine BLASSE Linie eine Bewegung im Rauschband ist. Ohne diesen Satz waere
- * der Blassgrad eine Farbe mit Bedeutung und sonst nichts — genau das, was
- * Farbe nie sein darf.
+ * Sie fasst die Notationen in Worte, die man sonst raten muesste. Drei davon
+ * gibt es, und keine erklaert sich von selbst:
+ *
+ *   DIE ACHSE laeuft ueber die volle Score-Skala. Das ist der Grund, warum die
+ *   Linien dicht beieinander liegen — und es ist die Wahrheit ueber die Werte,
+ *   nicht ein Mangel der Darstellung. Wer das nicht dazuschreibt, laesst den
+ *   Leser vermuten, hier sei etwas zusammengedrueckt worden.
+ *   DIE GESTRICHELTE LINIE ist eine Bewegung im Rauschband. Ohne diesen Satz
+ *   waere der Strichel eine Notation mit Bedeutung und sonst nichts.
+ *   DAS ANFASSEN eines Termins ist die einzige Angabe, die man nicht sieht,
+ *   solange man es nicht tut.
  */
 const PROGRESSION_EXPLAINER =
-  "Jede Linie ist ein Bereich, die rote der Gesamtscore. Blass gezeichnet sind Bereiche, deren Bewegung im Rauschband liegt: dort ist der Unterschied kleiner als die Streuung zwischen zwei Tests, also noch kein Trend.";
+  `Jede Linie ist ein Bereich, die rote der Gesamtscore. Die Achse zeigt die volle Skala von ${SCORE_MIN} bis ${SCORE_MAX} Punkten — die Linien liegen deshalb dicht beieinander, und genau so gross sind die Bewegungen auch. ` +
+  "Gestrichelt und blass gezeichnet sind Bereiche, deren Bewegung im Rauschband liegt: dort ist der Unterschied kleiner als die Streuung zwischen zwei Tests, also noch kein Trend. " +
+  "Zeigst du auf einen Testtermin — mit der Maus oder mit der Tabulatortaste —, stehen die Werte aller Reihen zu diesem Termin an ihren Beschriftungen.";
 
 /* ------------------------------------------------------------------------- */
 /* Formate                                                                     */
@@ -126,33 +136,83 @@ const VERDICT_TONE: Readonly<
 /* Geometrie                                                                   */
 /* ------------------------------------------------------------------------- */
 
-/**
- * Luft ueber und unter der Spanne aller gezeichneten Werte, als Anteil dieser
- * Spanne. Ohne sie liefen die aeussersten Linien auf den Feldkanten.
- */
-const FIELD_PADDING = 0.12;
-
 /** Hoehe des Feldes in Pixeln. */
-const FIELD_HEIGHT = 224;
+const FIELD_HEIGHT = 256;
+
+/*
+ * ============================================================================
+ * DIE ACHSE — volle Skala, beschriftet, und die Folgen davon ausgehalten.
+ * ============================================================================
+ * ⚠️ HIER STAND EINE ZUGESCHNITTENE SPANNE: das Feld reichte von der kleinsten
+ * bis zur groessten gezeichneten Zahl plus zwoelf Prozent Luft, und die
+ * ENTSCHEIDUNG daneben hielt das fuer vertretbar, SOLANGE keine Achse
+ * danebensteht. Genau daran lag der Fehler — eine Kurve, die den halben Kasten
+ * durchmisst, wird als grosse Bewegung gelesen, ob eine Achse danebensteht oder
+ * nicht. Vier Punkte Unterschied sahen aus wie ein Aufschwung.
+ *
+ * Jetzt laeuft die Skala von SCORE_MIN bis SCORE_MAX, drei Linien, beschriftet.
+ * DIE FOLGE IST BEABSICHTIGT: die fuenf Reihen liegen in einem schmalen Band im
+ * oberen Drittel, und die Bewegungen sehen klein aus. Sie SIND klein. Die
+ * Betraege stehen als Delta an jeder Beschriftung, die einzelnen Werte holt man
+ * sich am Termin, und was die Bewegung getragen hat, steht in der Liste
+ * darunter — es geht also nichts verloren ausser dem falschen Eindruck.
+ *
+ * Wer diese Spanne je wieder zuschneidet, muss BEIDES tun: die Achse ihre
+ * echten Enden zeigen lassen und es im ⓘ-Text sagen. Zugeschnitten UND
+ * unbeschriftet ist die eine Kombination, die es nicht mehr geben darf.
+ */
+const AXIS_TICKS: readonly number[] = [
+  SCORE_MIN,
+  (SCORE_MIN + SCORE_MAX) / 2,
+  SCORE_MAX,
+];
 
 /**
- * Breite der Beschriftungsspur rechts. Sie ist aus dem INHALT gerechnet:
- * Punkt, der laengste Bereichsname ("Herz-Kreislauf") und ein Delta stehen bei
- * diesem Mass umbruchfrei nebeneinander. Breiter gezogen nimmt sie dem Feld die
- * Breite, in der die Steigungen ueberhaupt sichtbar sind.
+ * Breite der Achsenbeschriftung links. "100" bei 10px Schrift misst rund 18px;
+ * mehr braucht die breiteste Marke dieser Skala nicht.
  */
-const LABEL_WIDTH = 152;
+const AXIS_WIDTH = 20;
 
-/** Abstand zwischen Feld und Spur. */
-const LABEL_GAP = 8;
+/** Abstand zwischen Achsenbeschriftung und Feldkante. */
+const AXIS_GAP = 6;
+
+/**
+ * Breite der Beschriftungsspur rechts. Sie ist aus dem INHALT gerechnet: Punkt
+ * (6) plus Fuge (6) plus der laengste Bereichsname ("Herz-Kreislauf", rund 72px
+ * bei 11px Schrift) plus Fuge (6) plus die Wertspalte (40, siehe VALUE_WIDTH).
+ *
+ * ⚠️ SIE WAR 152px und damit ein Fuenftel der Kachel fuer fuenf kurze Woerter.
+ * Was zu breit gemessen war, war nicht die Schrift, sondern die Reserve
+ * dahinter. Die 22px gehen an das Feld, und dort sind sie Steigung.
+ */
+const LABEL_WIDTH = 130;
+
+/**
+ * Abstand zwischen Feld und Spur. Er ist zugleich die LAUFSTRECKE der
+ * Verbindungslinien (siehe Leader unten): unter etwa 14px hat eine Verbindung,
+ * die 30px in der Hoehe ueberbrueckt, keine lesbare Neigung mehr, sondern steht
+ * fast senkrecht.
+ */
+const LABEL_GAP = 16;
+
+/** Feld plus beide Spuren — alles, was neben dem Feld Platz braucht. */
+const SIDE_WIDTH = AXIS_WIDTH + AXIS_GAP + LABEL_WIDTH + LABEL_GAP;
 
 /**
  * Ab dieser Zeilenbreite steht die Spur NEBEN dem Feld. Darunter waere das Feld
  * schmaler als 200px, und auf 200px sind vier Testtermine keine Kurve mehr,
  * sondern ein Zickzack — dann rutschen die Beschriftungen unter das Feld und
- * bekommen die ganze Breite.
+ * bekommen die ganze Breite. Die Achse bleibt in beiden Lagen stehen: eine
+ * Skala, die bei schmaler Kachel verschwindet, ist keine Skala.
  */
-const STACK_BELOW = LABEL_WIDTH + LABEL_GAP + 200;
+const STACK_BELOW = SIDE_WIDTH + 200;
+
+/**
+ * Ab dieser Verschiebung bekommt eine Beschriftung ihre Verbindungslinie. Ein
+ * halber Pixel Versatz braucht keine — eine Linie zu zeichnen, wo nichts
+ * auseinanderliegt, waere ein Zeichen ohne Anlass.
+ */
+const LEADER_MIN_OFFSET = 2;
 
 /**
  * Mindestabstand zweier Beschriftungen am Linienende, in Pixeln — von Mitte zu
@@ -281,15 +341,35 @@ function toEndSlots(
 /* Das Feld                                                                    */
 /* ------------------------------------------------------------------------- */
 
+/** Breite der Wertspalte am Linienende — Delta und Messwert teilen sie sich. */
+const VALUE_WIDTH = "w-10";
+
+/**
+ * Radius eines Messpunkts. Er haengt an drei Fragen, und alle drei sind
+ * Rangfragen: traegt die Reihe die Aussage, ist das der juengste Test, wird
+ * dieser Termin gerade gelesen.
+ */
+function toPointRadius(
+  lead: boolean,
+  isLast: boolean,
+  isRead: boolean,
+): number {
+  const base = lead ? (isLast ? 4 : 2.5) : isLast ? 3 : 1.75;
+  return isRead ? base + 1 : base;
+}
+
 interface TrendFieldProps {
   dates: readonly string[];
   /** Alle Reihen; genau eine davon traegt lead. */
   traces: readonly Trace[];
   /** Beschreibung des ganzen Bildes fuer Screenreader. */
   fieldLabel: string;
-  /** Reihe, deren Linie gerade vortritt. */
+  /** Reihe, deren Linie gerade vortritt. Kommt von ihrer Beschriftung. */
   activeId: string | null;
   onHover: (id: string | null) => void;
+  /** Angefasster Testtermin als Platz in `dates`; null = keiner. */
+  readIndex: number | null;
+  onRead: (index: number | null) => void;
 }
 
 function TrendField({
@@ -298,6 +378,8 @@ function TrendField({
   fieldLabel,
   activeId,
   onHover,
+  readIndex,
+  onRead,
 }: TrendFieldProps) {
   const motionPreset = useMotionPreset();
   const [row, rowSize] = useRowSize();
@@ -308,36 +390,27 @@ function TrendField({
    */
   const [leadDrawn, setLeadDrawn] = useState(false);
 
+  const gutter = AXIS_WIDTH + AXIS_GAP;
   const stacked = rowSize.width > 0 && rowSize.width < STACK_BELOW;
   const fieldWidth = Math.max(
     0,
-    rowSize.width - (stacked ? 0 : LABEL_WIDTH + LABEL_GAP),
+    rowSize.width - gutter - (stacked ? 0 : LABEL_WIDTH + LABEL_GAP),
   );
   const isMeasured = fieldWidth > 0;
 
   const lead = traces.find((trace) => trace.lead);
   const hairlines = traces.filter((trace) => !trace.lead);
+  const lastIndex = dates.length - 1;
 
-  /*
-   * EINE Skala fuer alle Linien. Sie umfasst die Spanne der gezeichneten Werte
-   * und nicht die volle Score-Skala: das Feld traegt keine Achsenbeschriftung
-   * und behauptet damit keine absolute Hoehe — es zeigt Verlaeufe zueinander.
-   * Die absoluten Werte stehen am Ring, als Delta und in der Tabelle.
-   *
-   * ENTSCHEIDUNG: Bekommt das Feld je eine beschriftete y-Achse, muss diese
-   * Spanne zurueck auf 0–100. Eine beschriftete, aber zugeschnittene Achse
-   * macht aus drei Punkten Unterschied einen halben Bildschirm.
-   */
-  const values = traces
-    .flatMap((trace) => trace.values)
-    .filter((value): value is number => value !== null);
-  const low = Math.min(...values);
-  const high = Math.max(...values);
-  const air = (high - low || 1) * FIELD_PADDING;
-
+  /* EINE Skala fuer alle Linien, und es ist die volle — siehe AXIS_TICKS. */
   const toY = scaleLinear()
-    .domain([low - air, high + air])
+    .domain([SCORE_MIN, SCORE_MAX])
     .range([FIELD_HEIGHT, 0]);
+
+  /* Die Rasterlinien an den Enden der Skala liegen auf der Feldkante; ein
+   * halber Pixel nach innen haelt sie vollstaendig im Bild. */
+  const toGridY = (value: number): number =>
+    Math.min(FIELD_HEIGHT - 0.5, Math.max(0.5, toY(value)));
 
   /*
    * Die Termine sind eine ORDINALE Achse: zwischen zwei Tests liegt kein halber
@@ -356,26 +429,7 @@ function TrendField({
     .x((_, index) => positions[index] ?? 0)
     .y((value) => toY(value ?? 0));
 
-  /*
-   * Die Flaeche beginnt am HOECHSTEN Punkt der Linie und nicht an der
-   * Feldkante: ihr Farbverlauf soll DORT dicht sein, wo er die Linie traegt.
-   * Ueber die ganze Feldhoehe gestreckt waere er an der Linie schon fast
-   * ausgelaufen. Ihre Koordinaten sind deshalb um denselben Betrag verschoben
-   * wie ihr Container.
-   */
-  const leadValues = lead?.values ?? [];
-  const washTop = Math.min(
-    ...leadValues.map((value) => (value === null ? FIELD_HEIGHT : toY(value))),
-  );
-  const toArea = area<number | null>()
-    .defined((value) => value !== null)
-    .x((_, index) => positions[index] ?? 0)
-    .y0(FIELD_HEIGHT - washTop)
-    .y1((value) => toY(value ?? 0) - washTop);
-
   const lastX = positions.at(-1) ?? 0;
-  const leadEnd = leadValues.at(-1);
-  const endY = leadEnd === null || leadEnd === undefined ? 0 : toY(leadEnd);
 
   const ends = traces.flatMap((trace) => {
     const value = trace.values.at(-1);
@@ -386,6 +440,29 @@ function TrendField({
   const slotById = new Map(
     toEndSlots(ends, FIELD_HEIGHT).map((slot) => [slot.id, slot]),
   );
+
+  /*
+   * Die Lesespalten: je Termin ein Streifen, der bis zur Mitte zum Nachbarn
+   * reicht. Gerechnet und nicht gleichmaessig geteilt, weil die aeusseren
+   * Termine nur eine halbe Spalte haben — ihre Punkte sitzen auf der Feldkante.
+   */
+  const columns = positions.map((x, index) => {
+    const left = index === 0 ? 0 : ((positions[index - 1] ?? x) + x) / 2;
+    const right =
+      index === lastIndex ? fieldWidth : (x + (positions[index + 1] ?? x)) / 2;
+    return { left, width: Math.max(0, right - left) };
+  });
+
+  /** Alle fuenf Reihen zu EINEM Termin — die Vorlesefassung der Lesespalte. */
+  const toReadLabel = (index: number): string =>
+    `${toLongDate(dates[index] ?? "")}: ${toGermanList(
+      traces.map((trace) => {
+        const value = trace.values[index];
+        return value === null || value === undefined
+          ? `${trace.label} nicht erhoben`
+          : `${trace.label} ${value}`;
+      }),
+    )}, jeweils von ${SCORE_MAX} Punkten.`;
 
   /*
    * EIN Markup fuer beide Lagen. Was sich zwischen "neben dem Feld" und "unter
@@ -404,6 +481,12 @@ function TrendField({
       {traces.map((trace, position) => {
         const slot = slotById.get(trace.id);
         const isRecessed = activeId !== null && activeId !== trace.id;
+        /* Zwei verschiedene Nullen: "es wird gerade kein Termin gelesen" und
+         * "an diesem Termin wurde nichts erhoben". Die zweite muss als Luecke
+         * dastehen — faellt sie auf das Delta zurueck, stuende in einer Reihe
+         * von vier Messwerten eine Bewegung, und die liest sich als fuenfter. */
+        const reading = readIndex !== null;
+        const readValue = reading ? (trace.values[readIndex] ?? null) : null;
 
         return (
           <motion.li
@@ -425,7 +508,9 @@ function TrendField({
           >
             {/*
              * Der Punkt traegt die Farbe SEINER Linie — er ist die ganze
-             * Verbindung zwischen Beschriftung und Kurve.
+             * Verbindung zwischen Beschriftung und Kurve, und wo die
+             * Beschriftung von ihrem Linienende weggeschoben wurde, laeuft
+             * zusaetzlich eine Verbindungslinie zu ihm.
              *
              * ⚠️ HIER KOMMT KEINE STATUSFARBE HIN, auch nicht, seit das
              * Bereichsfeld darueber eine traegt. Die Farben dort beantworten
@@ -433,8 +518,8 @@ function TrendField({
              * bernsteiner Punkt an einer steigenden Linie waere beides
              * gleichzeitig, und die Linie verloere ihre einzige Aussage. Der
              * Akzent bleibt der tragenden Linie vorbehalten, die vier
-             * Bereichslinien bleiben Haarlinien — unterschieden durch Staerke
-             * und Beschriftung, nicht durch Ton.
+             * Bereichslinien bleiben Haarlinien — unterschieden durch Staerke,
+             * Strichel und Beschriftung, nicht durch Ton.
              */}
             <span
               aria-hidden="true"
@@ -465,11 +550,37 @@ function TrendField({
             >
               {trace.label}
             </span>
-            <ScoreDelta
-              delta={trace.delta}
-              quiet={trace.quiet}
-              className="shrink-0"
-            />
+            {/*
+             * DIESELBE SPALTE, ZWEI ANGABEN — und welche dasteht, haengt daran,
+             * ob gerade ein Termin gelesen wird.
+             *
+             * In Ruhe steht hier das Delta: die Frage der Kachel ist "wohin ging
+             * es", und die beantwortet die Bewegung. Faehrt man einen Termin an,
+             * steht hier sein WERT — dann ist die Frage eine andere geworden
+             * ("wo stand es damals"), und sie an anderer Stelle zu beantworten
+             * hiesse, eine zweite Flaeche aufzumachen, die man erst suchen muss.
+             *
+             * Die feste Breite ist kein Schmuck: ohne sie ruecken beim Lesen
+             * fuenf Beschriftungen seitlich, waehrend die Verbindungslinien auf
+             * ihre alten Enden zeigen.
+             */}
+            <span
+              className={cn(
+                "flex shrink-0 justify-end tabular-nums",
+                /* Nur neben dem Feld: unter dem Feld stehen die Beschriftungen
+                 * in einer umbrechenden Reihe, dort waere die feste Breite eine
+                 * Luecke zwischen Name und Wert und sonst nichts. */
+                stacked ? null : VALUE_WIDTH,
+              )}
+            >
+              {reading ? (
+                <span className="text-foreground font-medium">
+                  {readValue ?? "—"}
+                </span>
+              ) : (
+                <ScoreDelta delta={trace.delta} quiet={trace.quiet} />
+              )}
+            </span>
           </motion.li>
         );
       })}
@@ -479,188 +590,321 @@ function TrendField({
   return (
     <div ref={row}>
       <div className="flex items-start" style={{ gap: LABEL_GAP }}>
-        {/*
-         * Das Feld ist EIN Bild mit einer Beschreibung. Die Einzelteile darin
-         * bleiben fuer Screenreader unsichtbar — vorgelesen waeren sie eine
-         * Reihe zusammenhangloser Zahlen. Denselben Inhalt tragen die
-         * Beschriftungen DANEBEN (echter Text, deshalb ausserhalb dieses Bildes)
-         * und die Tabelle unter der Kachel.
-         */}
-        <div
-          role="img"
-          aria-label={fieldLabel}
-          className="relative shrink-0"
-          style={{ width: fieldWidth, height: FIELD_HEIGHT }}
-        >
-          {isMeasured && lead ? (
-            <>
-              {/*
-               * Die Flaeche unter der Linie. Ihre FORM ist Geometrie und steht
-               * deshalb im style-Attribut, ihre FARBE kommt aus trend-wash — im
-               * style-Attribut steht hier nie eine Farbe.
-               */}
-              <motion.div
-                aria-hidden="true"
-                variants={motionPreset.fadeIn}
-                initial="hidden"
-                animate={leadDrawn ? "visible" : "hidden"}
-                style={{
-                  top: `${washTop}px`,
-                  height: `${FIELD_HEIGHT - washTop}px`,
-                  clipPath: `path('${toArea(lead.values) ?? ""}')`,
-                }}
-                className="trend-wash pointer-events-none absolute inset-x-0"
-              />
-
-              {/* Der Schein sitzt UNTER dem Punkt und macht ihn nicht groesser —
-               * Groesse waere hier ein groesserer Wert. */}
-              <motion.span
-                aria-hidden="true"
-                variants={motionPreset.fadeIn}
-                initial="hidden"
-                animate={leadDrawn ? "visible" : "hidden"}
-                style={{ left: `${lastX}px`, top: `${endY}px` }}
-                className="trend-glow pointer-events-none absolute size-14 -translate-x-1/2 -translate-y-1/2 rounded-full"
-              />
-
-              <svg
-                aria-hidden="true"
-                width={fieldWidth}
-                height={FIELD_HEIGHT}
-                className="absolute inset-0 overflow-visible"
+        <div className="flex shrink-0 items-start" style={{ gap: AXIS_GAP }}>
+          {/*
+           * DIE WERTACHSE. Drei Marken, rechtsbuendig an der Feldkante, in der
+           * leisesten Schriftstufe — sie ordnet ein, sie meldet sich nicht. Die
+           * Rasterlinien dazu liegen im Feld (siehe unten); Marke und Linie
+           * teilen sich dieselbe Liste, damit sie nicht auseinanderlaufen.
+           */}
+          <div
+            aria-hidden="true"
+            className="relative shrink-0"
+            style={{ width: AXIS_WIDTH, height: FIELD_HEIGHT }}
+          >
+            {AXIS_TICKS.map((tick) => (
+              <span
+                key={`marke-${tick}`}
+                className="text-faint text-3xs absolute right-0 -translate-y-1/2 tabular-nums"
+                style={{ top: toY(tick) }}
               >
-                {/*
-                 * Die Haarlinien liegen UNTER der tragenden Linie: kreuzen sie
-                 * sich, gehoert die Kreuzung der Linie, die die Aussage traegt.
-                 */}
-                {hairlines.map((trace, position) => {
-                  const isActive = activeId === trace.id;
-                  const isRecessed = activeId !== null && !isActive;
+                {tick}
+              </span>
+            ))}
+          </div>
 
-                  return (
-                    <motion.g
-                      key={trace.id}
-                      variants={motionPreset.fadeIn}
-                      initial="hidden"
-                      animate={leadDrawn ? "visible" : "hidden"}
-                      /* Platz 1 aufwaerts: die tragende Linie ist Platz 0. */
-                      custom={position + 1}
-                    >
-                      <motion.path
-                        d={toPath(trace.values) ?? ""}
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        /* initial={false}: die Staerke ist ein ZUSTAND und kein
-                         * Auftritt — sie steht beim ersten Frame da und wird
-                         * erst beim Betonen animiert. Ohne das sucht Motion
-                         * einen Ausgangswert im DOM, findet keinen und meldet
-                         * "undefined is not an animatable value". */
-                        initial={false}
-                        animate={{ strokeWidth: isActive ? 1.75 : 1 }}
-                        transition={motionPreset.hover}
-                        className={cn(
-                          "transition-colors",
-                          isActive
-                            ? "stroke-trend-hairline-active"
-                            : isRecessed || trace.quiet
-                              ? "stroke-trend-hairline-muted"
-                              : "stroke-trend-hairline",
+          <div
+            className="relative shrink-0"
+            style={{ width: fieldWidth, height: FIELD_HEIGHT }}
+          >
+            {/*
+             * Das Feld ist EIN Bild mit einer Beschreibung. Die Einzelteile
+             * darin bleiben fuer Screenreader unsichtbar — vorgelesen waeren
+             * sie eine Reihe zusammenhangloser Zahlen. Denselben Inhalt tragen
+             * die Beschriftungen DANEBEN (echter Text, deshalb ausserhalb
+             * dieses Bildes), die Lesespalten und die Tabelle unter der Kachel.
+             */}
+            <div
+              role="img"
+              aria-label={fieldLabel}
+              className="absolute inset-0"
+            >
+              {isMeasured && lead ? (
+                <svg
+                  aria-hidden="true"
+                  width={fieldWidth}
+                  height={FIELD_HEIGHT}
+                  className="absolute inset-0 overflow-visible"
+                >
+                  {/* Das Raster zuerst: alles Weitere liegt darauf. */}
+                  {AXIS_TICKS.map((tick) => (
+                    <line
+                      key={`raster-${tick}`}
+                      x1={0}
+                      x2={fieldWidth}
+                      y1={toGridY(tick)}
+                      y2={toGridY(tick)}
+                      strokeWidth={1}
+                      className="stroke-trend-grid"
+                    />
+                  ))}
+
+                  {/* Das Fadenkreuz des gelesenen Termins. Es zeigt nur, WO
+                   * gelesen wird — die Werte stehen als Text in der Spur. */}
+                  {readIndex === null ? null : (
+                    <line
+                      x1={positions[readIndex] ?? 0}
+                      x2={positions[readIndex] ?? 0}
+                      y1={0}
+                      y2={FIELD_HEIGHT}
+                      strokeWidth={1}
+                      className="stroke-trend-crosshair"
+                    />
+                  )}
+
+                  {/*
+                   * Die Haarlinien liegen UNTER der tragenden Linie: kreuzen sie
+                   * sich, gehoert die Kreuzung der Linie, die die Aussage traegt.
+                   */}
+                  {hairlines.map((trace, position) => {
+                    const isActive = activeId === trace.id;
+                    const isRecessed = activeId !== null && !isActive;
+                    /* Ausgeschriebene Klassen, keine zusammengesetzten: Tailwind
+                     * liest den Quelltext und findet nur, was als ganzes Wort
+                     * dasteht. */
+                    const stroke = isActive
+                      ? "stroke-trend-hairline-active"
+                      : isRecessed || trace.quiet
+                        ? "stroke-trend-hairline-muted"
+                        : "stroke-trend-hairline";
+                    const fill = isActive
+                      ? "fill-trend-hairline-active"
+                      : isRecessed || trace.quiet
+                        ? "fill-trend-hairline-muted"
+                        : "fill-trend-hairline";
+
+                    return (
+                      <motion.g
+                        key={trace.id}
+                        variants={motionPreset.fadeIn}
+                        initial="hidden"
+                        animate={leadDrawn ? "visible" : "hidden"}
+                        /* Platz 1 aufwaerts: die tragende Linie ist Platz 0. */
+                        custom={position + 1}
+                      >
+                        <motion.path
+                          d={toPath(trace.values) ?? ""}
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          /*
+                           * GESTRICHELT HEISST "IM RAUSCHBAND". Der Blassgrad
+                           * allein war ein Beinahe-Unterschied: vier Linien in
+                           * derselben Staerke, eine davon etwas heller, liest
+                           * niemand als Aussage — man haelt es fuer eine Linie
+                           * weiter hinten. Der Strichel ist der Schritt, den man
+                           * SIEHT, und er sagt in der Bildsprache jeder
+                           * Statistik dasselbe, was hier gemeint ist:
+                           * vorlaeufig, noch kein Trend. In Graustufen bleibt er
+                           * ebenfalls stehen (WCAG 1.4.1); das Wort dazu steht
+                           * im ⓘ.
+                           */
+                          strokeDasharray={trace.quiet ? "3 4" : undefined}
+                          /* initial={false}: die Staerke ist ein ZUSTAND und kein
+                           * Auftritt — sie steht beim ersten Frame da und wird
+                           * erst beim Betonen animiert. Ohne das sucht Motion
+                           * einen Ausgangswert im DOM, findet keinen und meldet
+                           * "undefined is not an animatable value". */
+                          initial={false}
+                          animate={{ strokeWidth: isActive ? 1.75 : 1 }}
+                          transition={motionPreset.hover}
+                          className={cn("transition-colors", stroke)}
+                        />
+                        {/*
+                         * JEDE MESSUNG IST EIN PUNKT. Vorher trug nur das Ende
+                         * einen — die vier Tests davor waren durch die Linie
+                         * nur BEHAUPTET, und eine Linie ohne Punkte behauptet
+                         * ausserdem einen Verlauf zwischen den Messungen, den es
+                         * nicht gibt. Dieselbe Regel faehrt die Kachel auf dem
+                         * Dashboard.
+                         */}
+                        {trace.values.map((value, index) =>
+                          value === null ? null : (
+                            <circle
+                              key={`punkt-${trace.id}-${dates[index]}`}
+                              cx={positions[index] ?? 0}
+                              cy={toY(value)}
+                              r={toPointRadius(
+                                false,
+                                index === lastIndex,
+                                index === readIndex,
+                              )}
+                              className={cn(
+                                "transition-colors",
+                                index === readIndex
+                                  ? "fill-trend-hairline-active"
+                                  : fill,
+                              )}
+                            />
+                          ),
                         )}
-                      />
-                      <circle
-                        cx={lastX}
-                        cy={toY(trace.values.at(-1) ?? 0)}
-                        r={isActive ? 3 : 2}
-                        className={cn(
-                          "transition-colors",
-                          isActive
-                            ? "fill-trend-hairline-active"
-                            : isRecessed || trace.quiet
-                              ? "fill-trend-hairline-muted"
-                              : "fill-trend-hairline",
-                        )}
-                      />
-                    </motion.g>
-                  );
-                })}
+                      </motion.g>
+                    );
+                  })}
 
-                {/* Die tragende Linie zeichnet sich EINMAL, in der Richtung der
-                 * Zeit. Alles Weitere im Feld wartet auf ihr Ende. */}
-                <motion.path
-                  d={toPath(lead.values) ?? ""}
-                  fill="none"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="stroke-trend-line"
-                  variants={motionPreset.drawPath}
-                  initial="hidden"
-                  animate="visible"
-                  onAnimationComplete={() => setLeadDrawn(true)}
-                />
-
-                <motion.circle
-                  cx={lastX}
-                  cy={endY}
-                  r={4}
-                  className="fill-trend-line"
-                  variants={motionPreset.fadeIn}
-                  initial="hidden"
-                  animate={leadDrawn ? "visible" : "hidden"}
-                />
-
-                {/*
-                 * Griffe fuer die Maus: eine Haarlinie ist einen Pixel breit,
-                 * und niemand trifft einen Pixel. Das sind keine
-                 * Bedienelemente, sondern grosszuegigere Trefferflaechen fuer
-                 * dieselbe Betonung, die auch die Beschriftung daneben ausloest.
-                 */}
-                {hairlines.map((trace) => (
-                  <path
-                    key={`griff-${trace.id}`}
-                    d={toPath(trace.values) ?? ""}
+                  {/* Die tragende Linie zeichnet sich EINMAL, in der Richtung der
+                   * Zeit. Alles Weitere im Feld wartet auf ihr Ende. */}
+                  <motion.path
+                    d={toPath(lead.values) ?? ""}
                     fill="none"
-                    strokeWidth={16}
-                    pointerEvents="stroke"
-                    className="stroke-transparent"
-                    onMouseEnter={() => onHover(trace.id)}
-                    onMouseLeave={() => onHover(null)}
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="stroke-trend-line"
+                    variants={motionPreset.drawPath}
+                    initial="hidden"
+                    animate="visible"
+                    onAnimationComplete={() => setLeadDrawn(true)}
                   />
-                ))}
-              </svg>
-            </>
-          ) : null}
+
+                  <motion.g
+                    variants={motionPreset.fadeIn}
+                    initial="hidden"
+                    animate={leadDrawn ? "visible" : "hidden"}
+                  >
+                    {lead.values.map((value, index) =>
+                      value === null ? null : (
+                        <circle
+                          key={`punkt-gesamt-${dates[index]}`}
+                          cx={positions[index] ?? 0}
+                          cy={toY(value)}
+                          r={toPointRadius(
+                            true,
+                            index === lastIndex,
+                            index === readIndex,
+                          )}
+                          className="fill-trend-line"
+                        />
+                      ),
+                    )}
+                  </motion.g>
+
+                  {/*
+                   * DIE VERBINDUNGSLINIEN. Sobald der Loeser eine Beschriftung
+                   * von ihrem Linienende wegschiebt, steht sie auf der Hoehe
+                   * einer FREMDEN Linie — und ein Feld, das Werte der falschen
+                   * Reihe zuordnet, ist schlimmer als eines, in dem sich zwei
+                   * Beschriftungen ueberlappen. Die Linie laeuft als flache
+                   * Kurve vom Messpunkt zum Punkt der Beschriftung; sie beginnt
+                   * ausserhalb des Messpunkts, damit sie nicht aus ihm
+                   * herauszuwachsen scheint.
+                   *
+                   * Sie bleibt im Haarlinienton, auch die der tragenden Linie:
+                   * eine Verbindung ist kein Messwert, und der Akzent gehoert
+                   * den Daten.
+                   *
+                   * UNTER dem Feld gibt es sie nicht: dort stehen die
+                   * Beschriftungen in einer Reihe unter der Datumszeile, und
+                   * eine Linie, die zu einer Stelle laeuft, an der nichts mehr
+                   * steht, zeigt auf den Kartenrand.
+                   */}
+                  <motion.g
+                    variants={motionPreset.fadeIn}
+                    initial="hidden"
+                    animate={leadDrawn ? "visible" : "hidden"}
+                  >
+                    {(stacked ? [] : traces).map((trace) => {
+                      const slot = slotById.get(trace.id);
+                      if (
+                        !slot ||
+                        Math.abs(slot.labelY - slot.dataY) < LEADER_MIN_OFFSET
+                      ) {
+                        return null;
+                      }
+
+                      const from = lastX + 5;
+                      const to = lastX + LABEL_GAP;
+                      const bend = (from + to) / 2;
+
+                      return (
+                        <path
+                          key={`fuehrung-${trace.id}`}
+                          d={`M ${from} ${slot.dataY} C ${bend} ${slot.dataY}, ${bend} ${slot.labelY}, ${to} ${slot.labelY}`}
+                          fill="none"
+                          strokeWidth={1}
+                          className="stroke-trend-hairline"
+                        />
+                      );
+                    })}
+                  </motion.g>
+                </svg>
+              ) : null}
+            </div>
+
+            {/*
+             * DIE LESESPALTEN — je Testtermin eine, ueber die ganze Feldhoehe.
+             *
+             * Das ist die Stelle, an der aus einem Bild ein Diagramm wird: bis
+             * hierher konnte man eine Linie betonen, aber nicht ABLESEN, was an
+             * einem Termin stand. Es sind echte Schaltflaechen und keine
+             * Mausflaechen, weil das Ablesen sonst nur mit Zeiger ginge — mit
+             * der Tabulatortaste wandert man jetzt Termin fuer Termin durch das
+             * Feld, und die Beschriftung jeder Spalte nennt alle fuenf Werte.
+             * Sie tun beim Klick nichts: sie sind eine LESEPOSITION und keine
+             * Aktion.
+             */}
+            {isMeasured
+              ? columns.map((column, index) => (
+                  <button
+                    key={`termin-${dates[index]}`}
+                    type="button"
+                    onMouseEnter={() => onRead(index)}
+                    onMouseLeave={() => onRead(null)}
+                    onFocus={() => onRead(index)}
+                    onBlur={() => onRead(null)}
+                    aria-label={toReadLabel(index)}
+                    className="focus-visible:outline-ring absolute inset-y-0 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
+                    style={{ left: column.left, width: column.width }}
+                  />
+                ))
+              : null}
+          </div>
         </div>
 
         {stacked ? null : labels}
       </div>
 
-      {/* Die Achse steht unter dem FELD und ist genau so breit wie es. */}
+      {/*
+       * Die Datumsreihe steht unter dem FELD, genau so breit wie es und dicht
+       * daran: sie ist die Beschriftung der Achse und kein eigener Block.
+       * Der gelesene Termin tritt hier vor — damit hat das Fadenkreuz einen
+       * NAMEN und nicht nur eine Stelle.
+       */}
       <div
         aria-hidden="true"
-        className="relative mt-2 h-4"
-        style={{ width: fieldWidth }}
+        className="relative mt-1 h-4"
+        style={{ width: fieldWidth, marginLeft: gutter }}
       >
         {dates.map((date, index) => (
           <span
             key={`achse-${date}`}
             className={cn(
-              "text-faint text-3xs absolute tabular-nums",
+              "text-3xs absolute tabular-nums transition-colors",
+              index === readIndex
+                ? "text-foreground font-medium"
+                : "text-faint",
               /* Die aeusseren Beschriftungen stehen buendig statt mittig —
                * zentriert liefen sie aus dem Feld. */
               index === 0
                 ? "left-0"
-                : index === dates.length - 1
+                : index === lastIndex
                   ? "right-0"
                   : "-translate-x-1/2",
             )}
             style={
-              index === 0 || index === dates.length - 1
+              index === 0 || index === lastIndex
                 ? undefined
-                : {
-                    left: `${(index / Math.max(1, dates.length - 1)) * 100}%`,
-                  }
+                : { left: `${(index / Math.max(1, lastIndex)) * 100}%` }
             }
           >
             {toShortDate(date)}
@@ -693,92 +937,145 @@ interface MovementListProps {
  * geraten hatte, welche Kategorie interessant ist. Offen und ueber alle
  * Kategorien hinweg antwortet dieselbe Liste auf die Frage, die man wirklich
  * hat: was hat sich bewegt?
+ *
+ * ============================================================================
+ * SIE IST JETZT EINE TABELLE, und das ist der ganze Unterschied.
+ * ============================================================================
+ * ⚠️ HIER STAND EINE LISTE aus drei Rastern mit je zwei bis drei Zellen, in der
+ * Messwerte und Urteil als rechtsbuendiger Pulk zusammenstanden. Jede Zeile war
+ * fuer sich lesbar; DREI Zeilen untereinander waren es nicht, weil "102 → 88
+ * mg/dl" und "0,9 → 0,6 mg/l" verschieden breit sind und ihre Nachbarangaben
+ * damit an verschiedenen Stellen anfingen. Wer die Prozentwerte vergleichen
+ * wollte, musste jede Zeile einzeln zerlegen.
+ *
+ * Fuenf echte Spalten mit Kopf loesen genau das: die Augen laufen einmal
+ * SENKRECHT durch die Prozentspalte, statt dreimal waagerecht durch eine Zeile.
+ * Und es ist ohnehin, was der Inhalt ist — fuenf gleichartige Angaben zu drei
+ * Zeilen sind eine Tabelle, ganz gleich, welches Element man dafuer nimmt. Als
+ * <table> bekommen die Spaltenkoepfe zusaetzlich ihre Zuordnung fuer
+ * Screenreader geschenkt.
+ *
+ * SCHMAL FALLEN ZWEI SPALTEN WEG, nicht ihr Inhalt: unter 32rem Kachelbreite
+ * ruecken Bereich und Urteil in die Zellen, zu denen sie gehoeren. Fuenf
+ * Textspalten auf 350px waeren fuenf abgeschnittene Woerter.
+ *
+ * DER AUFTRITT IST fadeIn UND NICHT fadeRise. Eine Tabellenzeile ist ein
+ * display:table-row; sie laesst sich zuverlaessig in der Deckkraft animieren,
+ * aber nicht verschieben, ohne dass das Raster darunter zuckt.
  */
 function MovementList({ changes, categories, index }: MovementListProps) {
   const motionPreset = useMotionPreset();
 
   return (
-    <div className="border-border mt-6 border-t pt-4">
+    <div className="border-border mt-4 border-t pt-4">
       <h3 className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase">
         Grösste Bewegungen
       </h3>
-      <ul className="mt-1">
-        {changes.map((change, position) => {
-          const reading = toChangeReading(change);
-          const verdict = VERDICT_TONE[reading.verdict];
-          /* Der Bereich steht nur da, wenn er hinterlegt ist: ein geratener
-           * Bereich neben einem Markernamen ist schlimmer als keiner. */
-          const areaName = categories.find(
-            (category) => category.id === categoryIdByMarker(change.id),
-          )?.shortName;
-
-          return (
-            <motion.li
-              key={change.id}
-              variants={motionPreset.fadeRise}
-              custom={index + position}
-              /*
-               * IMMER zwei Spalten — Name links, Zahlen rechts. Erst ab 32rem
-               * Kachelbreite werden es drei, und dann stehen Messwerte und
-               * Urteil nebeneinander auf einer Grundlinie.
-               *
-               * Warum nicht drei ab null: die Kachel steht in Zeile 2 ueber
-               * sechs von zwoelf Spalten, und das sind auf einem 1440er Schirm
-               * MIT Kontext-Leiste rund 350px Inhaltsbreite. Dort brauchen
-               * 'LDL-Cholesterin Herz-Kreislauf', '102 → 88 mg/dl' und
-               * '−14 % günstig' nebeneinander mehr Platz als da ist — also
-               * bricht die Zeile, aber nur EINMAL und immer an derselben
-               * Stelle. Drei untereinander gestapelte Angaben waeren dreimal so
-               * hoch und liessen den Namen mit den Zahlen um die Zeile streiten.
-               */
-              className="border-border/60 grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-0.5 border-b py-2 last:border-b-0 @lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto]"
+      <table className="mt-2 w-full text-left">
+        <thead>
+          <tr className="text-faint text-3xs">
+            <th scope="col" className="pb-1 font-medium">
+              Marker
+            </th>
+            <th
+              scope="col"
+              className="hidden pb-1 pl-3 font-medium @lg:table-cell"
             >
-              <span className="min-w-0">
-                <span className="text-foreground text-xs font-semibold">
-                  {change.name}
-                </span>
-                {areaName ? (
-                  <span className="text-muted-foreground text-2xs ml-2">
-                    {areaName}
-                  </span>
-                ) : null}
-              </span>
-              <span className="text-muted-foreground text-2xs text-right tabular-nums">
-                {withUnit(change.previous, change.unit)}
-                <span aria-hidden="true"> → </span>
-                <span className="sr-only">auf</span>
-                <span className="text-foreground font-medium">
-                  {withUnit(change.current, change.unit)}
-                </span>
-              </span>
-              {/*
-               * In der zweispaltigen Form steht das Urteil UNTER den Messwerten
-               * und rechts an derselben Kante — col-start-2 haelt es aus der
-               * Namensspalte heraus. In der dreispaltigen faellt beides weg und
-               * es rueckt in seine eigene Spalte.
-               */}
-              <span
-                className={cn(
-                  "text-2xs col-start-2 text-right tabular-nums @lg:col-start-3 @lg:justify-self-end",
-                  verdict.tone,
-                )}
+              Bereich
+            </th>
+            <th scope="col" className="pb-1 pl-3 text-right font-medium">
+              Von → Nach
+            </th>
+            <th scope="col" className="pb-1 pl-3 text-right font-medium">
+              Veränderung
+            </th>
+            <th
+              scope="col"
+              className="hidden pb-1 pl-3 text-right font-medium @lg:table-cell"
+            >
+              Urteil
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {changes.map((change, position) => {
+            const reading = toChangeReading(change);
+            const verdict = VERDICT_TONE[reading.verdict];
+            /* Der Bereich steht nur da, wenn er hinterlegt ist: ein geratener
+             * Bereich neben einem Markernamen ist schlimmer als keiner. */
+            const areaName = categories.find(
+              (category) => category.id === categoryIdByMarker(change.id),
+            )?.shortName;
+
+            return (
+              <motion.tr
+                key={change.id}
+                variants={motionPreset.fadeIn}
+                custom={index + position}
+                className="border-border/60 border-t"
               >
-                {reading.verdict === "unveraendert"
-                  ? "unverändert"
-                  : percentFormat.format(reading.ratio)}
-                {/* Das Wort neben dem Prozentwert, sichtbar: bei einem Marker
-                 * sagt das VORZEICHEN nichts ueber gut oder schlecht — minus 14
-                 * Prozent LDL ist die Erholung, plus 14 Prozent hs-CRP das
-                 * Problem. Ohne das Wort waere die Farbe hier das einzige
-                 * Signal. */}
-                {reading.verdict === "unveraendert" ? null : (
-                  <span className="text-3xs ml-1.5">{verdict.label}</span>
-                )}
-              </span>
-            </motion.li>
-          );
-        })}
-      </ul>
+                <th
+                  scope="row"
+                  className="text-foreground py-2 text-xs font-semibold"
+                >
+                  {change.name}
+                  {areaName ? (
+                    <span className="text-muted-foreground text-2xs block font-normal @lg:hidden">
+                      {areaName}
+                    </span>
+                  ) : null}
+                </th>
+                <td className="text-muted-foreground text-2xs hidden py-2 pl-3 @lg:table-cell">
+                  {areaName}
+                </td>
+                <td className="text-muted-foreground text-2xs py-2 pl-3 text-right whitespace-nowrap tabular-nums">
+                  {withUnit(change.previous, change.unit)}
+                  <span aria-hidden="true"> → </span>
+                  <span className="sr-only">auf</span>
+                  <span className="text-foreground font-medium">
+                    {withUnit(change.current, change.unit)}
+                  </span>
+                </td>
+                {/*
+                 * DIE ZAHL BLEIBT NEUTRAL, das WORT traegt die Farbe. Vorher
+                 * war es umgekehrt, und damit hing der Ton an der Angabe, die
+                 * ihn am wenigsten braucht: eine Prozentzahl ist eine Messung,
+                 * das Urteil ist die Deutung. So bleibt es ausserdem bei EINER
+                 * gefaerbten Stelle je Zeile (siehe Farbpolitik in
+                 * analysis-board.tsx), und die Prozentspalte laesst sich
+                 * senkrecht lesen, ohne dass drei Toene dazwischenfunken.
+                 */}
+                <td className="text-foreground text-2xs py-2 pl-3 text-right font-medium tabular-nums">
+                  {reading.verdict === "unveraendert"
+                    ? "±0 %"
+                    : percentFormat.format(reading.ratio)}
+                  {/* Schmal steht das Urteil hier mit — es hat dann keine
+                   * eigene Spalte, darf aber nicht fehlen: bei einem Marker
+                   * sagt das VORZEICHEN nichts ueber gut oder schlecht, minus
+                   * 14 Prozent LDL ist die Erholung und plus 14 Prozent hs-CRP
+                   * das Problem. */}
+                  <span
+                    className={cn(
+                      "text-3xs ml-1.5 font-normal @lg:hidden",
+                      verdict.tone,
+                    )}
+                  >
+                    {verdict.label}
+                  </span>
+                </td>
+                <td
+                  className={cn(
+                    "text-2xs hidden py-2 pl-3 text-right whitespace-nowrap @lg:table-cell",
+                    verdict.tone,
+                  )}
+                >
+                  {verdict.label}
+                </td>
+              </motion.tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -979,6 +1276,12 @@ export function ProgressionPanel({
 
   /* Fluechtig: Maus. Betont eine Linie, oeffnet nichts. */
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  /*
+   * Der gerade gelesene Testtermin. Ebenfalls fluechtig, aber aus Maus ODER
+   * Tastatur — deshalb ein Platz und keine Id: die Spalte ist eine Stelle auf
+   * der Achse und gehoert keiner Reihe.
+   */
+  const [readIndex, setReadIndex] = useState<number | null>(null);
 
   const current = score.history.at(-1);
   const previous = score.history.at(-2);
@@ -1044,13 +1347,19 @@ export function ProgressionPanel({
       >
         <ProgressionHeading id={titleId} />
 
-        <div className="mt-5">
+        {/* EINE Abstandsstufe fuer die ganze Kachel: Kopf, Feld, Trennlinie und
+         * Liste stehen alle auf space-4. Vorher liefen 5, 2, 6 und 4
+         * nebeneinander, und der groesste Abstand sass ausgerechnet zwischen
+         * zwei Dingen, die zusammengehoeren. */}
+        <div className="mt-4">
           <TrendField
             dates={dates}
             traces={traces}
             fieldLabel={fieldLabel}
             activeId={hoveredId}
             onHover={setHoveredId}
+            readIndex={readIndex}
+            onRead={setReadIndex}
           />
         </div>
 

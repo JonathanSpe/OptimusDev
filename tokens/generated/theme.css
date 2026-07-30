@@ -221,8 +221,6 @@
   --color-plot-timeline-window: rgba(30,25,26,0.48);
   --color-plot-timeline-now: rgba(30,25,26,0.82);
   --color-plot-trend-line: #A32432;
-  --color-plot-trend-wash: linear-gradient(180deg, #A3243224 0%, #A324320A 45%, #A3243200 100%);
-  --color-plot-trend-glow: radial-gradient(closest-side, #A3243252 0%, #A324321A 55%, #A3243200 100%);
   --color-plot-hairline: rgba(30,25,26,0.50);
   --color-plot-hairline-active: rgba(30,25,26,0.88);
   --color-plot-hairline-muted: rgba(30,25,26,0.22);
@@ -329,8 +327,6 @@
   --color-plot-timeline-window: rgba(255,255,255,0.50);
   --color-plot-timeline-now: rgba(255,255,255,0.88);
   --color-plot-trend-line: #C96773;
-  --color-plot-trend-wash: linear-gradient(180deg, #C9677329 0%, #C967730F 45%, #C9677300 100%);
-  --color-plot-trend-glow: radial-gradient(closest-side, #C9677347 0%, #C9677317 55%, #C9677300 100%);
   --color-plot-hairline: rgba(255,255,255,0.52);
   --color-plot-hairline-active: rgba(255,255,255,0.92);
   --color-plot-hairline-muted: rgba(255,255,255,0.24);

@@ -187,14 +187,23 @@
   /*
    * Die Entwicklungskurve: EINE tragende Linie in der Marke, darunter die
    * Haarlinien der bewegten Kategorien in drei Dichten — ruhend, betont und
-   * zurueckgetreten. Flaeche und Schein sind Verlaeufe und stehen deshalb
-   * weiter unten als eigene Utilities. Utilities trend-*, Tokens plot.trend*
-   * und plot.hairline*.
+   * zurueckgetreten. Dazu das Raster der Wertachse und das Fadenkreuz des
+   * gelesenen Termins; beide leihen sich die Toene, die die Landkarte und die
+   * Verlaufskurven schon fuehren, statt eigene anzulegen. Utilities trend-*,
+   * Tokens plot.trend*, plot.hairline*, plot.grid und plot.crosshair.
+   *
+   * ⚠️ HIER STANDEN AUSSERDEM EINE FLAECHE UND EIN SCHEIN (trend-wash,
+   * trend-glow), beide als Verlauf weiter unten. Beide sind entfernt, samt
+   * ihren Token. Der Grund steht in progression-panel.tsx: ein Schein hinter
+   * dem letzten Messpunkt und ein Farbnebel unter der Kurve sind Effekte auf
+   * DATEN, und ein Diagramm, dem man glauben soll, hat keine.
    */
   --color-trend-line: var(--color-plot-trend-line);
   --color-trend-hairline: var(--color-plot-hairline);
   --color-trend-hairline-active: var(--color-plot-hairline-active);
   --color-trend-hairline-muted: var(--color-plot-hairline-muted);
+  --color-trend-grid: var(--color-plot-grid);
+  --color-trend-crosshair: var(--color-plot-crosshair);
 
   /* Eingelassene Flaeche der Kategorie-Chips, ruhend und gehalten. */
   --color-chip: var(--color-surface-chip);
@@ -763,17 +772,20 @@
 }
 
 /*
- * Flaeche und Schein der Entwicklungskurve. Beide sind Verlaeufe und laufen
- * deshalb ueber background-image; die Form der Flaeche kommt von aussen als
- * clip-path, damit die Farbe hier bleibt und die Geometrie in der Komponente.
+ * ⚠️ HIER STANDEN trend-wash UND trend-glow — die Flaeche unter der
+ * Entwicklungskurve und der Schein hinter ihrem letzten Punkt. Beide sind
+ * entfernt, mit ihren Token (plot.trendWash, plot.trendGlow).
+ *
+ * Sie waren die einzigen Verlaeufe im Produkt, die auf DATEN lagen, und genau
+ * daran sind sie gescheitert: eine Flaeche unter einer Linie gibt ihr Gewicht,
+ * das die Zahl nicht hat, und ein Schein hinter dem letzten Messpunkt macht aus
+ * "zuletzt gemessen" ein Ereignis. Der Punkt und die Strichstaerke sagen
+ * dasselbe, ohne etwas zu behaupten. Wer hier je wieder einen Verlauf
+ * hinterlegt, verschiebt damit eine Aussage.
+ *
+ * (map-glow und map-scan bleiben: die liegen auf einer Landkarte, nicht auf
+ * einer Messreihe.)
  */
-@utility trend-wash {
-  background-image: var(--color-plot-trend-wash);
-}
-
-@utility trend-glow {
-  background-image: var(--color-plot-trend-glow);
-}
 
 /*
  * Beschriftung, die MIT einer senkrechten Achse laeuft, von unten nach oben.
