@@ -37,6 +37,27 @@ import { supplementListSchema } from "@/contracts";
  * Score und Verlauf. Die Marker-Werte sind dieselben wie auf dem Dashboard
  * (Vitamin D 17→44, Ferritin 41→68), damit dieselbe Messung nicht an zwei
  * Stellen verschiedene Zahlen traegt.
+ *
+ * ============================================================================
+ * ⚠️ DIE ZIELBEREICHE — woher jeder einzelne kommt.
+ * ============================================================================
+ * Gemeint ist der OPTIMALbereich, nicht der Referenzbereich des Labors (siehe
+ * targetRangeSchema in contracts/supplement.ts). Drei davon sind aus der
+ * Marker-Liste des Dashboards ABGESCHRIEBEN und muessen dort gleich bleiben:
+ *
+ *   25-OH-Vitamin-D   40–60 ng/ml    optimalLow/High von "vitamin-d-25-oh"
+ *   Ferritin          70–150 ng/ml   optimalLow/High von "ferritin"
+ *   Triglyceride      50–90 mg/dl    optimalLow/High von "triglyceride"
+ *
+ * Die drei anderen Zielmarker stehen in KEINER Marker-Liste des Projekts, ihre
+ * Bereiche sind also frei gesetzte Entwurfswerte wie die Preise:
+ *
+ *   Magnesium (Serum)     0,85–1,05 mmol/l   ⚠️ erfunden
+ *   Zink (Serum)          12–18 µmol/l       ⚠️ erfunden
+ *   Holo-Transcobalamin   50–120 pmol/l      ⚠️ erfunden
+ *
+ * Wer die drei Marker in data/ nachtraegt, holt die Bereiche von dort und
+ * loescht sie hier — zwei Quellen fuer dieselbe Grenze laufen auseinander.
  */
 
 export const mockSupplements = supplementListSchema.parse([
@@ -49,6 +70,8 @@ export const mockSupplements = supplementListSchema.parse([
     inSubscription: true,
     targetMarker: "25-OH-Vitamin-D",
     targetUnit: "ng/ml",
+    /* Aus der Marker-Liste: optimalLow/High von "vitamin-d-25-oh". */
+    targetRange: { min: 40, max: 60 },
     basis: "messung",
     effectWindowDays: { from: 56, to: 112 },
     expectedDirection: "up",
@@ -71,6 +94,10 @@ export const mockSupplements = supplementListSchema.parse([
     inSubscription: true,
     targetMarker: "Ferritin",
     targetUnit: "ng/ml",
+    /* Aus der Marker-Liste: optimalLow/High von "ferritin". 68 liegt darunter
+     * — im Referenzbereich, aber nicht im Ziel. Genau der Unterschied, um den
+     * es bei diesem Feld geht. */
+    targetRange: { min: 70, max: 150 },
     basis: "messung",
     effectWindowDays: { from: 56, to: 120 },
     expectedDirection: "up",
@@ -94,6 +121,8 @@ export const mockSupplements = supplementListSchema.parse([
     inSubscription: true,
     targetMarker: "Triglyceride",
     targetUnit: "mg/dl",
+    /* Aus der Marker-Liste: optimalLow/High von "triglyceride". */
+    targetRange: { min: 50, max: 90 },
     basis: "messung",
     effectWindowDays: { from: 60, to: 120 },
     expectedDirection: "down",
@@ -119,6 +148,8 @@ export const mockSupplements = supplementListSchema.parse([
     inSubscription: true,
     targetMarker: "Magnesium (Serum)",
     targetUnit: "mmol/l",
+    /* ⚠️ Erfunden — dieser Marker steht in keiner Marker-Liste des Projekts. */
+    targetRange: { min: 0.85, max: 1.05 },
     basis: "messung",
     effectWindowDays: { from: 42, to: 84 },
     expectedDirection: "up",
@@ -142,6 +173,7 @@ export const mockSupplements = supplementListSchema.parse([
     inSubscription: true,
     targetMarker: null,
     targetUnit: "",
+    targetRange: null,
     /* Kein Marker, also kann nur der Fragebogen die Empfehlung tragen — der
      * Vertrag laesst hier auch gar nichts anderes zu. */
     basis: "fragebogen",
@@ -172,6 +204,8 @@ export const mockSupplements = supplementListSchema.parse([
     inSubscription: false,
     targetMarker: "Zink (Serum)",
     targetUnit: "µmol/l",
+    /* ⚠️ Erfunden — dieser Marker steht in keiner Marker-Liste des Projekts. */
+    targetRange: { min: 12, max: 18 },
     basis: "messung",
     effectWindowDays: { from: 28, to: 84 },
     expectedDirection: "up",
@@ -189,6 +223,8 @@ export const mockSupplements = supplementListSchema.parse([
     inSubscription: false,
     targetMarker: "Holo-Transcobalamin",
     targetUnit: "pmol/l",
+    /* ⚠️ Erfunden — dieser Marker steht in keiner Marker-Liste des Projekts. */
+    targetRange: { min: 50, max: 120 },
     basis: "messung",
     effectWindowDays: { from: 42, to: 112 },
     expectedDirection: "up",
@@ -207,6 +243,7 @@ export const mockSupplements = supplementListSchema.parse([
     inSubscription: false,
     targetMarker: null,
     targetUnit: "",
+    targetRange: null,
     basis: "fragebogen",
     effectWindowDays: { from: 28, to: 56 },
     expectedDirection: "up",

@@ -15,6 +15,7 @@ import { useMotionPreset } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 import {
+  EVALUATION_DATE,
   isInNextSubscription,
   toEuro,
   toEuroDelta,
@@ -134,8 +135,8 @@ export function SubscriptionCart({
              */}
             {hasChanges ? (
               <p className="text-on-rail-muted mt-2 text-xs">
-                Vorschlag nach deinem Test vom 21.07.2026. Übernimm ihn oder
-                ändere ihn Zeile für Zeile.
+                Vorschlag nach deinem Test vom {EVALUATION_DATE}. Übernimm ihn
+                oder ändere ihn Zeile für Zeile.
               </p>
             ) : null}
 
@@ -150,7 +151,7 @@ export function SubscriptionCart({
                   className="w-full text-xs"
                   onClick={onRequestConfirm}
                 >
-                  Änderungen bestätigen
+                  Änderungen übernehmen
                 </Button>
               ) : (
                 /*

@@ -71,6 +71,51 @@ export const expectedDirectionSchema = z.enum(["up", "down"]);
 export type ExpectedDirection = z.infer<typeof expectedDirectionSchema>;
 
 /**
+ * ⚠️ PLATZHALTER UND NICHT KLINISCH FREIGEGEBEN — der Bereich, in dem der
+ * Zielmarker stehen soll, in targetUnit.
+ *
+ * ============================================================================
+ * WARUM DIESER BEREICH AM PRAEPARAT STEHT UND NICHT AM MARKER
+ * ============================================================================
+ * Fachlich gehoert er an den Marker: contracts/biomarker.ts traegt schon
+ * referenceLow/High und optionale optimalLow/High, und drei unserer Zielmarker
+ * stehen dort auch (25-OH-Vitamin-D, Ferritin, Triglyceride). Die anderen drei
+ * — Magnesium (Serum), Zink (Serum), Holo-Transcobalamin — stehen NICHT in der
+ * Marker-Liste, und `targetMarker` ist ein Anzeigename und keine Marker-Id: es
+ * gibt heute keine Verknuepfung, ueber die eine Oberflaeche vom Praeparat zum
+ * Marker kaeme.
+ *
+ * ENTSCHEIDUNG: der Bereich liegt deshalb am Praeparat, mit den Werten aus der
+ * Marker-Liste, wo es sie gibt. Das ist bewusst die kleinere Loesung, und sie
+ * ist umkehrbar: wer `targetMarkerId` nachtraegt und die Marker aus data/
+ * bezieht, ersetzt dieses Feld durch den Verweis und traegt den Bereich nur
+ * noch an einer Stelle. Bis dahin ist es eine ZWEITE Quelle fuer dieselbe
+ * Zahl — der eigentliche Grund, es beim naechsten Umbau abzuloesen.
+ *
+ * ============================================================================
+ * ⚠️ WELCHER BEREICH GEMEINT IST: DER OPTIMALBEREICH.
+ * ============================================================================
+ * Nicht der Referenzbereich des Labors. Ferritin 68 ng/ml liegt im
+ * Referenzbereich (30–300) und unter dem Optimalbereich (70–150) — zwei
+ * verschiedene Aussagen ueber denselben Messwert, und nur eine davon ist die,
+ * auf die sich eine Empfehlung stuetzt. Wo ein Marker keinen Optimalbereich
+ * traegt, gilt der Referenzbereich.
+ *
+ * null heisst: es gibt keinen Zielmarker, also auch keinen Bereich. Die Zeile
+ * zeichnet dann keine Schiene.
+ */
+export const targetRangeSchema = z
+  .object({
+    min: z.number().finite(),
+    max: z.number().finite(),
+  })
+  .refine((range) => range.max > range.min, {
+    error: "Der Zielbereich muss ueber seiner Untergrenze enden.",
+  });
+
+export type TargetRange = z.infer<typeof targetRangeSchema>;
+
+/**
  * WORAUS die Empfehlung eines Praeparats hervorgeht: aus einer Messung oder aus
  * den Angaben im Fragebogen.
  *
@@ -132,6 +177,11 @@ export const supplementSchema = z
     /** Einheit des Zielmarkers; leer bei dimensionslosen Groessen. */
     targetUnit: z.string(),
     /**
+     * ⚠️ PLATZHALTER — der Zielbereich des Markers, siehe targetRangeSchema.
+     * null, wo es keinen Zielmarker gibt.
+     */
+    targetRange: targetRangeSchema.nullable(),
+    /**
      * Woher die Empfehlung kommt. Die Empfehlungsseite macht daraus den Satz,
      * mit dem sich eine Zeile begruendet: gibt es keinen Messwert, ist die
      * Herkunft das einzige, was sie ehrlich sagen kann.
@@ -189,6 +239,13 @@ export const supplementSchema = z
   .refine((prep) => prep.targetMarker !== null || prep.targetUnit === "", {
     error: "Ohne Zielmarker gibt es keine Einheit — targetUnit muss leer sein.",
   })
+  .refine(
+    (prep) => (prep.targetMarker === null) === (prep.targetRange === null),
+    {
+      error:
+        "Zielmarker und Zielbereich gehoeren zusammen: beide oder keiner von beiden.",
+    },
+  )
   .refine((prep) => prep.targetMarker !== null || prep.basis === "fragebogen", {
     error:
       "Ohne Zielmarker kann keine Messung die Empfehlung tragen — basis muss „fragebogen“ sein.",

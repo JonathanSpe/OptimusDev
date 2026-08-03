@@ -25,8 +25,10 @@ export {
   supplementIntakeSchema,
   supplementListSchema,
   supplementSchema,
+  targetRangeSchema,
   type ExpectedDirection,
   type RecommendationBasis,
   type Supplement,
   type SupplementIntake,
+  type TargetRange,
 } from "./supplement";

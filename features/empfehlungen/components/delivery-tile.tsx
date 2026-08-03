@@ -4,58 +4,70 @@ import Image from "next/image";
 import { RailTile } from "@/components/common/context-rail";
 import tagespacks from "@/public/supplements/tagespacks.webp";
 
+import { DELIVERY_FROM_MONTH } from "../rules";
+
 /*
  * ============================================================================
- * SO KOMMT ES ZU DIR — die Kachel, die aus einer Liste eine Lieferung macht.
+ * SO KOMMT ES ZU DIR — Versand, Takt und das Produktfoto.
  * ============================================================================
- * Die Seite stellt ein Abo zusammen und zeigte davon bisher nur Zeilen, Preise
- * und eine Summe. Was jemand tatsaechlich in die Hand bekommt — Beutel, einer
- * pro Tag, statt acht Dosen — stand nirgends. Das Foto beantwortet das in einem
- * Blick; drei Saetze koennten es nicht.
+ * ⚠️ DAS FOTO STEHT WIEDER HIER. Es war eine Runde lang im Kopf der Seite, und
+ * dort war es Werbung: das erste, was man sah, war die Packung, und die
+ * Auswertung kam darunter. In dieser Kachel sagt es etwas anderes und Richtiges
+ * — SO kommt das, was in der Liste steht, bei dir an. Es darf nicht an beiden
+ * Stellen stehen: zweimal dasselbe Foto in einem Bild macht aus einer Aussage
+ * eine Verzierung.
  *
- * SIE STEHT IN DER LEISTE UND NICHT AUF DER SEITE, weil sie Rahmen ist und kein
- * Gegenstand: die Inhaltsspalte gehoert den Empfehlungen, die Leiste dem, was
- * man beim Zusammenstellen wissen muss. Und sie steht dort UNTER dem Warenkorb —
- * erst die Handlung, dann was daraus wird.
+ * ============================================================================
+ * ⚠️ TODO: DAS MOTIV FEHLT NOCH.
+ * ============================================================================
+ * Gebraucht wird EIN EINZELNER TAGESBEUTEL, frontal, im HOCHFORMAT. Das
+ * vorhandene Bild zeigt gestapelte Schachteln mit verstreuten Kapseln davor —
+ * das ist ein Regal und kein Tagesbeutel, und es beantwortet die Frage der
+ * Kachel nicht.
+ *
+ * Der Rahmen ist deshalb schon auf Hochformat gestellt (aspect-3/4, 96px breit)
+ * und schneidet das vorhandene Motiv zu. Wer das richtige Bild einsetzt, tauscht
+ * NUR den Import und den alt-Text; das Layout bleibt.
  *
  * ⚠️ KEINE WIRKAUSSAGE, auch hier nicht. Die Kachel spricht ueber Verpackung
- * und Takt, nie ueber Nutzen. "Vegan & ohne künstliche Zusatzstoffe" steht auf
- * der Schachtel im Foto und bewusst nicht als Text daneben: Produktangaben
- * gehoeren an das Produkt und brauchen eine Freigabe, die wir hier nicht haben.
+ * und Takt, nie ueber Nutzen. Produktangaben ("vegan", "ohne künstliche
+ * Zusatzstoffe") brauchen eine Freigabe, die das Projekt nicht hat — sie stehen
+ * auf der Schachtel im Foto und bewusst nirgends als Text.
  *
- * ⚠️ PLATZHALTER: 30 Beutel im Monat ist ein Entwurfswert wie die Preise. Der
- * echte Liefertakt kommt aus der Fulfillment-Seite, die es noch nicht gibt.
- *
- * Das Foto wird STATISCH importiert und liegt in public/ — next/image kennt
- * Groesse und Format zur Bauzeit, und zur Laufzeit geht keine Anfrage nach
- * draussen (siehe GDPR-Abschnitt in AGENTS.md).
+ * ⚠️ PLATZHALTER: 30 Beutel im Monat, der erste Liefermonat und der Versandtext
+ * sind Entwurfswerte wie die Preise. Der echte Liefertakt kommt aus der
+ * Fulfillment-Seite, die es noch nicht gibt.
  */
 export function DeliveryTile() {
   return (
     <RailTile title="So kommt es zu dir" icon={<Package />}>
-      {/*
-       * DAS FOTO TRAEGT HIER EINE AUSSAGE und ist deshalb NICHT alt="" — anders
-       * als die Kapseln in den Zeilen, die reine Wiedererkennung sind. Wer es
-       * nicht sieht, muss trotzdem erfahren, dass es Beutel sind.
-       *
-       * Nicht auf Leistenbreite: das Bild ist fast quadratisch und waere sonst
-       * 350px hoch, also hoeher als der Warenkorb darueber. Es ist freigestellt
-       * auf Weiss, liegt also ohne eigene Flaeche auf der Kachel.
-       */}
-      <Image
-        src={tagespacks}
-        alt="Eine Schachtel „Tagespacks“ mit einzelnen Beuteln darin, davor ein Tagesbeutel und lose Kapseln."
-        className="mx-auto mt-3 h-auto w-full max-w-48"
-      />
+      <div className="mt-3 flex items-start gap-3">
+        {/*
+         * Das Foto traegt hier eine Aussage und ist deshalb nicht alt="" —
+         * anders als die Kapseln in den Zeilen, die reine Wiedererkennung sind.
+         */}
+        <span className="relative block aspect-3/4 w-24 shrink-0 overflow-hidden rounded-lg">
+          <Image
+            src={tagespacks}
+            alt="Ein Tagesbeutel mit der Tagesportion darin."
+            fill
+            className="object-cover"
+            sizes="96px"
+          />
+        </span>
 
-      <p className="text-on-rail mt-3 text-xs">
-        Dein Abo kommt als Tagesbeutel: 30 im Monat, einer für jeden Tag. Alles,
-        was du an einem Tag nimmst, steckt in einem Beutel — nichts abzählen,
-        nichts umfüllen.
-      </p>
-      <p className="text-on-rail-muted text-2xs mt-2">
-        Nach jedem Test wird neu gepackt.
-      </p>
+        <p className="text-on-rail min-w-0 flex-1 text-xs">
+          Dein Abo kommt als Tagesbeutel: 30 im Monat, einer für jeden Tag.
+          Alles, was du an einem Tag nimmst, steckt in einem Beutel — nichts
+          abzählen, nichts umfüllen.
+        </p>
+      </div>
+
+      <ul className="text-on-rail-muted text-2xs mt-3 flex flex-col gap-1">
+        <li>Erste Lieferung im {DELIVERY_FROM_MONTH}, dann alle 30 Tage.</li>
+        <li>Versand innerhalb Deutschlands, ohne Versandkosten.</li>
+        <li>Jederzeit pausierbar. Nach jedem Test wird neu gepackt.</li>
+      </ul>
     </RailTile>
   );
 }
