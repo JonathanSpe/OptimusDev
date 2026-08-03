@@ -48,10 +48,12 @@
    *   shell     schwebendes Glas-Panel + abgesetzte Icon-Leiste
    *   content   helle Inhaltsflaeche im Panel
    *   card      DECKENDE Karte darauf — Zahlen wollen ruhigen Grund
-   *   rail      EIGENES Panel neben dem Inhalt, etwas matter als die
- *             Inhaltsflaeche — sonst verschwimmen die Kacheln darauf mit ihr
-   *   rail-card DECKENDE Karte darauf
-   * Inhalt und Leiste trennt der Spalt zwischen den Panels, keine Linie.
+   *   rail      Flaeche der Kontext-Leiste, etwas matter als die
+   *             Inhaltsflaeche — nur noch die Schublade unter xl, siehe
+   *             rail-panel weiter unten
+   *   rail-card DECKENDE Karte der Leiste; ab xl liegt sie ohne Flaeche
+   *             darunter direkt auf dem Hintergrund
+   * Inhalt und Leiste trennt der Hintergrund zwischen ihnen, keine Linie.
    */
   --color-shell: var(--color-surface-shell);
   --color-content: var(--color-surface-content);
@@ -69,6 +71,10 @@
   --color-rail-line-strong: var(--color-border-on-rail-strong);
   --color-success-on-rail: var(--color-status-success-on-rail);
   --color-warning-on-rail: var(--color-status-warning-on-rail);
+  /* Gefahr auf der Leiste — heute nur die Kuendigungswarnung im Warenkorb.
+   * Das orangerote Danger-Rot, nicht die Marke: auf derselben Kachel sitzt die
+   * markenrote Bestaetigung. */
+  --color-critical-on-rail: var(--color-status-critical-on-rail);
   /* Fokus-Ring muss auf BEIDEN Ebenen sichtbar sein — Rot verschwindet dort. */
   --color-ring-on-rail: var(--color-focus-on-rail);
 
@@ -187,23 +193,14 @@
   /*
    * Die Entwicklungskurve: EINE tragende Linie in der Marke, darunter die
    * Haarlinien der bewegten Kategorien in drei Dichten — ruhend, betont und
-   * zurueckgetreten. Dazu das Raster der Wertachse und das Fadenkreuz des
-   * gelesenen Termins; beide leihen sich die Toene, die die Landkarte und die
-   * Verlaufskurven schon fuehren, statt eigene anzulegen. Utilities trend-*,
-   * Tokens plot.trend*, plot.hairline*, plot.grid und plot.crosshair.
-   *
-   * ⚠️ HIER STANDEN AUSSERDEM EINE FLAECHE UND EIN SCHEIN (trend-wash,
-   * trend-glow), beide als Verlauf weiter unten. Beide sind entfernt, samt
-   * ihren Token. Der Grund steht in progression-panel.tsx: ein Schein hinter
-   * dem letzten Messpunkt und ein Farbnebel unter der Kurve sind Effekte auf
-   * DATEN, und ein Diagramm, dem man glauben soll, hat keine.
+   * zurueckgetreten. Flaeche und Schein sind Verlaeufe und stehen deshalb
+   * weiter unten als eigene Utilities. Utilities trend-*, Tokens plot.trend*
+   * und plot.hairline*.
    */
   --color-trend-line: var(--color-plot-trend-line);
   --color-trend-hairline: var(--color-plot-hairline);
   --color-trend-hairline-active: var(--color-plot-hairline-active);
   --color-trend-hairline-muted: var(--color-plot-hairline-muted);
-  --color-trend-grid: var(--color-plot-grid);
-  --color-trend-crosshair: var(--color-plot-crosshair);
 
   /* Eingelassene Flaeche der Kategorie-Chips, ruhend und gehalten. */
   --color-chip: var(--color-surface-chip);
@@ -285,6 +282,8 @@
   --container-map-column: var(--size-map-column);
   /* Breite einer Kategorie-Zelle im Ringfeld: w-dial-cell. */
   --container-dial-cell: var(--size-dial-cell);
+  /* Breite der Begruendungsspalte in der Empfehlungszeile: w-evidence-column. */
+  --container-evidence-column: var(--size-evidence-column);
 }
 
 /*
@@ -403,7 +402,23 @@
   --primary-foreground: var(--color-text-on-brand);
   --secondary: var(--neutral-800);
   --secondary-foreground: var(--color-text-default);
-  --muted: var(--neutral-800);
+  /*
+   * NICHT neutral-800, obwohl das die Spiegelung von --secondary waere.
+   *
+   * Im Dunkelmodus ist surface.card selbst neutral-800 (die HELLSTE Flaeche,
+   * siehe tokens.json). Eine gedaempfte Flaeche in derselben Stufe ist auf
+   * einer Karte nicht blass, sondern nachgemessen UNSICHTBAR: rgb(51,44,46)
+   * gegen rgb(51,44,46), Verhaeltnis 1,00. Jede graue Pille — "nicht
+   * beurteilbar" im VerdictChip, eine Bewegung ohne Richtung, ein
+   * Praeparate-Status ohne Urteil — verlor damit ihre Form und las sich als
+   * fehlende Angabe statt als graue.
+   *
+   * Eine Stufe heller stellt dasselbe Verhaeltnis her, das der Hellmodus
+   * ohnehin hat: dort ist die Karte neutral-0 und --muted neutral-100, also
+   * ebenfalls die naechste Stufe VON der Karte weg. Dasselbe Muster wie bei
+   * border.default, das aus demselben Grund korrigiert wurde.
+   */
+  --muted: var(--neutral-700);
   --muted-foreground: var(--color-text-muted);
   --accent: var(--color-background-panel);
   --accent-foreground: var(--brand-100);
@@ -538,15 +553,28 @@
 }
 
 /*
- * EBENE 4 — die Kontext-Leiste als EIGENES schwebendes Panel neben dem
- * Inhalts-Panel. Kein Trenner: die Leiste steht mit Abstand daneben, dazwischen
- * liegt der Hintergrund. Weil sie frei auf dem Hintergrund liegt, bringt sie
- * ihre Deckung selbst mit (surface.rail) und bekommt Lichtkante und Schatten wie
- * die anderen schwebenden Flaechen. Ihre Flaeche ist BEWUSST etwas matter als
- * die Inhaltsspalte: sie traegt deckend weisse Kacheln, und die muessen als
- * eigene Objekte lesbar bleiben statt mit dem Grund zu verschwimmen. Der Radius
- * kommt aus rounded-panel, damit dieselbe Flaeche unter xl auch als Schublade
- * (Sheet) an der Fensterkante sitzen kann.
+ * EBENE 4 — die Flaeche der Kontext-Leiste. NUR NOCH DIE SCHUBLADE UNTER xl.
+ *
+ * Ab xl hat die Leiste keine Flaeche mehr: sie ist dort eine Spalte neben dem
+ * Panel, und ihre Kacheln liegen einzeln auf dem Mesh (siehe den Block am Kopf
+ * von app/(app)/layout.tsx). Der Grund war Trennung — zwei helle Glasflaechen
+ * mit 16px Spalt dazwischen lasen sich als EINE geteilte Flaeche; der blanke
+ * Hintergrund trennt, eine zweite Scheibe daneben nicht.
+ *
+ * Unter xl kehrt genau das um: die Leiste faehrt als Schublade UEBER den Inhalt
+ * (components/ui/sheet.tsx), und was ueber etwas liegt, braucht eine Flaeche —
+ * sonst schwebten die Kacheln vor dem durchscheinenden Inhalt. Deshalb bleibt
+ * diese Utility, und deshalb bringt sie weiter ihre eigene Deckung
+ * (surface.rail), Lichtkante und Schatten mit. Ihre Flaeche ist etwas matter
+ * als die Inhaltsspalte, damit die deckend weissen Kacheln darauf als eigene
+ * Objekte lesbar bleiben.
+ *
+ * KEIN Radius in dieser Utility, und das war schon vorher so: die Schublade
+ * sitzt buendig an der Fensterkante und braucht dort keinen. Wer eine Rundung
+ * will, setzt sie am Aufrufer.
+ *
+ * ⚠️ Wer diese Utility wieder an die Spalte ab xl haengt, dreht die Trennung
+ * oben zurueck.
  */
 @utility rail-panel {
   background-color: var(--color-surface-rail);
@@ -772,20 +800,17 @@
 }
 
 /*
- * ⚠️ HIER STANDEN trend-wash UND trend-glow — die Flaeche unter der
- * Entwicklungskurve und der Schein hinter ihrem letzten Punkt. Beide sind
- * entfernt, mit ihren Token (plot.trendWash, plot.trendGlow).
- *
- * Sie waren die einzigen Verlaeufe im Produkt, die auf DATEN lagen, und genau
- * daran sind sie gescheitert: eine Flaeche unter einer Linie gibt ihr Gewicht,
- * das die Zahl nicht hat, und ein Schein hinter dem letzten Messpunkt macht aus
- * "zuletzt gemessen" ein Ereignis. Der Punkt und die Strichstaerke sagen
- * dasselbe, ohne etwas zu behaupten. Wer hier je wieder einen Verlauf
- * hinterlegt, verschiebt damit eine Aussage.
- *
- * (map-glow und map-scan bleiben: die liegen auf einer Landkarte, nicht auf
- * einer Messreihe.)
+ * Flaeche und Schein der Entwicklungskurve. Beide sind Verlaeufe und laufen
+ * deshalb ueber background-image; die Form der Flaeche kommt von aussen als
+ * clip-path, damit die Farbe hier bleibt und die Geometrie in der Komponente.
  */
+@utility trend-wash {
+  background-image: var(--color-plot-trend-wash);
+}
+
+@utility trend-glow {
+  background-image: var(--color-plot-trend-glow);
+}
 
 /*
  * Beschriftung, die MIT einer senkrechten Achse laeuft, von unten nach oben.
@@ -799,15 +824,32 @@
 
 /*
  * Karten auf der Leiste: DECKEND und ohne Blur, genau wie surface-card auf der
- * Inhaltsflaeche. Sie stehen auf einer matteren Flaeche als die Karten in der
- * Mitte und springen deshalb schon durch ihr Weiss ab; Kante und Schatten geben
- * ihnen zusaetzlich Dicke. Eigene Rolle, damit die Leiste ihre Flaeche wechseln
- * kann, ohne jede Kachel darauf anzufassen.
+ * Inhaltsflaeche. Eigene Rolle, damit die Leiste ihre Flaeche wechseln kann,
+ * ohne jede Kachel darauf anzufassen — und genau das ist inzwischen passiert.
+ *
+ * DER SCHATTEN IST TIEFER ALS BEI surface-card (shadow-lift statt shadow-card),
+ * weil diese Karten ab xl auf KEINER Flaeche mehr stehen: die Leiste hat ihr
+ * Panel verloren, die Kacheln liegen direkt auf dem Mesh-Hintergrund. Vorher
+ * trug die Trennung die matte Panelflaeche unter ihnen, und der enge
+ * Kachel-Schatten reichte. Auf blankem, bewegtem Grund reicht er nicht: eine
+ * Karte ohne Abhebung sieht dort ausgeschnitten aus statt aufgelegt. Der zweite
+ * Schatten in shadow-lift ist die Abhebung, die die Flaeche vorher geliefert
+ * hat — kein neuer Effekt, nur der Ersatz fuer einen weggefallenen.
+ *
+ * shadow-lift ist ansonsten der Hover-Schatten interaktiver Kacheln. Das ist
+ * hier kein Widerspruch: diese Kacheln reagieren nicht auf Hover, der Wert ist
+ * also nie zweideutig.
+ *
+ * Die Kante kommt aus der on-rail-Familie (border-on-rail), nicht aus
+ * border-card. Beide sehen heute fast gleich aus, aber genau das war das
+ * Problem: die Regel "auf der Leiste nur on-rail" hatte hier ein Leck, das
+ * niemand gesehen haette — bis die Leiste ihre Flaeche wechselt und die Karten
+ * eine Kante der falschen Flaeche tragen.
  */
 @utility rail-card {
   background-color: var(--color-surface-rail-card);
-  border: 1px solid var(--color-border-card);
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border-on-rail);
+  box-shadow: var(--shadow-lift);
 }
 
 /*

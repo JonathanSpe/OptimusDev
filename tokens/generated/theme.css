@@ -21,6 +21,7 @@
   --neutral-400: #A29699;
   --neutral-500: #85787B;
   --neutral-600: #6B5F62;
+  --neutral-700: #443B3D;
   --neutral-800: #332C2E;
   --neutral-900: #1E191A;
   --neutral-950: #131011;
@@ -104,6 +105,7 @@
   --size-dial-column: 30rem;
   --size-dial-cell: 7.25rem;
   --size-capsule: 2.75rem;
+  --size-evidence-column: 12rem;
   --size-content-max: 112.5rem;
 
   /* Schrift-Familien */
@@ -221,9 +223,11 @@
   --color-plot-timeline-window: rgba(30,25,26,0.48);
   --color-plot-timeline-now: rgba(30,25,26,0.82);
   --color-plot-trend-line: #A32432;
-  --color-plot-hairline: rgba(30,25,26,0.50);
+  --color-plot-trend-wash: linear-gradient(180deg, #A3243224 0%, #A324320A 45%, #A3243200 100%);
+  --color-plot-trend-glow: radial-gradient(closest-side, #A3243252 0%, #A324321A 55%, #A3243200 100%);
+  --color-plot-hairline: rgba(30,25,26,0.62);
   --color-plot-hairline-active: rgba(30,25,26,0.88);
-  --color-plot-hairline-muted: rgba(30,25,26,0.22);
+  --color-plot-hairline-muted: rgba(30,25,26,0.30);
   --color-brand-default: #A32432;
   --color-brand-hover: #881E2A;
   --color-brand-secondary: #C96773;
@@ -235,6 +239,7 @@
   --color-status-critical-subtle: #FBE3D5;
   --color-status-success-on-rail: #0F7059;
   --color-status-warning-on-rail: #8A5A00;
+  --color-status-critical-on-rail: #A8380B;
   --color-status-success-on-score: #7AE0BE;
   --color-category-k1-surface: #E5D7F9;
   --color-category-k1-icon: #704891;
@@ -296,7 +301,7 @@
   --color-text-on-rail-brand: #E0A3AA;
   --color-text-on-score: #FFFFFF;
   --color-text-on-score-muted: #C9C0C2;
-  --color-border-default: #332C2E;
+  --color-border-default: rgba(255,255,255,0.12);
   --color-border-on-rail: rgba(255,255,255,0.10);
   --color-border-on-rail-strong: rgba(255,255,255,0.18);
   --color-border-on-score: rgba(255,255,255,0.42);
@@ -327,9 +332,11 @@
   --color-plot-timeline-window: rgba(255,255,255,0.50);
   --color-plot-timeline-now: rgba(255,255,255,0.88);
   --color-plot-trend-line: #C96773;
-  --color-plot-hairline: rgba(255,255,255,0.52);
+  --color-plot-trend-wash: linear-gradient(180deg, #C9677329 0%, #C967730F 45%, #C9677300 100%);
+  --color-plot-trend-glow: radial-gradient(closest-side, #C9677347 0%, #C9677317 55%, #C9677300 100%);
+  --color-plot-hairline: rgba(255,255,255,0.62);
   --color-plot-hairline-active: rgba(255,255,255,0.92);
-  --color-plot-hairline-muted: rgba(255,255,255,0.24);
+  --color-plot-hairline-muted: rgba(255,255,255,0.32);
   --color-brand-default: #B64652;
   --color-brand-hover: #C96773;
   --color-brand-secondary: #881E2A;
@@ -341,6 +348,7 @@
   --color-status-critical-subtle: #3B1305;
   --color-status-success-on-rail: #34B894;
   --color-status-warning-on-rail: #E8A93D;
+  --color-status-critical-on-rail: #F2764A;
   --color-status-success-on-score: #7AE0BE;
   --color-category-k1-surface: #332A41;
   --color-category-k1-icon: #CDB8EA;

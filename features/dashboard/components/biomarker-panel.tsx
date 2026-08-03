@@ -7,14 +7,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useId } from "react";
-import { Area, AreaChart, ReferenceArea, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, YAxis } from "recharts";
 
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
+import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import {
   Tooltip,
   TooltipContent,
@@ -42,7 +37,28 @@ import {
  * darf leer sein (die dimensionslosen Verhaeltnis-Indizes).
  */
 
-/** "value" = Wert, Sparkline und Referenzbereich; "trend" = grosses Diagramm. */
+/*
+ * ============================================================================
+ * ZWEI KARTEN, EIN MARKER — die Wertkarte und die Verlaufskarte.
+ * ============================================================================
+ * "value" — DIE WERTKARTE, die einfache Ansicht: Name, Zahl, Veraenderung,
+ * Testdatum und die Schiene. KEIN Diagramm. Sie beantwortet die Frage, mit der
+ * die meisten auf diese Seite kommen ("wo stehe ich gerade"), und beantwortet
+ * sie in einer Kachelhoehe, in der doppelt so viele Marker gleichzeitig auf dem
+ * Schirm stehen.
+ *
+ * "trend" — DIE VERLAUFSKARTE: dieselbe Karte plus die Kurve ueber alle
+ * Messungen. Sie beantwortet "wohin geht es".
+ *
+ * ⚠️ HIER GAB ES EINE DRITTE FORM: die aufgeklappte Verlaufsansicht mit
+ * Datumsachse, Wertachse, Referenzbaendern und Tooltip, 296px hoch. Sie ist
+ * entfernt. Der Grund ist nicht ihre Groesse, sondern ihre Rolle: sie war eine
+ * Detailansicht, die sich als Kachelzustand ausgab — zwanzig Detailansichten
+ * nebeneinander, jede zu klein, um wirklich eine zu sein. Was sie konnte,
+ * gehoert in die Detailansicht EINES Markers (siehe TODO(L2) weiter unten);
+ * bis dahin zeigt die Verlaufskarte die Kurve, und die Schiene darunter zeigt
+ * weiterhin die Referenzlage.
+ */
 export type BiomarkerPanelView = "value" | "trend";
 
 /*
@@ -173,19 +189,6 @@ const TRACK_LABEL_INSET = 4;
 /* Polster ueber und unter der Kurve, damit sie nicht an der Kante klebt. */
 const DOMAIN_PADDING = 0.12;
 
-/* Eine Referenzgrenze wandert nur dann in die Skala, wenn sie hoechstens diesen
- * Anteil der Messspanne entfernt liegt. Sonst wuerde ein weiter Bereich wie
- * 30–300 die Kurve zu einer Geraden zusammendruecken. */
-const REFERENCE_REACH = 0.6;
-
-/*
- * Dieselben Zonen-Tokens wie an der Schiene, nur leiser: eine Flaeche ueber die
- * ganze Diagrammhoehe wirkt viel schwerer als ein 6px-Balken. Der Faktor gilt
- * fuer BEIDE Baender, damit ihr Dichteverhaeltnis — und damit die Lesart
- * "Optimalbereich ist der dichtere" — unveraendert bleibt.
- */
-const BAND_AREA_OPACITY = 0.45;
-
 type DeltaDirection = "up" | "down" | "flat";
 
 interface BiomarkerDelta {
@@ -310,53 +313,28 @@ function toDelta(marker: Biomarker): BiomarkerDelta | null {
 }
 
 /**
- * Skala der Y-Achse: eng um die Messwerte gelegt und nur so weit geoeffnet,
- * dass eine nahe Bereichsgrenze mit ins Bild kommt — erst dadurch liest sich
- * ein Band als Band und nicht als flaechiger Hintergrund. Gemessen wird immer
- * gegen die urspruengliche Messspanne, damit die Reihenfolge der Grenzen das
- * Ergebnis nicht verschiebt.
+ * Skala der Kurve: eng um die Messwerte gelegt, mit etwas Polster oben und
+ * unten. Sie zeigt die BEWEGUNG und nicht die absolute Hoehe — wo der Wert
+ * gegenueber Referenz und Optimum steht, sagt die Schiene darunter, und zwar
+ * fuer beide Ansichten dieselbe.
+ *
+ * ⚠️ HIER WURDEN FRUEHER Referenzgrenzen in die Skala gezogen, damit die
+ * Baender des aufgeklappten Diagramms als Baender lesbar blieben. Mit dieser
+ * Ansicht ist auch die Regel weg: ohne Achsenbeschriftung behauptet die Kurve
+ * keine absolute Hoehe, und eine Grenze in einer Skala ohne Beschriftung waere
+ * eine unsichtbare.
  */
-function toChartDomain(
-  points: readonly { value: number }[],
-  bounds: readonly number[] = [],
-): [number, number] {
+function toChartDomain(points: readonly { value: number }[]): [number, number] {
   const values = points.map((point) => point.value);
   if (values.length === 0) return [0, 1];
 
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = max - min;
-  const fallback = Math.max(Math.abs(max) * 0.1, 1);
-  const reach = (span === 0 ? fallback : span) * REFERENCE_REACH;
-
-  let lower = min;
-  let upper = max;
-  for (const bound of bounds) {
-    if (bound < min && min - bound <= reach) lower = Math.min(lower, bound);
-    if (bound > max && bound - max <= reach) upper = Math.max(upper, bound);
-  }
-
+  const lower = Math.min(...values);
+  const upper = Math.max(...values);
   const spread = upper - lower;
-  const padding = spread === 0 ? fallback : spread * DOMAIN_PADDING;
+  const padding =
+    spread === 0 ? Math.max(Math.abs(upper) * 0.1, 1) : spread * DOMAIN_PADDING;
 
   return [lower - padding, upper + padding];
-}
-
-/** Rundet die Achsenenden auf glatte Zahlen — nur so taugen sie als Beschriftung. */
-function toNiceDomain([lower, upper]: [number, number]): [number, number] {
-  const spread = upper - lower;
-  if (spread <= 0) return [lower, upper];
-
-  const magnitude = 10 ** Math.floor(Math.log10(spread));
-  const normalized = spread / magnitude;
-  const step =
-    normalized >= 5
-      ? magnitude
-      : normalized >= 2
-        ? magnitude / 2
-        : magnitude / 5;
-
-  return [Math.floor(lower / step) * step, Math.ceil(upper / step) * step];
 }
 
 const DELTA_ICONS: Record<DeltaDirection, LucideIcon> = {
@@ -429,26 +407,18 @@ function DeltaPill({ delta }: { delta: BiomarkerDelta }) {
 interface BiomarkerChartProps {
   data: ChartPoint[];
   gradientId: string;
-  unit: string;
-  referenceLow: number;
-  referenceHigh: number;
-  optimal: ValueRange | null;
   /** Lage des aktuellen Werts — sie faerbt Linie, Flaeche und letzten Punkt. */
   standing: MarkerStanding;
-  /** Grosse Ansicht: mit Datumsachse, Bereichsbaendern und Tooltip. */
-  expanded: boolean;
 }
 
-function BiomarkerChart({
-  data,
-  gradientId,
-  unit,
-  referenceLow,
-  referenceHigh,
-  optimal,
-  standing,
-  expanded,
-}: BiomarkerChartProps) {
+/**
+ * Die Kurve der Verlaufskarte: eine Sparkline, ohne Achsen, ohne Baender, ohne
+ * Tooltip. Sie zeigt die FORM der Bewegung — gestiegen, gefallen, geschwankt —
+ * und nichts, was man ablesen muesste. Alles Ablesbare steht als Zahl darueber
+ * oder als Position auf der Schiene darunter; die Messwerte selbst stehen fuer
+ * Screenreader als Liste neben dem Diagramm.
+ */
+function BiomarkerChart({ data, gradientId, standing }: BiomarkerChartProps) {
   /*
    * Die Farbe reist als chart-Config, nicht als Attribut an jedem Element:
    * ChartContainer legt sie als --color-value an, und Linie, Flaeche und Punkt
@@ -460,24 +430,13 @@ function BiomarkerChart({
   } satisfies ChartConfig;
 
   const lastIndex = data.length - 1;
-  // Nur die aufgeklappte Ansicht zeigt die Baender — die Sparkline nicht.
-  const rawDomain = toChartDomain(
-    data,
-    expanded
-      ? [
-          referenceLow,
-          referenceHigh,
-          ...(optimal ? [optimal.low, optimal.high] : []),
-        ]
-      : [],
-  );
-  const [domainMin, domainMax] = expanded ? toNiceDomain(rawDomain) : rawDomain;
+  const [domainMin, domainMax] = toChartDomain(data);
 
   return (
     <ChartContainer
       config={chartConfig}
       className="aspect-auto h-full w-full"
-      initialDimension={{ width: 240, height: expanded ? 168 : 48 }}
+      initialDimension={{ width: 240, height: 48 }}
     >
       <AreaChart
         data={data}
@@ -488,13 +447,9 @@ function BiomarkerChart({
          * als Liste unter dem Diagramm.
          */
         accessibilityLayer={false}
-        margin={
-          expanded
-            ? // Rechts bleibt Platz, damit die letzte Datumsbeschriftung nicht
-              // an der Kachelkante abgeschnitten wird.
-              { top: 6, right: 18, bottom: 0, left: 0 }
-            : { top: 5, right: 4, bottom: 3, left: 4 }
-        }
+        /* Gerade so viel Rand, dass der Punkt der letzten Messung samt seinem
+         * Ring nicht an der Kante abgeschnitten wird. */
+        margin={{ top: 5, right: 4, bottom: 3, left: 4 }}
       >
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -510,55 +465,10 @@ function BiomarkerChart({
             />
           </linearGradient>
         </defs>
-        <YAxis
-          domain={[domainMin, domainMax]}
-          hide={!expanded}
-          // Nur die beiden Enden — die Skala soll begrenzen, nicht rastern.
-          ticks={[domainMin, domainMax]}
-          tickLine={false}
-          axisLine={false}
-          width={30}
-          tickMargin={3}
-          tickFormatter={(bound: number) => numberFormat.format(bound)}
-        />
-        <XAxis
-          dataKey="label"
-          hide={!expanded}
-          tickLine={false}
-          axisLine={false}
-          tickMargin={6}
-          /* Jede Messung bekommt ihr Datum; erst bei vielen Punkten ausduennen.
-           * Auf der schmaleren Karte faengt das eine Messung frueher an. */
-          interval={data.length > 5 ? "preserveStartEnd" : 0}
-          minTickGap={8}
-          // Auf der Achse reicht Tag und Monat, das Jahr steht im Tooltip.
-          tickFormatter={(label: string) => label.slice(0, 6)}
-        />
-        {/*
-         * Dieselbe Idee wie an der Schiene: ein Farbton, zwei Dichten. Das
-         * Referenzband liegt unten, der Optimalbereich dichter darueber — beide
-         * nur so weit, wie sie die sichtbare Skala schneiden (ifOverflow).
-         */}
-        {expanded ? (
-          <ReferenceArea
-            y1={referenceLow}
-            y2={referenceHigh}
-            ifOverflow="hidden"
-            fill="var(--track-reference)"
-            fillOpacity={BAND_AREA_OPACITY}
-            stroke="none"
-          />
-        ) : null}
-        {expanded && optimal ? (
-          <ReferenceArea
-            y1={optimal.low}
-            y2={optimal.high}
-            ifOverflow="hidden"
-            fill="var(--track-optimal)"
-            fillOpacity={BAND_AREA_OPACITY}
-            stroke="none"
-          />
-        ) : null}
+        {/* Unsichtbar, aber noetig: die Achse setzt die Skala, in der die Kurve
+         * gezeichnet wird. Beschriftet ist sie nicht — eine Sparkline behauptet
+         * keine Hoehe, sie zeigt eine Form. */}
+        <YAxis domain={[domainMin, domainMax]} hide />
         <Area
           dataKey="value"
           /*
@@ -590,31 +500,10 @@ function BiomarkerChart({
               />
             );
           }}
-          activeDot={
-            expanded
-              ? {
-                  r: 3,
-                  fill: "var(--color-value)",
-                  stroke: "var(--background)",
-                  strokeWidth: 1.75,
-                }
-              : false
-          }
+          /* Kein Hover-Punkt: die Kurve nimmt keine Maus an (die Kachel ist das
+           * Klickziel), also gibt es auch keinen aktiven Punkt zu zeigen. */
+          activeDot={false}
         />
-        {expanded ? (
-          <ChartTooltip
-            content={
-              <ChartTooltipContent
-                hideIndicator
-                formatter={(measured) => (
-                  <span className="text-foreground font-medium tabular-nums">
-                    {numberFormat.format(Number(measured))} {unit}
-                  </span>
-                )}
-              />
-            }
-          />
-        ) : null}
       </AreaChart>
     </ChartContainer>
   );
@@ -804,10 +693,6 @@ export function BiomarkerPanel({
    * eine Kurve noch eine Veraenderung. */
   const hasTrend = marker.history.length > 1;
   const isTrendView = view === "trend";
-  /* Gross gezeichnet wird nur, wo es auch einen Verlauf gibt. Die HOEHE der
-   * Kachel haengt trotzdem allein an der Ansicht — sonst stehen in einer Zeile
-   * unterschiedlich hohe Kacheln. */
-  const isExpanded = hasTrend && isTrendView;
   const delta = hasTrend ? toDelta(marker) : null;
   const standing = toMarkerStanding(marker);
   const standingLabel = STANDING_LOOK[standing].label;
@@ -817,7 +702,6 @@ export function BiomarkerPanel({
     value: reading.value,
   }));
 
-  const readingCount = marker.history.length;
   const lastReading = marker.history.at(-1);
   const optimal = toOptimalRange(marker);
   /* Quellen eines Index werden vorgelesen, nicht hingeschrieben: auf der Kachel
@@ -845,14 +729,17 @@ export function BiomarkerPanel({
          * ist ein Mindestmass — im Raster streckt eine hoehere Kachel ihre
          * Zeile, und der Zugewinn geht in die Verlaufsgruppe.
          *
-         * KOMPAKTER ALS FRUEHER (256/380px). Die Kachel ist ein Eintrag in
-         * einer Uebersicht von zwanzig Markern und kein Schaustueck: bei der
-         * alten Groesse standen drei Stueck pro Reihe, und wer den zwoelften
-         * Wert sehen wollte, scrollte. Kleiner geworden ist dabei alles im
-         * gleichen Verhaeltnis — Kachel, Kopf, Zahl und Kurve. Nur die
-         * Schiene und ihre Beschriftungen behalten ihre Lesbarkeit.
+         * ZWEI MASSE FUER ZWEI KARTEN. Die Wertkarte traegt kein Diagramm und
+         * ist deshalb rund ein Drittel flacher — sie ist die Ansicht, in der
+         * man zwanzig Marker ueberfliegt, und dafuer zaehlt, wie viele
+         * gleichzeitig auf dem Schirm stehen. Die Verlaufskarte behaelt die
+         * Hoehe, die die Kurve braucht, um eine Form zu zeigen.
+         *
+         * Beide Masse sind MINDESTmasse: im Raster streckt die hoechste Kachel
+         * ihre Zeile, und der Zugewinn geht auf der Verlaufskarte an die Kurve,
+         * auf der Wertkarte an den Abstand ueber der Schiene.
          */
-        isTrendView ? "min-h-74" : "min-h-52",
+        isTrendView ? "min-h-52" : "min-h-40",
         "hover:shadow-lift motion-safe:hover:-translate-y-px motion-reduce:transition-none",
         className,
       )}
@@ -886,10 +773,11 @@ export function BiomarkerPanel({
 
       {/*
        * ZWEI GRUPPEN, ein Abstand dazwischen: oben die Identitaet mit dem Wert,
-       * unten Verlauf und Schiene als Paar an der Unterkante. Der Zwischenraum
-       * ist fest (gap-4); alles, was die Kachel an Hoehe dazubekommt, nimmt die
-       * Kurve auf. Dadurch entsteht in keinem Zustand eine lose Flaeche in der
-       * Mitte — auch nicht bei "Nicht gemessen".
+       * unten die Bezugsflaechen an der Unterkante. Der Zwischenraum ist fest;
+       * alles, was die Kachel an Hoehe dazubekommt, nimmt die Kurve auf — und wo
+       * es keine gibt, bleibt es zwischen den Gruppen. Dadurch entsteht in
+       * keinem Zustand eine lose Flaeche in der Mitte, auch nicht bei "Nicht
+       * gemessen".
        */}
       <div
         className={cn(
@@ -952,49 +840,57 @@ export function BiomarkerPanel({
             {delta ? <DeltaPill delta={delta} /> : null}
           </div>
 
-          {/* Kontextzeile — wann zuletzt und wie oft gemessen wurde. */}
+          {/*
+           * Kontextzeile — WANN dieser Wert gemessen wurde, und sonst nichts.
+           *
+           * ⚠️ HIER STAND ZUSAETZLICH DIE ZAHL DER MESSUNGEN ("· 5 Messungen").
+           * Sie ist entfernt: sie beantwortet keine Frage, die jemand an einen
+           * Blutwert stellt. Wie oft gemessen wurde, ist eine Angabe ueber
+           * unsere Datenhaltung — auf der Verlaufskarte zeigt sie ohnehin die
+           * Kurve, indem sie ihre Punkte zeichnet, und auf der Wertkarte
+           * interessiert nur, wie aktuell die Zahl darueber ist.
+           */}
           <p className={cn("text-2xs mt-1 truncate tabular-nums", quietText)}>
-            {lastReading ? (
-              <>
-                Zuletzt {formatFullDate(lastReading.date)} · {readingCount}{" "}
-                {readingCount === 1 ? "Messung" : "Messungen"}
-              </>
-            ) : (
-              "Noch keine Messung erfasst"
-            )}
+            {lastReading
+              ? `Test vom ${formatFullDate(lastReading.date)}`
+              : "Noch keine Messung erfasst"}
           </p>
         </div>
 
         {/*
-         * Verlauf und Schiene: ein Paar an der Unterkante (mt-auto). Die Kurve
-         * nimmt die freie Hoehe auf (flex-1), die Schiene sitzt darunter — so
-         * liegen die Schienen aller Kacheln einer Zeile auf einer Linie.
+         * Der untere Block. Auf der Verlaufskarte ein Paar — Kurve oben, Schiene
+         * darunter, und die Kurve nimmt die freie Hoehe auf (flex-1), damit die
+         * Schienen aller Kacheln einer Zeile auf einer Linie liegen.
+         *
+         * Auf der Wertkarte steht hier NUR die Schiene, und dann darf der Block
+         * nicht wachsen: mit flex-1 saesse die Schiene am oberen Rand des
+         * gewachsenen Platzes und liesse ein Loch unter sich. mt-auto haengt sie
+         * stattdessen an die Unterkante, wo sie hingehoert.
          */}
-        <div className="mt-auto flex min-h-0 flex-1 flex-col gap-2">
-          {hasTrend ? (
-            <div className={cn("min-h-12 flex-1", isExpanded && "min-h-24")}>
-              <div
-                aria-hidden="true"
-                className={cn(
-                  "h-full w-full",
-                  // Aufgeklappt liegt das Diagramm ueber der Kachel-Flaeche,
-                  // sonst faengt sie den Hover fuer den Tooltip ab.
-                  isExpanded ? "relative z-10" : "pointer-events-none",
-                )}
-              >
-                <BiomarkerChart
-                  data={chartData}
-                  gradientId={gradientId}
-                  unit={marker.unit}
-                  referenceLow={marker.referenceLow}
-                  referenceHigh={marker.referenceHigh}
-                  optimal={optimal}
-                  standing={standing}
-                  expanded={isExpanded}
-                />
-              </div>
-              {isExpanded ? (
-                // Das Diagramm ist rein visuell — hier die gleichen Daten als Text.
+        <div
+          className={cn(
+            "mt-auto flex min-h-0 flex-col gap-2",
+            isTrendView && "flex-1",
+          )}
+        >
+          {isTrendView ? (
+            hasTrend ? (
+              <div className="min-h-12 flex-1">
+                {/* pointer-events-none: das Klickziel ist die Kachel, und eine
+                 * Kurve, die den Zeiger abfaengt, macht ein Loch hinein. */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none h-full w-full"
+                >
+                  <BiomarkerChart
+                    data={chartData}
+                    gradientId={gradientId}
+                    standing={standing}
+                  />
+                </div>
+                {/* Das Diagramm ist rein visuell — hier dieselben Daten als Text.
+                 * Ohne diese Liste waere der Verlauf fuer Screenreader schlicht
+                 * nicht vorhanden. */}
                 <ul className="sr-only">
                   {marker.history.map((reading) => (
                     <li key={reading.date}>
@@ -1003,20 +899,20 @@ export function BiomarkerPanel({
                     </li>
                   ))}
                 </ul>
-              ) : null}
-            </div>
-          ) : (
-            /* Kein Verlauf: ein leichter gestrichelter Umriss haelt den Platz
-             * der Kurve, ohne sich wie eine aufzufuehren. Er FUELLT die Hoehe —
-             * sonst bliebe genau hier die lose Flaeche. */
-            <div className="border-border flex min-h-12 flex-1 items-center justify-center rounded-lg border border-dashed px-3 text-center">
-              <p className={cn("text-xs", quietText)}>
-                {hasValue
-                  ? "Noch kein Verlauf – ab dem zweiten Test"
-                  : "Verlauf ab der ersten Messung"}
-              </p>
-            </div>
-          )}
+              </div>
+            ) : (
+              /* Kein Verlauf: ein leichter gestrichelter Umriss haelt den Platz
+               * der Kurve, ohne sich wie eine aufzufuehren. Er FUELLT die Hoehe —
+               * sonst bliebe genau hier die lose Flaeche. */
+              <div className="border-border flex min-h-12 flex-1 items-center justify-center rounded-lg border border-dashed px-3 text-center">
+                <p className={cn("text-xs", quietText)}>
+                  {hasValue
+                    ? "Noch kein Verlauf – ab dem zweiten Test"
+                    : "Verlauf ab der ersten Messung"}
+                </p>
+              </div>
+            )
+          ) : null}
 
           {/*
            * Die Schiene. Objektive Flaeche: neutral, ohne Urteil, und in beiden

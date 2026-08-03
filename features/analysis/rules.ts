@@ -13,12 +13,13 @@
  * Bluttest-Framework und muessen vor dem Release freigegeben werden.
  */
 
+import type { Supplement } from "@/contracts";
+
 import type {
   Bundle,
   CategorySeries,
   FindingMarker,
   MarkerChange,
-  Supplement,
 } from "./sample-data";
 
 /*
@@ -544,8 +545,14 @@ export function toCategoryMovements(
  * ============================================================================
  * PRAEPARATE — wann eine Einnahme als Wirkung zaehlt, und wann nicht.
  * ============================================================================
- * Drei Regeln, die in dieser Reihenfolge stehen muessen:
+ * Vier Regeln, die in dieser Reihenfolge stehen muessen:
  *
+ *   0. Ohne EINNAHME gibt es nichts zu beurteilen — "nicht beurteilbar". Diese
+ *      Stufe ist neu, seit der Vertrag auch Praeparate kennt, die niemand
+ *      nimmt (Empfehlungsseite). Auf DIESER Oberflaeche kommt der Fall nicht
+ *      vor: die Kachel "Wirkt, was du nimmst?" bekommt nur laufende Praeparate.
+ *      Die Pruefung steht trotzdem hier, weil eine Regel, die sich darauf
+ *      verlaesst, dass der Aufrufer schon filtert, keine Regel ist.
  *   1. Ohne messbaren Zielmarker gibt es KEIN Urteil — "nicht beurteilbar".
  *   2. Vor dem Wirkfenster gibt es KEIN "keine Reaktion" — nur "zu frueh".
  *      Eine fehlende Wirkung vor dem Fenster ist keine fehlende Wirkung; sie
@@ -555,7 +562,7 @@ export function toCategoryMovements(
  *      nie dazu, denselben Rat zu wiederholen. Der Text des Rats steht am
  *      Praeparat; dass er angepasst sein MUSS, steht hier.
  *
- * ⚠️ Schwellwerte und Wirkfenster sind PLATZHALTER (siehe Supplement).
+ * ⚠️ Schwellwerte und Wirkfenster sind PLATZHALTER (siehe contracts/supplement).
  */
 
 export type SupplementStatus =
@@ -583,7 +590,8 @@ export interface ObservedChange {
  * kennt.
  */
 export function toObservedChange(prep: Supplement): ObservedChange | null {
-  const { baseline, current } = prep;
+  if (prep.intake === null) return null;
+  const { baseline, current } = prep.intake;
   if (baseline === null || current === null) return null;
   return {
     baseline,
@@ -598,12 +606,12 @@ export function toObservedChange(prep: Supplement): ObservedChange | null {
  * die Regel — siehe Kommentarblock oben.
  */
 export function toSupplementStatus(prep: Supplement): SupplementStatus {
-  if (prep.targetMarker === null) {
+  if (prep.intake === null || prep.targetMarker === null) {
     return "nichtBeurteilbar";
   }
 
   /* Vor dem Fenster: immer "zu frueh", egal welches Delta schon da waere. */
-  if (prep.daysOn < prep.effectWindowDays.from) {
+  if (prep.intake.daysOn < prep.effectWindowDays.from) {
     return "zuFrueh";
   }
 

@@ -26,13 +26,21 @@ export const metadata: Metadata = {
  * die Kacheln sagen dasselbe, ohne es anzukuendigen. Damit steht der Hinweis
  * auf die Platzhalter-Grenzwerte nur noch im Code — sobald hier echte
  * Messwerte ankommen, gehoert er sichtbar zurueck auf die Seite.
+ *
+ * ENTSCHEIDUNG: Die Ueberschrift ist sr-only, wie auf /analyse/snapshot. Die
+ * ausfuehrliche Begruendung steht dort; kurz: die 36px-Zeile kostete die erste
+ * Bildschirmhoehe und benannte nur, was die Navigation schon markiert. Als h1
+ * bleibt sie im Dokument, weil eine Seite ohne h1 fuer Screenreader eine Seite
+ * ohne Namen ist.
+ *
+ * BEIDE SEITEN ODER KEINE. Die zwei einzigen gebauten Seiten stehen in
+ * derselben Huelle nebeneinander; traege die eine einen grossen Titel und die
+ * andere keinen, laese sich das als Versehen und nicht als Haltung.
  */
 export default function DashboardPage() {
   return (
     <BiomarkerBoard groups={sampleMarkerGroups} markers={sampleMarkers}>
-      <h1 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-        Deine Blutwerte
-      </h1>
+      <h1 className="sr-only">Deine Blutwerte</h1>
     </BiomarkerBoard>
   );
 }

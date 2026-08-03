@@ -78,13 +78,13 @@ sichtbar hinter allem, und Tiefe entsteht durch **drei klar getrennte
 Flächenstufen** statt durch Ränder. Alle liegen unter
 `semantic.<mode>.surface.*` und werden nie ad hoc nachgebaut.
 
-| Token              | Utility            | Wirkung                                                                          |
-| ------------------ | ------------------ | -------------------------------------------------------------------------------- |
-| `surface.shell`    | `.glass-shell`     | das schwebende Panel und die Icon-Leiste: helles Frostglas über dem Grund        |
-| `surface.content`  | `.surface-content` | die Inhaltsfläche in der Mitte, eine Spur heller und ruhiger                     |
-| `surface.card`     | `.surface-card`    | **deckende** Karten darauf — Zahlen liegen nie auf Glas                          |
-| `surface.rail`     | `.rail-panel`      | die Kontextleiste rechts: eigenes, abgesetztes Panel, etwas matter als die Mitte |
-| `surface.railCard` | `.rail-card`       | **deckende**, reinweisse Karten darin — sie springen von der matteren Leiste ab  |
+| Token              | Utility            | Wirkung                                                                     |
+| ------------------ | ------------------ | --------------------------------------------------------------------------- |
+| `surface.shell`    | `.glass-shell`     | das schwebende Panel und die Icon-Leiste: helles Frostglas über dem Grund   |
+| `surface.content`  | `.surface-content` | die Inhaltsfläche in der Mitte, eine Spur heller und ruhiger                |
+| `surface.card`     | `.surface-card`    | **deckende** Karten darauf — Zahlen liegen nie auf Glas                     |
+| `surface.rail`     | `.rail-panel`      | die Kontextleiste als **Schublade** unter `xl` — etwas matter als die Mitte |
+| `surface.railCard` | `.rail-card`       | **deckende**, reinweisse Kacheln der Leiste — ab `xl` direkt auf dem Grund  |
 
 Zwei Dinge daran sind Absicht und keine Nachlässigkeit:
 
@@ -95,11 +95,16 @@ Zwei Dinge daran sind Absicht und keine Nachlässigkeit:
 2. **Karten sind das Gegenteil davon: deckend.** Messwerte werden auf ruhigem
    Grund gelesen, nicht auf einem Verlauf.
 3. **`rail` bringt ihre Deckung selbst mit** (0.46 statt 0.34): die
-   Inhaltsfläche liegt auf dem Shell-Glas, die Leiste als eigenes Panel direkt
-   auf dem Grund. Der Wert liegt bewusst unter der Summe der Mitte (≈ 0.62) —
-   die Leiste trägt reinweisse Karten, und die brauchen einen matteren Grund,
-   von dem sie abspringen. Bei 0.62 verschmelzen Karte und Leiste zu einer
-   Fläche, bei deutlich weniger verliert die Leiste ihren Bezug zur Mitte.
+   Inhaltsfläche liegt auf dem Shell-Glas, die Schublade direkt auf dem Grund.
+   Der Wert liegt bewusst unter der Summe der Mitte (≈ 0.62) — sie trägt
+   reinweisse Karten, und die brauchen einen matteren Grund, von dem sie
+   abspringen. Bei 0.62 verschmelzen Karte und Fläche, bei deutlich weniger
+   verliert die Schublade ihren Bezug zur Mitte.
+
+   ⚠️ Ab `xl` steht die Leiste **ohne** diese Fläche: dort liegen ihre Kacheln
+   einzeln auf dem Mesh, weil zwei helle Glasflächen nebeneinander sich als eine
+   geteilte lasen. `surface.rail` gilt deshalb nur noch für die Schublade —
+   `surface.railCard` dagegen für beide Fälle.
 
 Auf der Rail gilt eine eigene Textfamilie
 (`text.onRail`, `onRailMuted`, `onRailFaint`, `onRailBrand`), dazu

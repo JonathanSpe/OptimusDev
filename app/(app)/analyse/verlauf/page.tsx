@@ -16,3 +16,7 @@ export default function AnalyseVerlaufPage() {
     />
   );
 }
+//   "Verlauf"
+//   "Wie sich deine Werte über die Tests hinweg entwickeln."
+//   "Inhalt folgt"
+//   "Hier entstehen die Verlaufsdiagramme über alle Tests hinweg, inklusive Vergleich einzelner Marker."

@@ -492,7 +492,7 @@ function buildContrastCases(): ContrastCase[] {
    * (Zeile "Antwort gespeichert", Zustand einer Datenquelle) — deshalb wird
    * genau die Flaeche geprueft, auf der die Farbe wirklich steht.
    */
-  for (const status of ["successOnRail", "warningOnRail"]) {
+  for (const status of ["successOnRail", "warningOnRail", "criticalOnRail"]) {
     cases.push({
       label: `status.${status} auf surface.railCard`,
       foreground: light(`color.status.${status}`),

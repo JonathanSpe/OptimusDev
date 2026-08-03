@@ -14,6 +14,7 @@ import {
   type Bundle,
   type CategoryScore,
 } from "../sample-data";
+import { CategoryIcon } from "./category-icon";
 import { CategoryRing, ConfidenceDots, toRingLabel } from "./category-ring";
 import { ScoreDelta } from "./score-delta";
 import { VerdictChip, VerdictScore, toVerdictWord } from "./score-verdict";
@@ -322,10 +323,23 @@ function AreaColumn({
          * Pille so breit ist wie ihr Inhalt und nicht wie die Spalte.
          */}
         <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
+          {/*
+           * Zeichen und Name. Das Zeichen ist reine Dekoration und deshalb im
+           * ohnehin schon aria-hidden gestellten Namen aufgehoben — vorgelesen
+           * wird der Bereich vom Gruppen-Label des Rings (toRingLabel).
+           *
+           * Es ist NEUTRAL getoent und nicht nach Urteil: die Pille direkt
+           * darunter beantwortet "wo stehst du", und ein zweites gefaerbtes
+           * Element im selben Kopf waere dieselbe Aussage in zwei Lautstaerken.
+           */}
           <p
             aria-hidden="true"
-            className="text-foreground text-sm leading-5 font-semibold"
+            className="text-foreground flex items-center gap-1.5 text-sm leading-5 font-semibold"
           >
+            <CategoryIcon
+              categoryId={category.id}
+              className="text-muted-foreground size-3.5"
+            />
             {category.shortName}
           </p>
           {/*

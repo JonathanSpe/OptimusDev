@@ -20,6 +20,16 @@ import { BiomarkerPanel, type BiomarkerPanelView } from "./biomarker-panel";
  * bleibt ein einziges Klickziel fuer die spaetere Detailansicht.
  */
 
+/*
+ * Die beiden Karten, und der Umschalter benennt genau sie: "Werte" zeigt die
+ * Wertkarte (Zahl, Veraenderung, Testdatum, Schiene), "Verläufe" die
+ * Verlaufskarte (dieselbe Karte plus Kurve). Was die beiden unterscheidet,
+ * steht bei BiomarkerPanelView.
+ *
+ * Die Reihenfolge ist die Reihenfolge der Fragen: erst "wo stehe ich", dann
+ * "wohin geht es". Deshalb steht die Wertkarte auch links und ist die
+ * Voreinstellung.
+ */
 const VIEW_OPTIONS: readonly SegmentedControlOption<BiomarkerPanelView>[] = [
   { value: "value", label: "Werte" },
   { value: "trend", label: "Verläufe" },

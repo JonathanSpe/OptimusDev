@@ -40,6 +40,15 @@ export {
   type CategoryDialProps,
 } from "./components/category-dial";
 /*
+ * Das Zeichen eines Bereichs, EINE Tabelle fuer alle drei Fundstellen —
+ * Bereichskopf, Linienbeschriftung und Herkunft in der Veraenderungsliste. Reine
+ * Dekoration: immer aria-hidden, nie in einer Statusfarbe.
+ */
+export {
+  CategoryIcon,
+  type CategoryIconProps,
+} from "./components/category-icon";
+/*
  * Das Instrument selbst — Ring und Datenlage-Punkte. Beide Kacheln beziehen es
  * von hier, damit ein Ring nicht an zwei Orten anders laufen kann.
  */
@@ -157,7 +166,6 @@ export {
   sampleMarkerChanges,
   samplePriorityFindings,
   sampleScore,
-  sampleSupplements,
   toCategoryEvidence,
   toCategoryScore,
   toMarkerChanges,
@@ -170,5 +178,4 @@ export {
   type PriorityFinding,
   type ScorePoint,
   type ScoreSummary,
-  type Supplement,
 } from "./sample-data";

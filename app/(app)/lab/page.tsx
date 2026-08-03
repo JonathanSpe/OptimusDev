@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { mockSupplements } from "@/data/mock";
 import {
   BundleFocus,
   CategoryFocus,
@@ -12,7 +13,6 @@ import {
   sampleCategorySeries,
   sampleMarkerChanges,
   sampleScore,
-  sampleSupplements,
 } from "@/features/analysis";
 
 /*
@@ -87,7 +87,7 @@ export default function LabPage() {
       {/* Die Praeparate-Liste in derselben halben Breite: ab 32rem Kachelbreite
        * traegt ihre Zeile vier Spalten (Kapsel, Name, Beobachtet, Status). */}
       <div className="max-w-map-column">
-        <SupplementPanel supplements={sampleSupplements} />
+        <SupplementPanel supplements={mockSupplements} />
       </div>
     </div>
   );

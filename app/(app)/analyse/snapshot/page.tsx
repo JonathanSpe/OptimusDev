@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { mockSupplements } from "@/data/mock";
 import {
   AnalysisBoard,
   sampleBundles,
@@ -7,7 +8,6 @@ import {
   sampleCategorySeries,
   sampleMarkerChanges,
   sampleScore,
-  sampleSupplements,
 } from "@/features/analysis";
 
 export const metadata: Metadata = {
@@ -20,8 +20,25 @@ export const metadata: Metadata = {
  * setzt den Seitenkopf und reicht die Daten an das Bento weiter; Anordnung und
  * Auftritt liegen in features/analysis.
  *
- * KEIN Vorspann unter der Ueberschrift. Ein Absatz, der aufzaehlt, was gleich
- * darunter steht, ist eine Inhaltsangabe der Seite: er kostet die erste
+ * KEIN SICHTBARER SEITENKOPF. Hier standen eine Dachzeile ("Analyse ·
+ * Snapshot") und eine Ueberschrift in 36px. Zusammen mit ihrem Abstand kosteten
+ * sie rund 90px — die erste Bildschirmhoehe ging fuer zwei Zeilen drauf, die
+ * beide nur wiederholten, was die Navigation links schon markiert und der
+ * Browser-Tab schon im Titel traegt. Jetzt beginnt die Inhaltsspalte auf
+ * derselben Hoehe wie die erste Kachel der Kontext-Leiste, und das Erste, was
+ * man sieht, ist der Score.
+ *
+ * ⚠️ DIE UEBERSCHRIFT IST NICHT WEG, SIE IST NUR UNSICHTBAR. Eine Seite ohne h1
+ * ist fuer Screenreader eine Seite ohne Namen: wer sich per Ueberschriften-Liste
+ * durch das Dokument bewegt, landet sonst direkt in den Kacheln und weiss nicht,
+ * worauf er steht. sr-only ist deshalb Pflicht, nicht Kosmetik — dieselbe
+ * Loesung, die hideTitle in components/ui/sheet.tsx fuer das Panel benutzt.
+ *
+ * Die Dachzeile faellt dabei ganz weg. Vorgelesen war sie ohnehin eine
+ * Verdopplung: "Analyse · Snapshot" direkt vor "Deine Auswertung".
+ *
+ * Ein Vorspann kommt hier ebenfalls nicht zurueck. Ein Absatz, der aufzaehlt,
+ * was gleich darunter steht, ist eine Inhaltsangabe der Seite: er kostet
  * Bildschirmhoehe und sagt nichts, was die Kacheln nicht selbst sagen.
  *
  * ⚠️ ALLE ZAHLEN SIND PLATZHALTER — sie sind ein Mock aus
@@ -34,16 +51,8 @@ export const metadata: Metadata = {
  */
 export default function AnalyseSnapshotPage() {
   return (
-    /* Genau EIN Schritt der Abstandsskala zwischen Kopf und Raster. */
-    <div className="space-y-6">
-      <header>
-        <p className="text-muted-foreground text-2xs font-semibold tracking-wide uppercase">
-          Analyse · Snapshot
-        </p>
-        <h1 className="text-foreground mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-          Deine Auswertung
-        </h1>
-      </header>
+    <>
+      <h1 className="sr-only">Deine Auswertung</h1>
 
       <AnalysisBoard
         score={sampleScore}
@@ -51,8 +60,8 @@ export default function AnalyseSnapshotPage() {
         bundles={sampleBundles}
         categorySeries={sampleCategorySeries}
         markerChanges={sampleMarkerChanges}
-        supplements={sampleSupplements}
+        supplements={mockSupplements}
       />
-    </div>
+    </>
   );
 }

@@ -1,3 +1,4 @@
+import type { Supplement } from "@/contracts";
 import { cn } from "@/lib/utils";
 
 import type {
@@ -6,7 +7,6 @@ import type {
   CategorySeries,
   MarkerChange,
   ScoreSummary,
-  Supplement,
 } from "../sample-data";
 import { CategoryFocus, CategoryFocusTable } from "./category-focus";
 import { ProgressionPanel } from "./progression-panel";
@@ -55,17 +55,33 @@ import { SupplementPanel } from "./supplement-row";
  *   deshalb wie vorher — und wer sie gelesen hat, kann das Bereichsfeld ohne
  *   Legende lesen.
  *
- *   GRAU IST DER NORMALFALL. Gefaerbt ist hoechstens eine Stelle je Zeile, und
- *   eine gefuellte Pille tritt nur im Kopf eines Bereichs auf — dort dafuer bei
- *   JEDER Stufe, "gut" eingeschlossen, weil vier Koepfe nebeneinander dieselbe
- *   Form brauchen, um sich vergleichen zu lassen (siehe VerdictChip). Das sind
- *   vier Pillen auf der Seite; die zehn Befundzeilen darunter tragen Zeichen
- *   und Ziffer und sonst nichts.
+ *   GRAU IST DER NORMALFALL. Gefaerbt ist hoechstens eine Stelle je Zeile.
+ *
+ *   EINE STATUSANGABE IST EINE PILLE. ENTSCHEIDUNG, die eine fruehere umkehrt:
+ *   hier stand, eine gefuellte Pille trete NUR im Kopf eines Bereichs auf —
+ *   "das sind vier Pillen auf der Seite; die zehn Befundzeilen darunter tragen
+ *   Zeichen und Ziffer und sonst nichts". Diese Regel ist auf Anweisung
+ *   aufgehoben. Sie unterschied nach ORT statt nach Sache: eine Bewegung
+ *   ("+4", "−36 % günstig") ist eine Statusangabe wie ein Urteil auch, und
+ *   dieselbe Angabe einmal als Pille und einmal als blosse farbige Schrift zu
+ *   zeigen, je nachdem in welcher Kachel sie steht, war ein Unterschied ohne
+ *   Bedeutung.
+ *
+ *   Was die Regel ERSETZT, damit die Zurueckhaltung nicht ganz verfaellt: eine
+ *   Pille traegt eine Angabe, die aus einer der drei Staffeln kommt — Urteil
+ *   (VerdictChip), Bewegung (ScoreDelta) oder Praeparate-Status. Alles andere
+ *   bleibt Text. Insbesondere bekommt DEKORATION keine Pille und keine
+ *   Statusfarbe: die Bereichszeichen (CategoryIcon) sind neutral getoent, an
+ *   allen drei Stellen, an denen sie stehen.
+ *
+ *   Die Befundzeilen tragen weiterhin Zeichen und Ziffer und sonst nichts.
+ *   Sie sind keine der drei Staffeln, sondern eine Rangliste.
  *
  *   ZWEI FLAECHEN BLEIBEN GANZ AUSSEN VOR. Die Entwicklung faerbt keine Linie
- *   nach Status ("wohin geht es" ist nicht "wo stehst du"), und die dunkle
- *   Score-Kachel traegt ihr Urteil als Satz — auf ihrem Grund haelt von den drei
- *   Toenen nur success ein AA-Verhaeltnis, und die Palette sollte nicht wachsen.
+ *   nach Status ("wohin geht es" ist nicht "wo stehst du") — die Deltas NEBEN
+ *   den Linien tun es, das Feld selbst nie. Und die dunkle Score-Kachel traegt
+ *   ihr Urteil als Satz: auf ihrem Grund haelt von den drei Toenen nur success
+ *   ein AA-Verhaeltnis, und die Palette sollte nicht wachsen.
  *
  *   ROT HAT EINE BEDEUTUNG. Die Rangscheiben der Ansatzpunkte sind deshalb
  *   Graphit statt Markenkarmin: Rang und Urteil sitzen in derselben Zeile, und

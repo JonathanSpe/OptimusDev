@@ -10,16 +10,14 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import { useId, useState } from "react";
 
 import { PanelExplainer } from "@/components/common/panel-explainer";
+import type { Supplement, SupplementIntake } from "@/contracts";
 import { useMotionPreset } from "@/lib/motion";
+import { toSupplementImage } from "@/lib/supplement-images";
 import { cn } from "@/lib/utils";
-import capsuleBlue from "@/public/supplements/capsule-blue.webp";
-import capsuleGreen from "@/public/supplements/capsule-green.webp";
-import capsuleRed from "@/public/supplements/capsule-red.webp";
-import capsuleSand from "@/public/supplements/capsule-sand.webp";
 
 import {
   isAdjustedActionHint,
@@ -27,7 +25,6 @@ import {
   toSupplementStatus,
   type SupplementStatus,
 } from "../rules";
-import type { Supplement } from "../sample-data";
 
 /*
  * ============================================================================
@@ -56,26 +53,33 @@ import type { Supplement } from "../sample-data";
  */
 
 /* ------------------------------------------------------------------------- */
-/* Die Kapseln                                                                 */
+/* Die Einnahme                                                                */
 /* ------------------------------------------------------------------------- */
 
 /*
- * ⚠️ PLATZHALTER — Zuordnung Praeparat → Foto. Es gibt vier freigestellte
- * Kapseln fuer fuenf Praeparate; wer noch kein eigenes Foto hat, bekommt die
- * gruene. Das Bild ist reine Wiedererkennung und traegt KEINE Aussage: es sagt
- * nichts ueber Wirkstoff, Dosis oder Status, und deshalb steht es hier als
- * alt="" und nicht als beschriftetes Bild. Sobald es echte Produktfotos gibt,
- * kommt das Bild aus dem Praeparat-Vertrag und diese Tabelle faellt weg.
+ * ⚠️ HIER STAND CAPSULE_BY_ID — eine Tabelle Praeparat-Id → Foto. Sie ist weg:
+ * welches Bild ein Praeparat traegt, sagen jetzt die Daten (Feld imageKey im
+ * Vertrag), und aufgeloest wird der Schluessel in lib/supplement-images.ts.
+ * Die Begruendung steht dort.
+ *
+ * DIESE KACHEL ZEIGT NUR LAUFENDE PRAEPARATE. Seit der Vertrag auch solche
+ * kennt, die niemand nimmt (intake === null), muss diese Datei den Fall
+ * abfangen: "Wirkt, was du nimmst?" kann ueber ein Praeparat, das man nicht
+ * nimmt, nichts sagen. SupplementPanel filtert sie deshalb heraus, und die
+ * Zeile selbst kommt ohne intake gar nicht erst vor.
  */
-const CAPSULE_FALLBACK = capsuleGreen;
 
-const CAPSULE_BY_ID: Readonly<Record<string, StaticImageData>> = {
-  "vit-d3": capsuleBlue,
-  eisen: capsuleSand,
-  "omega-3": capsuleRed,
-  magnesium: capsuleGreen,
-  ashwagandha: capsuleGreen,
-};
+/**
+ * Ein Praeparat, das tatsaechlich genommen wird. Der Typ macht die Vorbedingung
+ * dieser Kachel zu einer Zusage des Compilers, statt sie in jeder Zelle mit
+ * einem `?.` zu umgehen — die Zeile braucht Einnahmebeginn und Tageszahl, und
+ * ein `prep.intake?.daysOn ?? 0` waere eine erfundene Null.
+ */
+type TakenSupplement = Supplement & { intake: SupplementIntake };
+
+function isTaken(prep: Supplement): prep is TakenSupplement {
+  return prep.intake !== null;
+}
 
 /* ------------------------------------------------------------------------- */
 /* Formate                                                                     */
@@ -250,12 +254,13 @@ function toObservedReading(prep: Supplement): ObservedReading {
  * Fensters und bis "heute" — sonst klebte die Marke am Rand, sobald die
  * Einnahme laenger laeuft als das Fenster dauert.
  */
-function EffectTimeline({ prep }: { prep: Supplement }) {
-  const spanEnd = Math.max(prep.effectWindowDays.to, prep.daysOn, 1);
+function EffectTimeline({ prep }: { prep: TakenSupplement }) {
+  const { daysOn, startedOn } = prep.intake;
+  const spanEnd = Math.max(prep.effectWindowDays.to, daysOn, 1);
   const windowStart = (prep.effectWindowDays.from / spanEnd) * 100;
   const windowWidth =
     ((prep.effectWindowDays.to - prep.effectWindowDays.from) / spanEnd) * 100;
-  const now = Math.min(100, (prep.daysOn / spanEnd) * 100);
+  const now = Math.min(100, (daysOn / spanEnd) * 100);
 
   return (
     <div className="min-w-0">
@@ -276,9 +281,8 @@ function EffectTimeline({ prep }: { prep: Supplement }) {
        * Notation, keine Sprache — und die Zeile darunter sagt dieselben drei
        * Angaben ohnehin in Worten und Zahlen. */}
       <p className="text-muted-foreground text-2xs mt-1.5 tabular-nums">
-        Seit {toLongDate(prep.startedOn)} · Tag{" "}
-        {numberFormat.format(prep.daysOn)} · Wirkfenster Tag{" "}
-        {numberFormat.format(prep.effectWindowDays.from)}–
+        Seit {toLongDate(startedOn)} · Tag {numberFormat.format(daysOn)} ·
+        Wirkfenster Tag {numberFormat.format(prep.effectWindowDays.from)}–
         {numberFormat.format(prep.effectWindowDays.to)}
       </p>
     </div>
@@ -290,7 +294,8 @@ function EffectTimeline({ prep }: { prep: Supplement }) {
 /* ------------------------------------------------------------------------- */
 
 export interface SupplementRowProps {
-  prep: Supplement;
+  /** Nur laufende Praeparate — siehe TakenSupplement. */
+  prep: Supplement & { intake: SupplementIntake };
   /** Platz in der Auftrittsreihe der Liste. */
   index?: number;
   className?: string;
@@ -315,7 +320,7 @@ export function SupplementRow({
   const Symbol = look.icon;
   const observed = toObservedReading(prep);
   const hint = toActionHint(prep, status);
-  const capsule = CAPSULE_BY_ID[prep.id] ?? CAPSULE_FALLBACK;
+  const capsule = toSupplementImage(prep.imageKey);
 
   const target =
     prep.targetMarker === null
@@ -373,7 +378,7 @@ export function SupplementRow({
             <span className="sr-only">— Wirkfenster und nächster Schritt</span>
           </button>
           <p className="text-muted-foreground text-2xs mt-0.5">
-            {prep.dose} · seit {toShortDate(prep.startedOn)} · {target}
+            {prep.dose} · seit {toShortDate(prep.intake.startedOn)} · {target}
           </p>
 
           {/*
@@ -480,6 +485,10 @@ export function SupplementRow({
 /* ------------------------------------------------------------------------- */
 
 export interface SupplementPanelProps {
+  /**
+   * Alle bekannten Praeparate. Die Kachel nimmt sich daraus die LAUFENDEN —
+   * der Aufrufer muss nicht wissen, dass sie ueber andere nichts sagen kann.
+   */
   supplements: readonly Supplement[];
   /**
    * Platz in der Auftrittsreihe der SEITE. Er verzoegert nur den Auftritt der
@@ -550,7 +559,7 @@ function EmptySupplements({ className }: { className?: string }) {
  * Nullen.
  */
 function toStatusCounts(
-  supplements: readonly Supplement[],
+  supplements: readonly TakenSupplement[],
 ): ReadonlyMap<SupplementStatus, number> {
   const counts = new Map<SupplementStatus, number>();
   for (const prep of supplements) {
@@ -638,11 +647,15 @@ export function SupplementPanel({
   const motionPreset = useMotionPreset();
   const titleId = useId();
 
-  if (supplements.length === 0) {
+  /* Ein empfohlenes, aber nicht eingenommenes Praeparat gehoert auf
+   * /empfehlungen und nicht in eine Wirkungsbilanz. */
+  const taken = supplements.filter(isTaken);
+
+  if (taken.length === 0) {
     return <EmptySupplements className={className} />;
   }
 
-  const counts = toStatusCounts(supplements);
+  const counts = toStatusCounts(taken);
 
   return (
     <motion.section
@@ -661,7 +674,7 @@ export function SupplementPanel({
       {/* Eine Leiste, die die Liste zusammenfasst, bevor man sie liest. Sie ist
        * ein BEFUND aus den Daten (gezaehlte Staende), keine zweite Erklaerung
        * der Kachel. */}
-      <StatusTally counts={counts} total={supplements.length} />
+      <StatusTally counts={counts} total={taken.length} />
 
       {/*
        * Eine echte Tabelle, kein Raster aus divs: die vier Spalten teilen sich
@@ -701,7 +714,7 @@ export function SupplementPanel({
           </tr>
         </thead>
         <tbody>
-          {supplements.map((prep, position) => (
+          {taken.map((prep, position) => (
             <SupplementRow
               key={prep.id}
               prep={prep}

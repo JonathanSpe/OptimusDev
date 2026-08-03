@@ -15,3 +15,18 @@ export {
   type MarkerGroupId,
   type Measurement,
 } from "./biomarker";
+/*
+ * Praeparate. ⚠️ Wirkfenster, Delta-Schwellen und Preise sind Platzhalter.
+ * Der Vertrag kennt einen ZIELMARKER und Messwerte daran — keine Wirkaussage.
+ */
+export {
+  expectedDirectionSchema,
+  recommendationBasisSchema,
+  supplementIntakeSchema,
+  supplementListSchema,
+  supplementSchema,
+  type ExpectedDirection,
+  type RecommendationBasis,
+  type Supplement,
+  type SupplementIntake,
+} from "./supplement";
